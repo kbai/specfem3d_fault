@@ -66,7 +66,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                      rmemory_dux_dxl_z, rmemory_duy_dyl_z, rmemory_duz_dzl_z, &
                      rmemory_duz_dxl_z, rmemory_duz_dyl_z, rmemory_duy_dzl_z, rmemory_dux_dzl_z, &
                      rmemory_displ_elastic,displ_old
-  use fault_solver_dynamic, only : Kelvin_Voigt_eta, KV_direction
+  use fault_solver_dynamic, only : Kelvin_Voigt_eta!, KV_direction
   use specfem_par, only : PI,FULL_ATTENUATION_SOLID, xigll, yigll, zigll, ystore
 
   implicit none
