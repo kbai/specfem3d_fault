@@ -694,7 +694,8 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
       else
         GLoad = 1.0_CUSTOM_REAL
       endif
-      TxExt = DTau0 * bc%Fload * GLoad
+    !  TxExt = DTau0 * bc%Fload * GLoad
+      TxExt = bc%Fload * GLoad
       T(1,:) = T(1,:) + TxExt
     endif
 
@@ -1100,7 +1101,9 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
   call init_2d_distribution(nucFload,coord,IIN_PAR,nFload)
 
  ! WARNING: the line below is only valid for pure strike-slip faulting
-  V(1,:) = f%V_init
+ ! Kangchen modified the initial velocity
+  V(1,:) = f%V_init * T0(1,:)/sqrt(abs(T0(1,:))**2+abs(T0(2,:))**2)
+  V(2,:) = f%V_init * T0(2,:)/sqrt(abs(T0(1,:))**2+abs(T0(2,:))**2)
 end subroutine rsf_init
 
 !---------------------------------------------------------------------
