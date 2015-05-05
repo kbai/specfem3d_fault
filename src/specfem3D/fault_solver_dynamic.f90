@@ -78,7 +78,7 @@ module fault_solver_dynamic
 
   logical, save :: TPV29 = .FALSE.
 
-  logical, save :: RATE_AND_STATE = .FALSE.
+  logical, save :: RATE_AND_STATE = .TRUE.
 
   logical, save :: BALOCHI = .FALSE.
 
@@ -684,7 +684,7 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
     if (RATE_AND_STATE) then
       TxExt = 0._CUSTOM_REAL
       TLoad = 1.0_CUSTOM_REAL
-      DTau0 = 25e6_CUSTOM_REAL
+      DTau0 = 45e6_CUSTOM_REAL
       time = it*bc%dt !time will never be zero. it starts from 1
       if (time <= TLoad) then
         GLoad = exp( (time-TLoad)*(time-Tload) / (time*(time-2.0_CUSTOM_REAL*TLoad)) )
@@ -1593,7 +1593,7 @@ subroutine init_fault_traction(bc,Sigma,GradientZ)
   integer :: ij
   real(kind=CUSTOM_REAL) :: GradientZ
   logical :: TPV29=.FALSE.
-  logical :: TPV31=.TRUE.
+  logical :: TPV31=.FALSE.
   real(kind=CUSTOM_REAL) :: Pf,Omega,Depth,b11,b33,b13
   real(kind=CUSTOM_REAL) :: Vs,Vp,Rho,Att,Mu,Mu0
   !sigma_xx :: sigma(1)
@@ -1603,11 +1603,11 @@ subroutine init_fault_traction(bc,Sigma,GradientZ)
   !sigma_yz :: sigma(5)
   !sigma_xz :: sigma(6)
   Traction(1,:) = &
-Sigma(1)*bc%R(3,1,:)+Sigma(4)*bc%R(3,2,:)+Sigma(6)*bc%R(3,3,:)
+    Sigma(1)*bc%R(3,1,:)+Sigma(4)*bc%R(3,2,:)+Sigma(6)*bc%R(3,3,:)
   Traction(2,:) = &
-Sigma(4)*bc%R(3,1,:)+Sigma(2)*bc%R(3,2,:)+Sigma(5)*bc%R(3,3,:)
+    Sigma(4)*bc%R(3,1,:)+Sigma(2)*bc%R(3,2,:)+Sigma(5)*bc%R(3,3,:)
   Traction(3,:) = &
-Sigma(6)*bc%R(3,1,:)+Sigma(5)*bc%R(3,2,:)+(Sigma(3)+(bc%coord(3,:)*GradientZ))*bc%R(3,3,:)
+    Sigma(6)*bc%R(3,1,:)+Sigma(5)*bc%R(3,2,:)+(Sigma(3)+(bc%coord(3,:)*GradientZ))*bc%R(3,3,:)
 !  Traction = rotate(bc,Traction,1)    
 !  bc%T0 =bc%T0+ Traction
   if(TPV29) then
