@@ -69,6 +69,7 @@
                        iglob = ibool(i,j,k,ispec)
 
                        weight = wxgll(i)*wygll(j)*wzgll(k)
+                   !    weight=1.0  !kangchen added it for dbg
                        jacobianl = jacobianstore(i,j,k,ispec)
 
                        if(CUSTOM_REAL == SIZE_REAL) then
@@ -718,7 +719,7 @@
                    ! defines the material coefficient associated to the domain
                    mat_coef = 1.d0 / kappastore(i,j,k,ispec)
                    iglob = ibool(i,j,k,ispec)
-                   weight = wxgll(i)*wygll(j)*wzgll(k)
+                   weight = wxgll(i)*wygll(j)*wzgll(k) 
                    jacobianl = jacobianstore(i,j,k,ispec)
 
                    if(CUSTOM_REAL == SIZE_REAL) then

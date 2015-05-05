@@ -275,7 +275,7 @@
       write(IMAIN,*) '  ...saving fault databases'
       call flush_IMAIN()
     endif
-    !  call fault_save_arrays_test(prname)  ! for debugging
+    call fault_save_arrays_test(prname)  ! for debugging
     call fault_save_arrays(prname)
   endif
 

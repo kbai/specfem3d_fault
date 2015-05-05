@@ -41,17 +41,9 @@ subroutine compute_forces_viscoelastic()
   integer:: iphase
   logical:: phase_is_inner
   integer:: iface,ispec,igll,i,j,k,iglob
-! Kangchen added the following switch to enable symmetric boundary conditions
-  logical:: SYMMETRIC_BOUNDARY_CONDITIONS_INSTEAD_OF_FREE_SURFACE 
 
-  SYMMETRIC_BOUNDARY_CONDITIONS_INSTEAD_OF_FREE_SURFACE = .false.
+
 ! Kangchen added the following two synchronization to ensure that the nodes on MPI Interface keep in agreement with each other.
-
-
-#IFDEF   SYMMETRY
-  SYMMETRIC_BOUNDARY_CONDITIONS_INSTEAD_OF_FREE_SURFACE=.false.
-#ENDIF
-
 
   call synchronize_MPI_vector_blocking_ord(NPROC,NGLOB_AB,displ, &
                                      num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
@@ -249,14 +241,6 @@ subroutine compute_forces_viscoelastic()
                                 free_surface_normal,free_surface_ijk,free_surface_ispec, &
                                 num_free_surface_faces)
   endif
-  if (SYMMETRIC_BOUNDARY_CONDITIONS_INSTEAD_OF_FREE_SURFACE)  then   !added by Kangchen
-     call compute_symmetric_boundary_conditions(NSPEC_AB,NGLOB_AB, &
-                                ibool,accel, &
-                                free_surface_normal,free_surface_ijk,free_surface_ispec, &
-                                num_free_surface_faces)
-
-
-  endif
 
   ! C-PML boundary
   if( PML_CONDITIONS ) then
@@ -386,6 +370,7 @@ subroutine compute_forces_viscoelastic_bpwf()
                         num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic, &
                         phase_ispec_inner_elastic,.true.)
     endif
+
 
 ! adds elastic absorbing boundary term to acceleration (Stacey conditions)
     if( STACEY_ABSORBING_CONDITIONS ) then
@@ -856,85 +841,4 @@ subroutine compute_forces_viscoelastic_GPU()
   endif
 
 end subroutine compute_forces_viscoelastic_GPU
-
-
-subroutine compute_symmetric_boundary_conditions(NSPEC_AB,NGLOB_AB, &
-                                    ibool,accel, &
-                                    free_surface_normal,free_surface_ijk,free_surface_ispec, &
-                                    num_free_surface_faces)
-
-! updates acceleration with ocean load term:
-! approximates ocean-bottom continuity of pressure & displacement for longer period waves (> ~20s ),
-! assuming incompressible fluid column above bathymetry ocean bottom
-
-  implicit none
-
-  include 'constants.h'
-
-  integer :: NSPEC_AB,NGLOB_AB
-
-  real(kind=CUSTOM_REAL),dimension(NDIM,NGLOB_AB),intent(inout) :: accel
-
-  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
-
-  ! free surface
-  integer :: num_free_surface_faces
-  real(kind=CUSTOM_REAL) :: free_surface_normal(NDIM,NGLLSQUARE,num_free_surface_faces)
-  integer :: free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces)
-  integer :: free_surface_ispec(num_free_surface_faces)
-
-! local parameters
-  real(kind=CUSTOM_REAL) :: nx,ny,nz
-  real(kind=CUSTOM_REAL) :: force_normal_comp
-  integer :: i,j,k,ispec,iglob
-  integer :: igll,iface
-!  logical,dimension(NGLOB_AB) :: updated_dof_ocean_load
-
-  !   initialize the updates
-!  updated_dof_ocean_load(:) = .false.
-
-  ! for surface elements exactly at the top of the model (ocean bottom)
-  do iface = 1,num_free_surface_faces
-
-    ispec = free_surface_ispec(iface)
-    do igll = 1, NGLLSQUARE
-      i = free_surface_ijk(1,igll,iface)
-      j = free_surface_ijk(2,igll,iface)
-      k = free_surface_ijk(3,igll,iface)
-
-      ! get global point number
-      iglob = ibool(i,j,k,ispec)
-
-      ! only update once
-!      if(.not. updated_dof_ocean_load(iglob)) then
-!
-!        ! get normal
-!        nx = free_surface_normal(1,igll,iface)
-!        ny = free_surface_normal(2,igll,iface)
-!        nz = free_surface_normal(3,igll,iface)
-!
-!        ! make updated component of right-hand side
-!        ! we divide by rmass() which is 1 / M
-!        ! we use the total force which includes the Coriolis term above
-!        force_normal_comp = accel(1,iglob)*nx / rmassx(iglob) &
-!                            + accel(2,iglob)*ny / rmassy(iglob) &
-!                            + accel(3,iglob)*nz / rmassz(iglob)
-!
-!        accel(1,iglob) = accel(1,iglob) &
-!          + (rmass_ocean_load(iglob) - rmassx(iglob)) * force_normal_comp * nx
-!        accel(2,iglob) = accel(2,iglob) &
-!          + (rmass_ocean_load(iglob) - rmassy(iglob)) * force_normal_comp * ny
-!        accel(3,iglob) = accel(3,iglob) &
-!          + (rmass_ocean_load(iglob) - rmassz(iglob)) * force_normal_comp * nz
-!
-!        ! done with this point
-!        updated_dof_ocean_load(iglob) = .true.
-
-!      endif
-       accel(3,iglob)=0._CUSTOM_REAL
-       
-    enddo ! igll
-  enddo ! iface
-
-  end subroutine compute_symmetric_boundary_conditions
 

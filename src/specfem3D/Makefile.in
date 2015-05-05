@@ -241,6 +241,7 @@ SOLVER_ARRAY_OBJECTS = \
 	$O/write_output_ASCII.o \
 	$O/write_output_SU.o \
 	$O/write_seismograms.o \
+        $O/model_1d_layer.o \
 	$(EMPTY_MACRO)
 
 

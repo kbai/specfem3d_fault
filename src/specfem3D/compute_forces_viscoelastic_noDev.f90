@@ -52,7 +52,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                         num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic, &
                         phase_ispec_inner_elastic,backward_simulation)
 
-  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,N_SLS,SAVE_MOHO_MESH,ONE_THIRD,FOUR_THIRDS
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,N_SLS,SAVE_MOHO_MESH,ONE_THIRD,FOUR_THIRDS,PI  !IMAIN WAS ADDED BY Kangchen
   use pml_par, only: is_CPML, spec_to_CPML, accel_elastic_CPML,NSPEC_CPML,CPML_regions, &
                      PML_dux_dxl, PML_dux_dyl, PML_dux_dzl, PML_duy_dxl, PML_duy_dyl, PML_duy_dzl, &
                      PML_duz_dxl, PML_duz_dyl, PML_duz_dzl, &
@@ -66,8 +66,8 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                      rmemory_dux_dxl_z, rmemory_duy_dyl_z, rmemory_duz_dzl_z, &
                      rmemory_duz_dxl_z, rmemory_duz_dyl_z, rmemory_duy_dzl_z, rmemory_dux_dzl_z, &
                      rmemory_displ_elastic,displ_old
-  use fault_solver_dynamic, only : Kelvin_Voigt_eta
-  use specfem_par, only : FULL_ATTENUATION_SOLID
+  use fault_solver_dynamic, only : Kelvin_Voigt_eta, KV_direction
+  use specfem_par, only : PI,FULL_ATTENUATION_SOLID, xigll, yigll, zigll, ystore
 
   implicit none
 
@@ -188,8 +188,8 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
     tempx1_att,tempx2_att,tempx3_att,tempy1_att,tempy2_att,tempy3_att,tempz1_att,tempz2_att,tempz3_att
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dummyx_loc_att,dummyy_loc_att,dummyz_loc_att
 
-  real(kind=CUSTOM_REAL) :: eta
-
+  real(kind=CUSTOM_REAL) :: eta, eta_decay, eta_p
+  integer :: fault_direction
   ! local C-PML absorbing boundary conditions parameters
   integer :: ispec_CPML
 
@@ -219,15 +219,42 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
        ! Kelvin Voigt damping: artificial viscosity around dynamic faults
 
         ! stores displacment values in local array
-        if (allocated(Kelvin_Voigt_eta)) then
+        if (allocated(Kelvin_Voigt_eta)) then ! modified by Kangchen
+!         if (.TRUE.) then
           eta = Kelvin_Voigt_eta(ispec)
+!          select case (KV_direction)
+!                 case (1)
+!                   (xigll+1.0_CUSTOM_REAL)*0.5_CUSTOM_REAL
+!          eta = 1e-3_CUSTOM_REAL
           do k=1,NGLLZ
             do j=1,NGLLY
               do i=1,NGLLX
-                iglob = ibool(i,j,k,ispec)
-                dummyx_loc(i,j,k) = displ(1,iglob) + eta*veloc(1,iglob)
-                dummyy_loc(i,j,k) = displ(2,iglob) + eta*veloc(2,iglob)
-                dummyz_loc(i,j,k) = displ(3,iglob) + eta*veloc(3,iglob)
+
+!               select case (KV_direction(ispec))
+!                   case (1)
+!                     eta_p = (1.0_CUSTOM_REAL+xigll(i))*0.5_CUSTOM_REAL
+!                   case (2)
+!                     eta_p = (1.0_CUSTOM_REAL-xigll(i))*0.5_CUSTOM_REAL
+!                   case (3)
+!                     eta_p = (1.0_CUSTOM_REAL+yigll(j))*0.5_CUSTOM_REAL
+!                   case (4)
+!                     eta_p = (1.0_CUSTOM_REAL-yigll(j))*0.5_CUSTOM_REAL
+!                   case (5)
+!                     eta_p = (1.0_CUSTOM_REAL+zigll(k))*0.5_CUSTOM_REAL
+!                   case (6)
+!                     eta_p = (1.0_CUSTOM_REAL-zigll(k))*0.5_CUSTOM_REAL
+!               end select
+!
+                 iglob = ibool(i,j,k,ispec)
+
+!                eta_decay = eta*sngl(exp(-PI*eta_p*eta_p))
+                 eta_decay = eta * 1.0_CUSTOM_REAL
+!                if (eta_decay>0.0_CUSTOM_REAL) then
+!                write(*,*) 'ystore is',ystore(iglob), eta_decay
+!                endif
+                dummyx_loc(i,j,k) = displ(1,iglob) + eta_decay*veloc(1,iglob)
+                dummyy_loc(i,j,k) = displ(2,iglob) + eta_decay*veloc(2,iglob)
+                dummyz_loc(i,j,k) = displ(3,iglob) + eta_decay*veloc(3,iglob)
               enddo
             enddo
           enddo
@@ -591,7 +618,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                 sigma_xy = mul*duxdyl_plus_duydxl
                 sigma_xz = mul*duzdxl_plus_duxdzl
                 sigma_yz = mul*duzdyl_plus_duydzl
-
+     !           write(IMAIN,*) 'sigma_xy',sigma_xy,'mul',mul   !added by Kangchen
               endif ! ANISOTROPY
 
               ! subtract memory variables if attenuation

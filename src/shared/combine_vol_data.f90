@@ -225,6 +225,12 @@
     write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',iproc,'_'
     open(unit=27,file=prname_lp(1:len_trim(prname_lp))//'external_mesh.bin',&
           status='old',action='read',form='unformatted',iostat=ios)
+    !kangchen added this statement to add to its robustness
+    if (ios /= 0) then
+      print *,'Error opening mesh file!'
+      stop
+    endif
+
     read(27) NSPEC_AB
     read(27) NGLOB_AB
 
@@ -254,7 +260,7 @@
 
     allocate(dat(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
     if( ier /= 0 ) stop 'error allocating dat array'
-
+    print *,NSPEC_AB, ' ',NGLLX
     ! uses conversion to real values
     if( CUSTOM_REAL == SIZE_DOUBLE ) then
       allocate(data(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)

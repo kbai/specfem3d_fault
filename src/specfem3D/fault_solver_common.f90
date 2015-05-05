@@ -15,7 +15,7 @@ module fault_solver_common
     integer :: nspec=0, nglob=0
     real(kind=CUSTOM_REAL), dimension(:,:),   pointer :: T=>null(),V=>null(),D=>null(),coord=>null()
     real(kind=CUSTOM_REAL), dimension(:,:,:), pointer :: R=>null()
-    real(kind=CUSTOM_REAL), dimension(:),     pointer :: B=>null(),invM1=>null(),invM2=>null(),Z=>null()
+    real(kind=CUSTOM_REAL), dimension(:),     pointer :: B=>null(),invM1=>null(),invM2=>null(),Z=>null(),dbg1=>null(),dbg2=>null(),dbg3=>null(),dbg4=>null() 
     real(kind=CUSTOM_REAL) :: dt
     integer, dimension(:), pointer :: ibulk1=>null(), ibulk2=>null()
   end type fault_type
@@ -41,7 +41,7 @@ module fault_solver_common
 
   type rsf_type
 !! DK DK    private
-    integer :: StateLaw = 1 ! 1=ageing law, 2=slip law
+    integer :: StateLaw = 2 ! 1=ageing law, 2=slip law
     real(kind=CUSTOM_REAL), dimension(:), pointer :: V0=>null(), f0=>null(), L=>null(), &
                                                      V_init=>null(), &
                                                      a=>null(), b=>null(), theta=>null(), &
@@ -55,7 +55,7 @@ module fault_solver_common
     real(kind=CUSTOM_REAL) :: dt
     integer, dimension(:), pointer :: iglob=>null()   ! on-fault global index of output nodes
     real(kind=CUSTOM_REAL), dimension(:,:,:), pointer :: dat=>null()
-    character(len=70), dimension(:), pointer :: name=>null(),longFieldNames=>null()
+    character(len=80), dimension(:), pointer :: name=>null(),longFieldNames=>null()
     character(len=100) :: shortFieldNames
   end type dataT_type
 
@@ -77,13 +77,13 @@ module fault_solver_common
 
   end type bc_dynandkinflt_type
 
-  logical, parameter :: PARALLEL_FAULT = .true.
+  logical, parameter :: PARALLEL_FAULT = .TRUE.
  ! NOTE: PARALLEL_FAULT has to be the same
  !       in fault_solver_common.f90, fault_generate_databases.f90 and fault_scotch.f90
 
   public :: fault_type, PARALLEL_FAULT, &
             initialize_fault, get_jump, get_weighted_jump, rotate, add_BT, &
-            dataT_type, init_dataT, store_dataT, SCEC_write_dataT
+            dataT_type, init_dataT, store_dataT, SCEC_write_dataT, get_acceleration1,get_acceleration2
 
 contains
 
@@ -117,6 +117,12 @@ subroutine initialize_fault (bc,IIN_BIN)
     allocate(bc%invM2(bc%nglob))
     allocate(bc%B(bc%nglob))
     allocate(bc%Z(bc%nglob))
+    allocate(bc%dbg1(bc%nglob))
+    allocate(bc%dbg2(bc%nglob))
+    allocate(bc%dbg3(bc%nglob))
+    allocate(bc%dbg4(bc%nglob))
+
+
 
     allocate(ibool1(NGLLSQUARE,bc%nspec))
     allocate(normal(NDIM,NGLLSQUARE,bc%nspec))
@@ -150,19 +156,19 @@ subroutine initialize_fault (bc,IIN_BIN)
     tmp_vec = 0._CUSTOM_REAL
     if (bc%nspec>0) tmp_vec(1,bc%ibulk1) = bc%B
     ! assembles with other MPI processes
-    call assemble_MPI_vector_blocking(NPROC,NGLOB_AB,tmp_vec, &
+    call assemble_MPI_vector_blocking_ord(NPROC,NGLOB_AB,tmp_vec, &
                                      num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                                     my_neighbours_ext_mesh)
+                                     my_neighbours_ext_mesh,myrank)
     if (bc%nspec>0) bc%B = tmp_vec(1,bc%ibulk1)
 
     tmp_vec = 0._CUSTOM_REAL
     if (bc%nspec>0) tmp_vec(:,bc%ibulk1) = nxyz
     ! assembles with other MPI processes
-    call assemble_MPI_vector_blocking(NPROC,NGLOB_AB,tmp_vec, &
+    call assemble_MPI_vector_blocking_ord(NPROC,NGLOB_AB,tmp_vec, &
                                      num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                                     my_neighbours_ext_mesh)
+                                     my_neighbours_ext_mesh,myrank)
     if (bc%nspec>0) nxyz = tmp_vec(:,bc%ibulk1)
 
   endif
@@ -180,7 +186,7 @@ subroutine initialize_fault (bc,IIN_BIN)
     !   Z = 1/( B1/M1 + B2/M2 ) / (0.5*dt)
     ! T_stick = Z*Vfree traction as if the fault was stuck (no displ discontinuity)
     ! NOTE: same Bi on both sides, see note above
-    bc%Z = 1.e0_CUSTOM_REAL/(0.5e0_CUSTOM_REAL*bc%dt * bc%B *( bc%invM1 + bc%invM2 ))
+    bc%Z = 1.e0_CUSTOM_REAL/(0.5e0_CUSTOM_REAL*bc%dt * bc%B*(bc%invM1+bc%invM2) )
     ! WARNING: In non-split nodes at fault edges M is assembled across the fault.
     ! hence invM1+invM2=2/(M1+M2) instead of 1/M1+1/M2
     ! In a symmetric mesh (M1=M2) Z will be twice its intended value
@@ -255,6 +261,35 @@ function get_jump (bc,v) result(dv)
 
 end function get_jump
 
+function get_dis1 (bc,v) result(dv)
+
+!! DK DK use type(bc_dynandkinflt_type) instead of class(fault_type) for compatibility with some current compilers
+  type(bc_dynandkinflt_type), intent(in) :: bc
+  real(kind=CUSTOM_REAL), intent(in) :: v(:,:)
+  real(kind=CUSTOM_REAL) :: dv(3,bc%nglob)
+
+  ! difference between side 2 and side 1 of fault nodes. dv
+  dv(1,:) = v(1,bc%ibulk1)
+  dv(2,:) = v(2,bc%ibulk1)
+  dv(3,:) = v(3,bc%ibulk1)
+
+end function get_dis1
+
+function get_dis2 (bc,v) result(dv)
+
+!! DK DK use type(bc_dynandkinflt_type) instead of class(fault_type) for compatibility with some current compilers
+  type(bc_dynandkinflt_type), intent(in) :: bc
+  real(kind=CUSTOM_REAL), intent(in) :: v(:,:)
+  real(kind=CUSTOM_REAL) :: dv(3,bc%nglob)
+
+  ! difference between side 2 and side 1 of fault nodes. dv
+  dv(1,:) = v(1,bc%ibulk2)
+  dv(2,:) = v(2,bc%ibulk2)
+  dv(3,:) = v(3,bc%ibulk2)
+
+end function get_dis2
+
+
 !---------------------------------------------------------------------
 function get_weighted_jump (bc,f) result(da)
 
@@ -273,6 +308,61 @@ function get_weighted_jump (bc,f) result(da)
   ! Hence, f1=f2, invM1=invM2=1/(M1+M2) instead of invMi=1/Mi, and da=0.
 
 end function get_weighted_jump
+
+function get_acceleration1 (bc,f) result(da)
+
+!! DK DK use type(bc_dynandkinflt_type) instead of class(fault_type) for compatibility with some current compilers
+  type(bc_dynandkinflt_type), intent(in) :: bc
+  real(kind=CUSTOM_REAL), intent(in) :: f(:,:)
+
+  real(kind=CUSTOM_REAL) :: da(3,bc%nglob)
+
+  ! difference between side 2 and side 1 of fault nodes. M-1 * F
+  da(1,:) = bc%invM1*f(1,bc%ibulk1)
+  da(2,:) = bc%invM1*f(2,bc%ibulk1)
+  da(3,:) = bc%invM1*f(3,bc%ibulk1)
+
+  ! NOTE: In non-split nodes at fault edges M and f are assembled across the fault.
+  ! Hence, f1=f2, invM1=invM2=1/(M1+M2) instead of invMi=1/Mi, and da=0.
+
+end function get_acceleration1
+
+function get_acceleration2 (bc,f) result(da)
+
+!! DK DK use type(bc_dynandkinflt_type) instead of class(fault_type) for compatibility with some current compilers
+  type(bc_dynandkinflt_type), intent(in) :: bc
+  real(kind=CUSTOM_REAL), intent(in) :: f(:,:)
+
+  real(kind=CUSTOM_REAL) :: da(3,bc%nglob)
+
+  ! difference between side 2 and side 1 of fault nodes. M-1 * F
+  da(1,:) = bc%invM2*f(1,bc%ibulk2)
+  da(2,:) = bc%invM2*f(2,bc%ibulk2)
+  da(3,:) = bc%invM2*f(3,bc%ibulk2)
+
+  ! NOTE: In non-split nodes at fault edges M and f are assembled across the fault.
+  ! Hence, f1=f2, invM1=invM2=1/(M1+M2) instead of invMi=1/Mi, and da=0.
+
+end function get_acceleration2
+
+
+!function get_mass_jump (bc,f) result(da)
+!
+!!! DK DK use type(bc_dynandkinflt_type) instead of class(fault_type) for compatibility with some current compilers
+!  type(bc_dynandkinflt_type), intent(in) :: bc
+!  real(kind=CUSTOM_REAL), intent(in) :: f(:,:)
+!
+!  real(kind=CUSTOM_REAL) :: da(3,bc%nglob)
+!
+!  ! difference between side 2 and side 1 of fault nodes. M-1 * F
+!  da(1,:) = 1./bc%invM2*f(1,bc%ibulk2)-1./bc%invM1*f(1,bc%ibulk1)
+!  da(2,:) = 1./bc%invM2*f(2,bc%ibulk2)-1./bc%invM1*f(2,bc%ibulk1)
+!  da(3,:) = 1./bc%invM2*f(3,bc%ibulk2)-1./bc%invM1*f(3,bc%ibulk1)
+!
+!  ! NOTE: In non-split nodes at fault edges M and f are assembled across the fault.
+!  ! Hence, f1=f2, invM1=invM2=1/(M1+M2) instead of invMi=1/Mi, and da=0.
+!
+!end function get_mass_jump
 
 !----------------------------------------------------------------------
 function rotate(bc,v,fb) result(vr)
@@ -362,7 +452,7 @@ subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
     if (jflt==iflt) dataT%npoin = dataT%npoin +1
   enddo
   close(IIN)
-
+!  write(*,*) '101',myrank
   if (dataT%npoin == 0) return
 
   allocate(dataT%iglob(dataT%npoin))
@@ -380,17 +470,20 @@ subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
 
    ! search nearest node
     distkeep = huge(distkeep)
+!    write(*,*) 'the maximum distance:',distkeep,'the number of points:',nglob
     do iglob=1,nglob
       dist = sqrt( (coord(1,iglob)-xtarget)**2 &
                  + (coord(2,iglob)-ytarget)**2 &
                  + (coord(3,iglob)-ztarget)**2 )
+!      write(*,*) 'current distance:',distkeep,'this distance:',dist
       if (dist < distkeep) then
         distkeep = dist
         dataT%iglob(k) = iglob
+!      write(*,*) iglob ,'distance is changed from ',distkeep,'to',dist
       endif
     enddo
     dist_loc(k) = distkeep
-
+!  WRITE(*,*) 'The position of ',i,'station has been changed to ' ,dataT%iglob(k)
   enddo
   close(IIN)
 
@@ -423,6 +516,7 @@ subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
         if (myrank == iproc(ipoin)) then
           ipoin_local = ipoin_local + 1
           glob_indx(ipoin_local) = ipoin
+              write(*,*) 'the point',ipoin,'coordinate:',coord(:,dataT%iglob(ipoin))
         endif
       enddo
      ! Consolidate the output information (remove output points outside current proc)
@@ -447,7 +541,7 @@ subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
 
     deallocate(iproc,iglob_all,dist_all)
   endif
-
+!  write(*,*) '102',myrank
  !  3. initialize arrays
   if (dataT%npoin>0) then
     dataT%ndat = ndat
@@ -484,9 +578,9 @@ subroutine store_dataT(dataT,d,v,t,itime)
     dataT%dat(1,itime,i) = d(1,k)
     dataT%dat(2,itime,i) = v(1,k)
     dataT%dat(3,itime,i) = t(1,k)/1.0e6_CUSTOM_REAL
-    dataT%dat(4,itime,i) = -d(2,k)
-    dataT%dat(5,itime,i) = -v(2,k)
-    dataT%dat(6,itime,i) = -t(2,k)/1.0e6_CUSTOM_REAL
+    dataT%dat(4,itime,i) = d(2,k)
+    dataT%dat(5,itime,i) = v(2,k)
+    dataT%dat(6,itime,i) = t(2,k)/1.0e6_CUSTOM_REAL
     dataT%dat(7,itime,i) = t(3,k)/1.0e6_CUSTOM_REAL
   enddo
 
@@ -511,8 +605,8 @@ subroutine SCEC_write_dataT(dataT)
 
   do i=1,dataT%npoin
     open(IOUT,file='../OUTPUT_FILES/'//trim(dataT%name(i))//'.dat',status='replace')
-    write(IOUT,*) "# problem=TPV104" ! WARNING: this should be a user input
-    write(IOUT,*) "# author=Surendra Nadh Somala" ! WARNING: this should be a user input
+    write(IOUT,*) "# problem=TPV29" ! WARNING: this should be a user input
+    write(IOUT,*) "# author=Kangchen Bai" ! WARNING: this should be a user input
     write(IOUT,1000) time_values(2), time_values(3), time_values(1), time_values(5), time_values(6), time_values(7)
     write(IOUT,*) "# code=SPECFEM3D_Cartesian (split nodes)"
     write(IOUT,*) "# code_version=1.1"
@@ -525,7 +619,7 @@ subroutine SCEC_write_dataT(dataT)
     enddo
     write(IOUT,*) "#"
     write(IOUT,*) "# The line below lists the names of the data fields:"
-    write(IOUT,*) "# t " // trim(dataT%shortFieldNames)
+    write(IOUT,*) "t " // trim(dataT%shortFieldNames)
     write(IOUT,*) "#"
     do k=1,dataT%nt
       write(IOUT,my_fmt) k*dataT%dt, dataT%dat(:,k,i)

@@ -36,6 +36,7 @@
   implicit none
   ! local parameters
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ):: displ_element,veloc_element
+  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ):: gradientux,gradientuy,gradientuz !added by Kangchen
   double precision :: dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd
   integer :: irec_local,irec
   integer :: iglob,ispec,i,j,k
@@ -44,10 +45,12 @@
   real(kind=CUSTOM_REAL),dimension(NDIM):: eps_m_s
   real(kind=CUSTOM_REAL):: stf_deltat
   double precision :: stf
-
-  ! TODO: Test and Fix CUDA seismograms code.
+  real(kind=CUSTOM_REAL),dimension(6,NGLLX,NGLLY,NGLLZ)::stress_element  !added by  Kangchen
+  real(kind=CUSTOM_REAL),dimension(NGLLX,NGLLY,NGLLZ)::kappal,mul   !added by Kangchen
+  double precision,dimension(6)::stressd        !added by Kangchen
+! TODO: Test and Fix CUDA seismograms code.
   logical,parameter :: USE_CUDA_SEISMOGRAMS = .false.
-
+ 
   ! gets resulting array values onto CPU
   if(GPU_MODE) then
     if( nrec_local > 0 ) then
@@ -107,12 +110,43 @@
 
         ! elastic wave field
         if( ispec_is_elastic(ispec) ) then
+         
+          kappal(:,:,:)=kappastore(:,:,:,ispec)
+          mul(:,:,:)=mustore(:,:,:,ispec)
+
           ! interpolates displ/veloc/accel at receiver locations
+          
           call compute_interpolated_dva(displ,veloc,accel,NGLOB_AB, &
                           ispec,NSPEC_AB,ibool, &
                           xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
                           hxir,hetar,hgammar, &
                           dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
+!added by Kangchen
+          call compute_gradient_norho(ispec,NSPEC_AB,NGLOB_AB, &
+                          displ(1,:), gradientux,&
+                          hprime_xx,hprime_yy,hprime_zz, &
+                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                          ibool)
+          
+           call compute_gradient_norho(ispec,NSPEC_AB,NGLOB_AB, &
+                          displ(2,:), gradientuy,&
+                          hprime_xx,hprime_yy,hprime_zz, &
+                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                          ibool)
+           
+           call compute_gradient_norho(ispec,NSPEC_AB,NGLOB_AB, &
+                          displ(3,:), gradientuz,&
+                          hprime_xx,hprime_yy,hprime_zz, &
+                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                          ibool)
+           call compute_local_stress(gradientux,gradientuy,gradientuz,kappal,mul,stress_element)
+           call compute_interpolated_stress(stress_element,& 
+                          NGLOB_AB, ispec,NSPEC_AB,ibool, &
+                          xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
+                          hxir,hetar,hgammar, &
+                          stressd)
+           
+
         endif !elastic
 
         ! acoustic wave field
@@ -275,10 +309,14 @@
         seismograms_d(:,irec_local,it) = sngl((nu(:,1,irec)*dxd + nu(:,2,irec)*dyd + nu(:,3,irec)*dzd))
         seismograms_v(:,irec_local,it) = sngl((nu(:,1,irec)*vxd + nu(:,2,irec)*vyd + nu(:,3,irec)*vzd))
         seismograms_a(:,irec_local,it) = sngl((nu(:,1,irec)*axd + nu(:,2,irec)*ayd + nu(:,3,irec)*azd))
+        seismograms_nstress(:,irec_local,it) = sngl(stressd(1:3)) 
+        seismograms_sstress(:,irec_local,it) = sngl(stressd(4:6))
       else
         seismograms_d(:,irec_local,it) = (nu(:,1,irec)*dxd + nu(:,2,irec)*dyd + nu(:,3,irec)*dzd)
         seismograms_v(:,irec_local,it) = (nu(:,1,irec)*vxd + nu(:,2,irec)*vyd + nu(:,3,irec)*vzd)
         seismograms_a(:,irec_local,it) = (nu(:,1,irec)*axd + nu(:,2,irec)*ayd + nu(:,3,irec)*azd)
+        seismograms_nstress(:,irec_local,it) = stressd(1:3)
+        seismograms_sstress(:,irec_local,it) = stressd(4:6)
       endif
 
       !adjoint simulations
@@ -294,7 +332,9 @@
       call write_seismograms_to_file(seismograms_d,1)
       call write_seismograms_to_file(seismograms_v,2)
       call write_seismograms_to_file(seismograms_a,3)
-    else
+      call write_seismograms_to_file(seismograms_nstress,4)
+      call write_seismograms_to_file(seismograms_sstress,5)
+          else
       call write_adj_seismograms_to_file(myrank,seismograms_d,number_receiver_global, &
             nrec_local,it,DT,NSTEP,t0,LOCAL_PATH,1)
     endif
@@ -307,7 +347,22 @@
 
   end subroutine write_seismograms
 
-
+  subroutine  compute_local_stress(gradientux,gradientuy,gradientuz,kappal,mul,stress_element)
+   use constants
+   implicit none
+   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ):: gradientux,gradientuy,gradientuz !added by Kangchen
+   real(kind=CUSTOM_REAL),intent(out),dimension(6,NGLLX,NGLLY,NGLLZ):: stress_element
+   real(kind=CUSTOM_REAL),dimension(NGLLX,NGLLY,NGLLZ):: mul,kappal
+   real(kind=CUSTOM_REAL),dimension(NGLLX,NGLLY,NGLLZ):: lambda,lambda_plus_2mu
+   lambda_plus_2mu = kappal+4./3*mul
+   lambda = lambda_plus_2mu-2.*mul
+   stress_element(1,:,:,:)=lambda(:,:,:)*(gradientux(1,:,:,:)+gradientuy(2,:,:,:)+gradientuz(3,:,:,:))+2.*mul(:,:,:)*gradientux(1,:,:,:)
+   stress_element(2,:,:,:)=lambda(:,:,:)*(gradientux(1,:,:,:)+gradientuy(2,:,:,:)+gradientuz(3,:,:,:))+2.*mul(:,:,:)*gradientuy(2,:,:,:)
+   stress_element(3,:,:,:)=lambda(:,:,:)*(gradientux(1,:,:,:)+gradientuy(2,:,:,:)+gradientuz(3,:,:,:))+2.*mul(:,:,:)*gradientuz(3,:,:,:)
+   stress_element(4,:,:,:)=mul(:,:,:)*(gradientux(2,:,:,:)+gradientuy(1,:,:,:))
+   stress_element(5,:,:,:)=mul(:,:,:)*(gradientuy(3,:,:,:)+gradientuz(2,:,:,:))
+   stress_element(6,:,:,:)=mul(:,:,:)*(gradientuz(1,:,:,:)+gradientux(3,:,:,:))
+ end subroutine compute_local_stress
 !================================================================
 
 
@@ -324,8 +379,10 @@
   implicit none
 
   integer :: istore
-  real(kind=CUSTOM_REAL), dimension(NDIM,nrec_local,NSTEP) :: seismograms
 
+
+  real(kind=CUSTOM_REAL), dimension(NDIM,nrec_local,NSTEP) :: seismograms
+  
   ! local parameters
   integer irec,irec_local
   integer irecord
@@ -346,6 +403,21 @@
     component = 'v'
   else if(istore == 3) then
     component = 'a'
+  else if(istore == 4) then
+    component = 'n'
+  else if(istore == 5) then
+    component = 's'
+!  else if(istore == 5) then
+!    component = 'Tyy'
+!  else if(istore == 6) then
+!    component = 'Tzz'
+!  else if(istore == 7) then
+!    component = 'Txy'
+!  else if(istore == 8) then
+!    component = 'Tyz'
+!  else if(istore == 9) then
+!    component = 'Txz'
+
   else
     call exit_MPI(myrank,'wrong component to save for seismograms')
   endif

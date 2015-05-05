@@ -747,6 +747,7 @@ module decompose_mesh
     print *, '  min = ',minval(used_nodes_elmnts(:)),' max = ', maxval(used_nodes_elmnts(:))
     do inode = 1, nnodes
       if (.not. mask_nodes_elmnts(inode)) then
+        print *,inode
         stop 'ERROR: found some unused nodes (weird, but not necessarily fatal; your mesher may have created extra nodes).'
       endif
     enddo

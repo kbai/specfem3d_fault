@@ -352,12 +352,12 @@
 
       ! distinguish if single or double precision for reals
       if(CUSTOM_REAL == SIZE_REAL) then
-        jacobian2Dw_face(i,j) = sngl(jacobian * wgllwgll(i,j))
+        jacobian2Dw_face(i,j) = sngl((jacobian ) * wgllwgll(i,j))
         normal_face(1,i,j)=sngl(unx/jacobian)
         normal_face(2,i,j)=sngl(uny/jacobian)
         normal_face(3,i,j)=sngl(unz/jacobian)
       else
-        jacobian2Dw_face(i,j) = jacobian * wgllwgll(i,j)
+        jacobian2Dw_face(i,j) = jacobian * wgllwgll(i,j)  ! kangchen changed it for dbg
         normal_face(1,i,j)=unx/jacobian
         normal_face(2,i,j)=uny/jacobian
         normal_face(3,i,j)=unz/jacobian

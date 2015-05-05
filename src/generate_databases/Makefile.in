@@ -105,6 +105,7 @@ libgendatabases_a_OBJECTS = \
 	$O/model_1d_cascadia.o \
 	$O/model_1d_prem.o \
 	$O/model_1d_socal.o \
+        $O/model_1d_layer.o \
 	$O/model_aniso.o \
 	$O/model_default.o \
 	$O/model_external_values.o \

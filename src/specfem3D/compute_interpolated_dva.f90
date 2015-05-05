@@ -117,6 +117,98 @@ end subroutine compute_interpolated_dva
 !
 !-------------------------------------------------------------------------------------------------
 !
+subroutine compute_interpolated_stress(stress_element,&
+                        NGLOB_AB,ispec,NSPEC_AB,ibool, &
+                        xi_r,eta_r,gamma_r, &
+                        hxir,hetar,hgammar, &
+                        stressd)
+  implicit none
+  include 'constants.h'
+
+  
+
+  integer :: ispec
+
+  integer :: NSPEC_AB,NGLOB_AB
+  real(kind=CUSTOM_REAL),dimension(6,NGLLX,NGLLY,NGLLZ):: stress_element
+  double precision,dimension(6) :: stressd
+!  real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: potential_dot_dot_acoustic
+!  real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: potential_dot_acoustic
+!  real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: potential_acoustic
+
+  integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB):: ibool
+
+  ! receiver information
+  double precision :: xi_r,eta_r,gamma_r
+  double precision,dimension(NGLLX) :: hxir
+  double precision,dimension(NGLLY) :: hetar
+  double precision,dimension(NGLLZ) :: hgammar
+
+! local parameters
+  double precision :: hlagrange
+  integer :: i,j,k,iglob
+
+
+  stressd(:)=ZERO
+! perform the general interpolation using Lagrange polynomials
+
+
+! takes closest GLL point only (no interpolation)
+  if(FASTER_RECEIVERS_POINTS_ONLY) then
+
+    ! displacement
+    stressd = stress_element(:,nint(xi_r),nint(eta_r),nint(gamma_r))
+  !  dyd = displ_element(2,nint(xi_r),nint(eta_r),nint(gamma_r))
+  !  dzd = displ_element(3,nint(xi_r),nint(eta_r),nint(gamma_r))
+    ! velocity
+  !  vxd = veloc_element(1,nint(xi_r),nint(eta_r),nint(gamma_r))
+  !  vyd = veloc_element(2,nint(xi_r),nint(eta_r),nint(gamma_r))
+  !  vzd = veloc_element(3,nint(xi_r),nint(eta_r),nint(gamma_r))
+
+    ! global index
+  !  iglob = ibool(nint(xi_r),nint(eta_r),nint(gamma_r),ispec)
+
+    ! x component -> acoustic potential
+  !  axd = potential_acoustic(iglob)
+    ! y component -> first time derivative of potential
+  !  ayd = potential_dot_acoustic(iglob)
+    ! z component -> pressure
+  !  azd = - potential_dot_dot_acoustic(iglob)
+
+  else
+
+! interpolates seismograms at exact receiver locations
+    do k = 1,NGLLZ
+      do j = 1,NGLLY
+        do i = 1,NGLLX
+          iglob = ibool(i,j,k,ispec)
+
+          hlagrange = hxir(i)*hetar(j)*hgammar(k)
+
+          ! displacement
+         stressd=stressd+hlagrange*stress_element(:,i,j,k)
+   !      dxd = dxd + hlagrange*displ_element(1,i,j,k)
+   !       dyd = dyd + hlagrange*displ_element(2,i,j,k)
+   !       dzd = dzd + hlagrange*displ_element(3,i,j,k)
+          ! velocity
+   !       vxd = vxd + hlagrange*veloc_element(1,i,j,k)
+   !       vyd = vyd + hlagrange*veloc_element(2,i,j,k)
+   !       vzd = vzd + hlagrange*veloc_element(3,i,j,k)
+
+          ! x component -> acoustic potential
+   !       axd = axd + hlagrange*potential_acoustic(iglob)
+          ! y component -> first time derivative of potential
+   !       ayd = ayd + hlagrange*potential_dot_acoustic(iglob)
+          ! z component -> pressure
+   !       azd = azd - hlagrange*potential_dot_dot_acoustic(iglob)
+
+        enddo
+      enddo
+    enddo
+
+  endif
+
+end subroutine compute_interpolated_stress
 
 subroutine compute_interpolated_dva_ac(displ_element,veloc_element,&
                         potential_dot_dot_acoustic,potential_dot_acoustic,&

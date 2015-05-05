@@ -54,12 +54,12 @@
         store_val_ux_external_mesh(NGLLX*NGLLY*1), &
         store_val_uy_external_mesh(NGLLX*NGLLY*1), &
         store_val_uz_external_mesh(NGLLX*NGLLY*1), &
-        store_val_stressxx_external_mesh(NGLLX*NGLLY*1),&  
-        store_val_stressxy_external_mesh(NGLLX*NGLLY*1),&              
-        store_val_stressyy_external_mesh(NGLLX*NGLLY*1),&      
-        store_val_stressxz_external_mesh(NGLLX*NGLLY*1),&             
-        store_val_stressyz_external_mesh(NGLLX*NGLLY*1),&          
-        store_val_stresszz_external_mesh(NGLLX*NGLLY*1),stat=ier)
+        store_val_stressxx_all_external_mesh(NGLLX*NGLLY*1),&  
+        store_val_stressxy_all_external_mesh(NGLLX*NGLLY*1),&              
+        store_val_stressyy_all_external_mesh(NGLLX*NGLLY*1),&      
+        store_val_stressxz_all_external_mesh(NGLLX*NGLLY*1),&             
+        store_val_stressyz_all_external_mesh(NGLLX*NGLLY*1),&          
+        store_val_stresszz_all_external_mesh(NGLLX*NGLLY*1),stat=ier)
       if( ier /= 0 ) stop 'error allocating dummy arrays for highres movie'
     else
       allocate(faces_surface_ext_mesh(NGNOD2D_FOUR_CORNERS,1), &
@@ -69,12 +69,12 @@
         store_val_ux_external_mesh(NGNOD2D_FOUR_CORNERS*1), &
         store_val_uy_external_mesh(NGNOD2D_FOUR_CORNERS*1), &
         store_val_uz_external_mesh(NGNOD2D_FOUR_CORNERS*1),&
-        store_val_stressxx_external_mesh(NGNOD2D_FOUR_CORNERS*1),&  
-        store_val_stressxy_external_mesh(NGNOD2D_FOUR_CORNERS*1),&              
-        store_val_stressyy_external_mesh(NGNOD2D_FOUR_CORNERS*1),&      
-        store_val_stressxz_external_mesh(NGNOD2D_FOUR_CORNERS*1),&             
-        store_val_stressyz_external_mesh(NGNOD2D_FOUR_CORNERS*1),&          
-        store_val_stresszz_external_mesh(NGNOD2D_FOUR_CORNERS*1),stat=ier)
+        store_val_stressxx_all_external_mesh(NGNOD2D_FOUR_CORNERS*1),&  
+        store_val_stressxy_all_external_mesh(NGNOD2D_FOUR_CORNERS*1),&              
+        store_val_stressyy_all_external_mesh(NGNOD2D_FOUR_CORNERS*1),&      
+        store_val_stressxz_all_external_mesh(NGNOD2D_FOUR_CORNERS*1),&             
+        store_val_stressyz_all_external_mesh(NGNOD2D_FOUR_CORNERS*1),&          
+        store_val_stresszz_all_external_mesh(NGNOD2D_FOUR_CORNERS*1),stat=ier)
       if( ier /= 0 ) stop 'error allocating dummy arrays for lowres movie'
     endif
   else
@@ -86,12 +86,12 @@
         store_val_ux_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh), &
         store_val_uy_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh), &
         store_val_uz_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh),&
-        store_val_stressxx_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh),&  
-        store_val_stressxy_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh),&              
-        store_val_stressyy_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh),&      
-        store_val_stressxz_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh),&             
-        store_val_stressyz_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh),&          
-        store_val_stresszz_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh),stat=ier)
+        store_val_stressxx_all_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh),&  
+        store_val_stressxy_all_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh),&              
+        store_val_stressyy_all_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh),&      
+        store_val_stressxz_all_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh),&             
+        store_val_stressyz_all_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh),&          
+        store_val_stresszz_all_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh),stat=ier)
       if( ier /= 0 ) stop 'error allocating arrays for highres movie'
     else
       allocate(faces_surface_ext_mesh(NGNOD2D_FOUR_CORNERS,nfaces_surface_ext_mesh), &
@@ -101,24 +101,18 @@
         store_val_ux_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_ext_mesh), &
         store_val_uy_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_ext_mesh), &
         store_val_uz_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_ext_mesh),&
-        store_val_stressxx_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_ext_mesh),&  
-        store_val_stressxy_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_ext_mesh),&              
-        store_val_stressyy_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_ext_mesh),&      
-        store_val_stressxz_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_ext_mesh),&             
-        store_val_stressyz_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_ext_mesh),&          
-        store_val_stresszz_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_ext_mesh),stat=ier)
+        store_val_stressxx_all_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_ext_mesh),&  
+        store_val_stressxy_all_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_ext_mesh),&              
+        store_val_stressyy_all_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_ext_mesh),&      
+        store_val_stressxz_all_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_ext_mesh),&             
+        store_val_stressyz_all_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_ext_mesh),&          
+        store_val_stresszz_all_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_ext_mesh),stat=ier)
       if( ier /= 0 ) stop 'error allocating arrays for lowres movie'
     endif
   endif
   store_val_ux_external_mesh(:) = 0._CUSTOM_REAL
   store_val_uy_external_mesh(:) = 0._CUSTOM_REAL
   store_val_uz_external_mesh(:) = 0._CUSTOM_REAL
-  store_val_stressxx_external_mesh(:) = 0._CUSTOM_REAL
-  store_val_stressxy_external_mesh(:) = 0._CUSTOM_REAL
-  store_val_stressyy_external_mesh(:) = 0._CUSTOM_REAL
-  store_val_stressxz_external_mesh(:)= 0._CUSTOM_REAL
-  store_val_stressyz_external_mesh(:)= 0._CUSTOM_REAL
-  store_val_stresszz_external_mesh(:)= 0._CUSTOM_REAL
 
   ! number of surface faces for all partitions together
   call sum_all_i(nfaces_surface_ext_mesh,nfaces_surface_glob_ext_mesh)
@@ -147,12 +141,12 @@
         store_val_ux_all_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_glob_ext_mesh), &
         store_val_uy_all_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_glob_ext_mesh), &
         store_val_uz_all_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_glob_ext_mesh), &
-        store_val_stressxx_all_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_glob_ext_mesh),&  
-        store_val_stressxy_all_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_glob_ext_mesh),&              
-        store_val_stressyy_all_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_glob_ext_mesh),&      
-        store_val_stressxz_all_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_glob_ext_mesh),&             
-        store_val_stressyz_all_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_glob_ext_mesh),&          
-        store_val_stresszz_all_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_glob_ext_mesh),stat=ier)
+        store_val_stressxx_all_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_ext_mesh),&  
+        store_val_stressxy_all_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_ext_mesh),&              
+        store_val_stressyy_all_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_ext_mesh),&      
+        store_val_stressxz_all_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_ext_mesh),&             
+        store_val_stressyz_all_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_ext_mesh),&          
+        store_val_stresszz_all_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_ext_mesh),stat=ier)
       if( ier /= 0 ) stop 'error allocating arrays for lowres movie'
     endif
   endif

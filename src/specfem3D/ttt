@@ -1,0 +1,45 @@
+assemble_MPI_vector.f90:!    write(*,*) myrank
+assemble_MPI_vector.f90:!    write(*,*) maxval(compareerror)
+assemble_MPI_vector.f90:!    write(*,*) maxloc(compareerror)
+compute_add_sources_acoustic.f90:         ! write(*,*) "fortran dt = ", dt
+compute_add_sources_viscoelastic.f90:       ! write(*,*) "fortran dt = ", dt
+compute_forces_viscoelastic_calling_routine.F90:!write(*,*) myrank,'my maximum value is', maxval(abs(displ))
+compute_forces_viscoelastic_calling_routine.F90:!write(*,*) '1 ',myrank,'my location is', maxloc(abs(displ),2)
+compute_forces_viscoelastic_calling_routine.F90: !  write(*,*) SIMULATION_TYPE_DYN
+compute_forces_viscoelastic_noDev.f90:                write(*,*) 'ystore is',ystore(iglob), eta_decay
+compute_stacey_viscoelastic.f90:   !write(*,*) 'read dsm files',it_dsm
+fault_solver_common.f90:!  write(*,*) '101',myrank
+fault_solver_common.f90:!    write(*,*) 'the maximum distance:',distkeep,'the number of points:',nglob
+fault_solver_common.f90:!      write(*,*) 'current distance:',distkeep,'this distance:',dist
+fault_solver_common.f90:!      write(*,*) iglob ,'distance is changed from ',distkeep,'to',dist
+fault_solver_common.f90:!  WRITE(*,*) 'The position of ',i,'station has been changed to ' ,dataT%iglob(k)
+fault_solver_common.f90:              write(*,*) 'the point',ipoin,'coordinate:',coord(:,dataT%iglob(ipoin))
+fault_solver_common.f90:!  write(*,*) '102',myrank
+fault_solver_dynamic.f90:!  write(*,*) 'I am processor',myrank,'and my minimum is ',minvalue
+fault_solver_dynamic.f90: ! write(*,*) 'mynodes are ' ,bc%coord
+fault_solver_dynamic.f90:!  if (minvalue .lt. 1._CUSTOM_REAL)     write(*,*) 'the processor is',myrank,'and the nglob is :',pos
+fault_solver_dynamic.f90:!  !  write(*,*) bc%swf%mud
+fault_solver_dynamic.f90:!  write(*,*) fn
+fault_solver_dynamic.f90:!  write(*,*) size(a)
+fault_solver_dynamic.f90:!    write(*,*) coord(3,ij),' ',Vs,' ',Rho
+fault_solver_dynamic.f90:!         write(*,*) Mu(ij),size(Mu),size(coord(1,:))
+fault_solver_dynamic.f90:!        write(*,*)  'b= ',b,'u= ',Mu,'val=',val
+fault_solver_dynamic.f90:!     if(myrank==44)         write(*,*) 'from 44', bc%V(:,1075),bc%T(:,1075)
+fault_solver_dynamic.f90: !    if(myrank==45)          write(*,*) 'from 45', bc%V(:,9748),bc%T(:,1075) for dbg Kangchen
+model_1d_layer.f90:  write(*,*) zmesh,TABLE(:,1)
+model_1d_tpv31.f90:!  write(*,*) 'function:',depth,' ',vs 
+prepare_timerun.F90:       write(*,*) myrank, " doesn't have a free_surface_face"
+write_movie_output.f90:!       write(*,*) 'we are here!' 
+write_movie_output.f90:!       write(*,*) NSPEC_AB
+write_movie_output.f90:!       write(*,*) NGLOB_AB
+write_movie_output.f90:!       write(*,*) size(stress_xx_glob)
+write_movie_output.f90:!       write(*,*) size(displ)
+write_movie_output.f90:!       write(*,*) size(valency)
+write_movie_output.f90:!       write(*,*) size(stress_xx)
+write_movie_output.f90:!       write(*,*) size(ispec_is_elastic)
+write_movie_output.f90:!       write(*,*) size(ibool)
+write_movie_output.f90:!             write(*,*) 'put displ into storage array!'
+write_movie_output.f90:!             write(*,*) 'finished!'
+write_movie_output.f90:!write(*,*) 'VALUE VALENCY GIVEN SUCCESSFULLY!'
+write_movie_output.f90:!      write(*,*) 'partial derivative has been calculated!'
+write_movie_output.f90:!    write(*,*) 'stress calculated!'

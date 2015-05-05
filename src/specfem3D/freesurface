@@ -1,0 +1,115 @@
+compute_add_sources_viscoelastic.f90:                        free_surface_ijk,free_surface_jacobian2Dw, &
+compute_add_sources_viscoelastic.f90:                                num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
+compute_add_sources_viscoelastic.f90:                        free_surface_ijk,free_surface_jacobian2Dw, &
+compute_add_sources_viscoelastic.f90:                                num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
+compute_coupling_viscoelastic_ac.f90:                                    free_surface_normal,free_surface_ijk,free_surface_ispec, &
+compute_coupling_viscoelastic_ac.f90:  integer :: free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces)
+compute_coupling_viscoelastic_ac.f90:      i = free_surface_ijk(1,igll,iface)
+compute_coupling_viscoelastic_ac.f90:      j = free_surface_ijk(2,igll,iface)
+compute_coupling_viscoelastic_ac.f90:      k = free_surface_ijk(3,igll,iface)
+compute_coupling_viscoelastic_ac.f90:                                    free_surface_normal,free_surface_ijk,free_surface_ispec, &
+compute_coupling_viscoelastic_ac.f90:  integer :: free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces)
+compute_coupling_viscoelastic_ac.f90:      i = free_surface_ijk(1,igll,iface)
+compute_coupling_viscoelastic_ac.f90:      j = free_surface_ijk(2,igll,iface)
+compute_coupling_viscoelastic_ac.f90:      k = free_surface_ijk(3,igll,iface)
+compute_forces_acoustic_calling_routine.f90:                        ibool,free_surface_ijk,free_surface_ispec, &
+compute_forces_acoustic_calling_routine.f90:                        ibool,free_surface_ijk,free_surface_ispec, &
+compute_forces_acoustic_calling_routine.f90:                      ibool,free_surface_ijk,free_surface_ispec, &
+compute_forces_acoustic_calling_routine.f90:                      ibool,free_surface_ijk,free_surface_ispec, &
+compute_forces_acoustic_calling_routine.f90:                        ibool,free_surface_ijk,free_surface_ispec, &
+compute_forces_acoustic_calling_routine.f90:  integer :: free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces)
+compute_forces_acoustic_calling_routine.f90:        i = free_surface_ijk(1,igll,iface)
+compute_forces_acoustic_calling_routine.f90:        j = free_surface_ijk(2,igll,iface)
+compute_forces_acoustic_calling_routine.f90:        k = free_surface_ijk(3,igll,iface)
+compute_forces_viscoelastic_calling_routine.F90:                                free_surface_normal,free_surface_ijk,free_surface_ispec, &
+compute_forces_viscoelastic_calling_routine.F90:                                     free_surface_normal,free_surface_ijk,free_surface_ispec, &
+compute_kernels.f90:                        num_free_surface_faces,free_surface_ispec,free_surface_ijk,&
+iterate_time.F90:                            num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
+locate_receivers.f90:                 num_free_surface_faces,free_surface_ispec,free_surface_ijk)
+locate_receivers.f90:  integer, dimension(3,NGLLSQUARE,num_free_surface_faces) :: free_surface_ijk
+locate_receivers.f90:                                num_free_surface_faces,free_surface_ispec,free_surface_ijk)
+locate_source.f90:                 num_free_surface_faces,free_surface_ispec,free_surface_ijk)
+locate_source.f90:  integer, dimension(3,NGLLSQUARE,num_free_surface_faces) :: free_surface_ijk
+locate_source.f90:                              num_free_surface_faces,free_surface_ispec,free_surface_ijk)
+model_update.f90:                        free_surface_ijk,free_surface_ispec,num_free_surface_faces, &
+noise_tomography.f90:                                   num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
+noise_tomography.f90:  integer, dimension(3,NGLLSQUARE,num_free_surface_faces) :: free_surface_ijk
+noise_tomography.f90:        i = free_surface_ijk(1,igll,iface)
+noise_tomography.f90:        j = free_surface_ijk(2,igll,iface)
+noise_tomography.f90:        k = free_surface_ijk(3,igll,iface)
+noise_tomography.f90:                    num_free_surface_faces,free_surface_ispec,free_surface_ijk,&
+noise_tomography.f90:  integer, dimension(3,NGLLSQUARE,num_free_surface_faces) :: free_surface_ijk
+noise_tomography.f90:             i = free_surface_ijk(1,igll,iface)
+noise_tomography.f90:             j = free_surface_ijk(2,igll,iface)
+noise_tomography.f90:             k = free_surface_ijk(3,igll,iface)
+noise_tomography.f90:                  num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
+noise_tomography.f90:  integer, dimension(3,NGLLSQUARE,num_free_surface_faces) :: free_surface_ijk
+noise_tomography.f90:          i = free_surface_ijk(1,igll,iface)
+noise_tomography.f90:          j = free_surface_ijk(2,igll,iface)
+noise_tomography.f90:          k = free_surface_ijk(3,igll,iface)
+noise_tomography.f90:                          num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
+noise_tomography.f90:  integer, dimension(3,NGLLSQUARE,num_free_surface_faces) :: free_surface_ijk
+noise_tomography.f90:             i = free_surface_ijk(1,igll,iface)
+noise_tomography.f90:             j = free_surface_ijk(2,igll,iface)
+noise_tomography.f90:             k = free_surface_ijk(3,igll,iface)
+prepare_timerun.F90:                               num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
+prepare_timerun.F90:                                free_surface_ispec,free_surface_ijk, &
+prepare_timerun.F90:                                free_surface_normal,free_surface_ispec,free_surface_ijk, &
+prepare_timerun.F90:                                free_surface_ijk, &
+read_mesh_databases_adios.F90:             local_dim_free_surface_ijk, local_dim_free_surface_jacobian2Dw,   &
+read_mesh_databases_adios.F90:    call adios_get_scalar(handle, "free_surface_ijk/local_dim",&
+read_mesh_databases_adios.F90:                          local_dim_free_surface_ijk,ier)
+read_mesh_databases_adios.F90:          free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces), &
+read_mesh_databases_adios.F90:    start(1) = local_dim_free_surface_ijk * myrank
+read_mesh_databases_adios.F90:    call adios_schedule_read(handle, sel, "free_surface_ijk/array", 0, 1, &
+read_mesh_databases_adios.F90:                             free_surface_ijk, ier)
+read_mesh_databases_adios.F90:    start(1) = local_dim_free_surface_ijk* myrank
+read_mesh_databases_adios.F90:    call adios_schedule_read(handle, sel, "free_surface_ijk/array", 0, 1, &
+read_mesh_databases_adios.F90:                             free_surface_ijk, ier)
+read_mesh_databases.F90:          free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces), &
+read_mesh_databases.F90:    read(27) free_surface_ijk
+save_external_bin_m_up.f90:                    free_surface_ijk,free_surface_ispec, &
+save_external_bin_m_up.f90:  integer :: free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces)
+save_external_bin_m_up.f90:    write(IOUT) free_surface_ijk
+setup_sources_receivers.f90:          num_free_surface_faces,free_surface_ispec,free_surface_ijk)
+setup_sources_receivers.f90:            ixmin = minval( free_surface_ijk(1,:,iface) )
+setup_sources_receivers.f90:            ixmax = maxval( free_surface_ijk(1,:,iface) )
+setup_sources_receivers.f90:            iymin = minval( free_surface_ijk(2,:,iface) )
+setup_sources_receivers.f90:            iymax = maxval( free_surface_ijk(2,:,iface) )
+setup_sources_receivers.f90:            izmin = minval( free_surface_ijk(3,:,iface) )
+setup_sources_receivers.f90:            izmax = maxval( free_surface_ijk(3,:,iface) )
+setup_sources_receivers.f90:            num_free_surface_faces,free_surface_ispec,free_surface_ijk)
+setup_sources_receivers.f90:            ixmin = minval( free_surface_ijk(1,:,iface) )
+setup_sources_receivers.f90:            ixmax = maxval( free_surface_ijk(1,:,iface) )
+setup_sources_receivers.f90:            iymin = minval( free_surface_ijk(2,:,iface) )
+setup_sources_receivers.f90:            iymax = maxval( free_surface_ijk(2,:,iface) )
+setup_sources_receivers.f90:            izmin = minval( free_surface_ijk(3,:,iface) )
+setup_sources_receivers.f90:            izmax = maxval( free_surface_ijk(3,:,iface) )
+specfem3D_par.f90:  integer, dimension(:,:,:), allocatable :: free_surface_ijk
+write_movie_output.f90:                i = free_surface_ijk(1,igll,iface)
+write_movie_output.f90:                j = free_surface_ijk(2,igll,iface)
+write_movie_output.f90:                k = free_surface_ijk(3,igll,iface)
+write_movie_output.f90:             imin = minval( free_surface_ijk(1,:,iface) )
+write_movie_output.f90:             imax = maxval( free_surface_ijk(1,:,iface) )
+write_movie_output.f90:             jmin = minval( free_surface_ijk(2,:,iface) )
+write_movie_output.f90:             jmax = maxval( free_surface_ijk(2,:,iface) )
+write_movie_output.f90:             kmin = minval( free_surface_ijk(3,:,iface) )
+write_movie_output.f90:             kmax = maxval( free_surface_ijk(3,:,iface) )
+write_movie_output.f90:             i = free_surface_ijk(1,igll,iface)
+write_movie_output.f90:             j = free_surface_ijk(2,igll,iface)
+write_movie_output.f90:             k = free_surface_ijk(3,igll,iface)
+write_movie_output.f90:          imin = minval( free_surface_ijk(1,:,iface) )
+write_movie_output.f90:          imax = maxval( free_surface_ijk(1,:,iface) )
+write_movie_output.f90:          jmin = minval( free_surface_ijk(2,:,iface) )
+write_movie_output.f90:          jmax = maxval( free_surface_ijk(2,:,iface) )
+write_movie_output.f90:          kmin = minval( free_surface_ijk(3,:,iface) )
+write_movie_output.f90:          kmax = maxval( free_surface_ijk(3,:,iface) )
+write_movie_output.f90:        i = free_surface_ijk(1,igll,iface)
+write_movie_output.f90:        j = free_surface_ijk(2,igll,iface)
+write_movie_output.f90:        k = free_surface_ijk(3,igll,iface)
+write_movie_output.f90:      imin = minval( free_surface_ijk(1,:,iface) )
+write_movie_output.f90:      imax = maxval( free_surface_ijk(1,:,iface) )
+write_movie_output.f90:      jmin = minval( free_surface_ijk(2,:,iface) )
+write_movie_output.f90:      jmax = maxval( free_surface_ijk(2,:,iface) )
+write_movie_output.f90:      kmin = minval( free_surface_ijk(3,:,iface) )
+write_movie_output.f90:      kmax = maxval( free_surface_ijk(3,:,iface) )

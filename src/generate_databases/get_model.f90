@@ -432,6 +432,12 @@
     ! 1D model profile for Southern California
     call model_1D_socal(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
     qkappa_atten = 9999.  ! undefined in this model
+  
+  case( IMODEL_1D_LAYER )
+    ! 1D model profile for Southern California
+    call model_1D_layer(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
+    qkappa_atten = 9999.  ! undefined in this model
+
 
   case( IMODEL_SALTON_TROUGH )
     ! gets model values from tomography file

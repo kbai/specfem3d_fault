@@ -550,7 +550,7 @@ module specfem_par_movie
 ! to save full 3D snapshot of velocity (movie volume
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable:: div, curl_x, curl_y, curl_z
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable:: velocity_x,velocity_y,velocity_z
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable:: stress_xx,stress_yy,stress_zz,stress_xy,stress_xz,stress_yz
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable:: stress_xx,stress_yy,stress_xy
 ! shakemovies and movie surface
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_x_external_mesh
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_y_external_mesh
@@ -561,12 +561,6 @@ module specfem_par_movie
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_ux_external_mesh
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_uy_external_mesh
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_uz_external_mesh
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_stressxx_external_mesh
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_stressyy_external_mesh
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_stresszz_external_mesh
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_stressxy_external_mesh
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_stressyz_external_mesh
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_stressxz_external_mesh
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_stressxx_all_external_mesh
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_stressyy_all_external_mesh
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_stresszz_all_external_mesh

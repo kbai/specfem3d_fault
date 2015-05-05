@@ -44,14 +44,8 @@ subroutine compute_forces_viscoelastic()
 ! Kangchen added the following switch to enable symmetric boundary conditions
   logical:: SYMMETRIC_BOUNDARY_CONDITIONS_INSTEAD_OF_FREE_SURFACE 
 
-  SYMMETRIC_BOUNDARY_CONDITIONS_INSTEAD_OF_FREE_SURFACE = .false.
+  SYMMETRIC_BOUNDARY_CONDITIONS_INSTEAD_OF_FREE_SURFACE = .FALSE.
 ! Kangchen added the following two synchronization to ensure that the nodes on MPI Interface keep in agreement with each other.
-
-
-#IFDEF   SYMMETRY
-  SYMMETRIC_BOUNDARY_CONDITIONS_INSTEAD_OF_FREE_SURFACE=.false.
-#ENDIF
-
 
   call synchronize_MPI_vector_blocking_ord(NPROC,NGLOB_AB,displ, &
                                      num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &

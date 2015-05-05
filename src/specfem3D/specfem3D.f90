@@ -30,7 +30,7 @@
 
   use specfem_par
 
-
+!  logical::Debugwait=.true.
 !=============================================================================!
 !                                                                             !
 !  specfem3D is a 3-D spectral-element solver for a local or regional model.  !
@@ -330,8 +330,10 @@
 ! ************** PROGRAM STARTS HERE **************
 
   ! force Flush-To-Zero if available to avoid very slow Gradual Underflow trapping
+!  do while(Debugwait) 
+!  enddo
   call force_ftz()
-
+  
   ! reads in parameters
   call initialize_simulation()
 
@@ -348,7 +350,7 @@
 ! sets up reference element GLL points/weights/derivatives
   call setup_GLL_points()
 
-
+  
 ! detects surfaces
   call detect_mesh_surfaces()
 

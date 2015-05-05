@@ -558,7 +558,7 @@
   subroutine wmo_get_vel_vector_stress(ispec,ispec2D, &
                                 ipoin,iglob, &
                                 val_element, &
-                                narraydim,stress_xx_glob,stress_yy_glob,stress_zz_glob,stress_xy_glob,stress_xz_glob,stress_yz_glob)
+                                narraydim,stress_xx_glob,stress_yy_glob,stress_xy_glob)
 
   ! put into this separate routine to make compilation faster
 
@@ -571,7 +571,7 @@
   integer,intent(in) :: ispec,ispec2D,ipoin,iglob
   integer,intent(in) :: narraydim
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: val_element
-   real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: stress_xx_glob,stress_yy_glob,stress_zz_glob,stress_xy_glob,stress_xz_glob,stress_yz_glob
+   real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: stress_xx_glob,stress_yy_glob,stress_xy_glob
 
 
   ! local parameters
@@ -581,10 +581,7 @@
      ! velocity x,y,z-components
       store_val_stressxx_external_mesh(narraydim*(ispec2D-1)+ipoin) = stress_xx_glob(iglob)
       store_val_stressyy_external_mesh(narraydim*(ispec2D-1)+ipoin) = stress_yy_glob(iglob)
-      store_val_stresszz_external_mesh(narraydim*(ispec2D-1)+ipoin) = stress_zz_glob(iglob)
       store_val_stressxy_external_mesh(narraydim*(ispec2D-1)+ipoin) = stress_xy_glob(iglob)
-      store_val_stressxz_external_mesh(narraydim*(ispec2D-1)+ipoin) = stress_xz_glob(iglob)
-      store_val_stressyz_external_mesh(narraydim*(ispec2D-1)+ipoin) = stress_yz_glob(iglob)
     endif
 
 
@@ -719,19 +716,19 @@
              j = free_surface_ijk(2,igll,iface)
              k = free_surface_ijk(3,igll,iface)
              iglob = ibool(i,j,k,ispec)
-!             write(*,*) 'put displ into storage array!'
-            ! puts displ/velocity values into storage array
-             call wmo_get_vel_vector(ispec,0, &
-                  ipoin,iglob, &
-                  val_element, &
-                  0)
+             write(*,*) 'put displ into storage array!'
+             ! puts displ/velocity values into storage array
+!             call wmo_get_vel_vector(ispec,0, &
+!                  ipoin,iglob, &
+!                  val_element, &
+!                  0)
             call  wmo_get_vel_vector_stress(ispec,0, &
                                 ipoin,iglob, &
                                 val_element, &
-                                0,stress_xx_glob,stress_yy_glob,stress_zz_glob,stress_xy_glob,stress_xz_glob,stress_yz_glob)
+                                0,stress_xx_glob,stress_yy_glob,stress_xy_glob)
 
 
-!             write(*,*) 'finished!'
+             write(*,*) 'finished!'
           enddo
        else
           imin = minval( free_surface_ijk(1,:,iface) )
@@ -765,7 +762,7 @@
     ! master process collects all info
     if (it == NTSTEP_BETWEEN_FRAMES ) then
        ! master collects
-        if( myrank == 0 ) then
+       if( myrank == 0 ) then
           call gatherv_all_cr(store_val_x_external_mesh,nfaces_surface_ext_mesh_points,&
                store_val_x_all_external_mesh,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
                nfaces_surface_glob_em_points,NPROC)
@@ -775,7 +772,7 @@
           call gatherv_all_cr(store_val_z_external_mesh,nfaces_surface_ext_mesh_points,&
                store_val_z_all_external_mesh,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
                nfaces_surface_glob_em_points,NPROC)
-           else
+       else
           call gatherv_all_cr(store_val_x_external_mesh,nfaces_surface_ext_mesh_points,&
                dummy,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
                1,NPROC)
@@ -788,7 +785,7 @@
        endif
     endif
 
-   ! master collects wavefield
+    ! master collects wavefield
     if( myrank == 0 ) then
        call gatherv_all_cr(store_val_ux_external_mesh,nfaces_surface_ext_mesh_points,&
             store_val_ux_all_external_mesh,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
@@ -799,25 +796,6 @@
        call gatherv_all_cr(store_val_uz_external_mesh,nfaces_surface_ext_mesh_points,&
             store_val_uz_all_external_mesh,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
             nfaces_surface_glob_em_points,NPROC)
-        call gatherv_all_cr(store_val_stressxx_external_mesh,nfaces_surface_ext_mesh_points,&
-            store_val_stressxx_all_external_mesh,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-            nfaces_surface_glob_em_points,NPROC)
-       call gatherv_all_cr(store_val_stressyy_external_mesh,nfaces_surface_ext_mesh_points,&
-            store_val_stressyy_all_external_mesh,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-            nfaces_surface_glob_em_points,NPROC)
-       call gatherv_all_cr(store_val_stresszz_external_mesh,nfaces_surface_ext_mesh_points,&
-            store_val_stresszz_all_external_mesh,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-            nfaces_surface_glob_em_points,NPROC)
-       call gatherv_all_cr(store_val_stressxy_external_mesh,nfaces_surface_ext_mesh_points,&
-            store_val_stressxy_all_external_mesh,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-            nfaces_surface_glob_em_points,NPROC)
-       call gatherv_all_cr(store_val_stressxz_external_mesh,nfaces_surface_ext_mesh_points,&
-            store_val_stressxz_all_external_mesh,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-            nfaces_surface_glob_em_points,NPROC)
-       call gatherv_all_cr(store_val_stressyz_external_mesh,nfaces_surface_ext_mesh_points,&
-            store_val_stressyz_all_external_mesh,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-            nfaces_surface_glob_em_points,NPROC)
- 
     else
        call gatherv_all_cr(store_val_ux_external_mesh,nfaces_surface_ext_mesh_points,&
             dummy,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
@@ -828,25 +806,7 @@
        call gatherv_all_cr(store_val_uz_external_mesh,nfaces_surface_ext_mesh_points,&
             dummy,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
             1,NPROC)
-        call gatherv_all_cr(store_val_stressxx_external_mesh,nfaces_surface_ext_mesh_points,&
-            dummy,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-            1,NPROC)
-       call gatherv_all_cr(store_val_stressyy_external_mesh,nfaces_surface_ext_mesh_points,&
-            dummy,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-            1,NPROC)
-       call gatherv_all_cr(store_val_stresszz_external_mesh,nfaces_surface_ext_mesh_points,&
-            dummy,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-            1,NPROC)
-         call gatherv_all_cr(store_val_stressxy_external_mesh,nfaces_surface_ext_mesh_points,&
-            dummy,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-            1,NPROC)
-       call gatherv_all_cr(store_val_stressyz_external_mesh,nfaces_surface_ext_mesh_points,&
-            dummy,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-            1,NPROC)
-       call gatherv_all_cr(store_val_stressxz_external_mesh,nfaces_surface_ext_mesh_points,&
-            dummy,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-            1,NPROC)
-   endif
+    endif
 
     ! file output: note that values are only stored on free surface
     if(myrank == 0) then
@@ -1180,14 +1140,14 @@
             stress_yz_glob(NGLOB_AB), stat=ier)
     if( ier /= 0 ) stop 'error allocating arrays for movie div and curl'
 
-    ! calculates divergence and curl of velocity field note that this subroutine also calculats the velocity field 
-   call wmo_movie_div_curl(NSPEC_AB,NGLOB_AB,veloc, &
-                               div_glob,curl_glob,valency, &
-                               div,curl_x,curl_y,curl_z, &
-                               velocity_x,velocity_y,velocity_z, &
-                               ibool,ispec_is_elastic, &
-                               hprime_xx,hprime_yy,hprime_zz, &
-                               xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz)
+    ! calculates divergence and curl of velocity field
+  !  call wmo_movie_div_curl(NSPEC_AB,NGLOB_AB,veloc, &
+  !                              div_glob,curl_glob,valency, &
+  !                              div,curl_x,curl_y,curl_z, &
+  !                              velocity_x,velocity_y,velocity_z, &
+  !                              ibool,ispec_is_elastic, &
+  !                              hprime_xx,hprime_yy,hprime_zz, &
+  !                              xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz)
     call wmo_movie_stress(NSPEC_AB,NGLOB_AB,displ, &
                                  stress_xx_glob,stress_yy_glob,stress_zz_glob,stress_xy_glob,stress_xz_glob,stress_yz_glob,&
                                  valency, &
@@ -1229,7 +1189,7 @@
 
 
     deallocate(div_glob,curl_glob,valency)
-    deallocate(stress_xx_glob,stress_yy_glob,stress_xy_glob,stress_zz_glob,stress_xz_glob,stress_yz_glob)
+    deallocate(stress_xx_glob,stress_yy_glob,stress_xy_glob)
   endif ! elastic
 
   ! saves full snapshot data to local disk
@@ -1279,26 +1239,26 @@
 !
 !  endif
 
-  if( ACOUSTIC_SIMULATION .or. ELASTIC_SIMULATION .or. POROELASTIC_SIMULATION) then
-    write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compx,it
-    open(unit=27,file=trim(OUTPUT_FILES)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-    if( ier /= 0 ) stop 'error opening file movie output velocity x'
-    write(27) velocity_x
-    close(27)
-
-    write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compy,it
-    open(unit=27,file=trim(OUTPUT_FILES)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-    if( ier /= 0 ) stop 'error opening file movie output velocity y'
-    write(27) velocity_y
-    close(27)
-
-    write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compz,it
-    open(unit=27,file=trim(OUTPUT_FILES)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-    if( ier /= 0 ) stop 'error opening file movie output velocity z'
-    write(27) velocity_z
-    close(27)
-
-  endif
+!  if( ACOUSTIC_SIMULATION .or. ELASTIC_SIMULATION .or. POROELASTIC_SIMULATION) then
+!    write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compx,it
+!    open(unit=27,file=trim(OUTPUT_FILES)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+!    if( ier /= 0 ) stop 'error opening file movie output velocity x'
+!    write(27) velocity_x
+!    close(27)
+!
+!    write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compy,it
+!    open(unit=27,file=trim(OUTPUT_FILES)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+!    if( ier /= 0 ) stop 'error opening file movie output velocity y'
+!    write(27) velocity_y
+!    close(27)
+!
+!    write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compz,it
+!    open(unit=27,file=trim(OUTPUT_FILES)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+!    if( ier /= 0 ) stop 'error opening file movie output velocity z'
+!    write(27) velocity_z
+!    close(27)
+!
+!  endif
 
   end subroutine wmo_movie_volume_output
 
@@ -1466,10 +1426,10 @@
                                 xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz)
 
 ! calculates div, curl and velocity
-  use specfem_par ,only :kappastore,mustore
 
   implicit none
   include 'constants.h'
+
   integer :: NSPEC_AB,NGLOB_AB
 
   ! velocity field
@@ -1477,13 +1437,13 @@
 
   ! divergence and curl only in the global nodes
 
-  real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: stress_xx_glob,stress_yy_glob,stress_zz_glob,stress_xy_glob,stress_xz_glob,stress_yz_glob
+  real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: stress_xx_glob,stress_yy_glob,stress_xy_glob,stress_xz_glob,stress_yz_glob
 
   integer,dimension(NGLOB_AB) :: valency
 
 
 
-   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: stress_xx,stress_yy,stress_zz,stress_xy,stress_xz,stress_yz
+   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: stress_xx,stress_yy,stress_xy,stress_xz,stress_yz
 
   integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB):: ibool
   logical,dimension(NSPEC_AB) :: ispec_is
@@ -1513,13 +1473,11 @@
    stress_xx_glob(:) = 0.0_CUSTOM_REAL
    stress_yy_glob(:) = 0.0_CUSTOM_REAL
    stress_xy_glob(:) = 0.0_CUSTOM_REAL
+write(*,*)   'VALUE GIVEN SUCCESSFULLY!'
 
-   stress_zz_glob(:) = 0.0_CUSTOM_REAL
-   stress_xz_glob(:) = 0.0_CUSTOM_REAL 
-   stress_yz_glob(:) = 0.0_CUSTOM_REAL
   valency(:) = 0
 
-!write(*,*) 'VALUE VALENCY GIVEN SUCCESSFULLY!'
+write(*,*) 'VALUE VALENCY GIVEN SUCCESSFULLY!'
   ! loops over elements
   do ispec=1,NSPEC_AB
     if( .not. ispec_is(ispec) ) cycle
@@ -1586,9 +1544,9 @@
     do k = 1,NGLLZ
       do j = 1,NGLLY
         do i = 1,NGLLX
-           stress_xx(i,j,k,ispec)=(kappastore(i,j,k,ispec)-2./3.*mustore(i,j,k,ispec))*(dvydyl(i,j,k)+dvzdzl(i,j,k))+(kappastore(i,j,k,ispec)+4./3.*mustore(i,j,k,ispec))*dvxdxl(i,j,k);
-           stress_yy(i,j,k,ispec)=(kappastore(i,j,k,ispec)-2./3.*mustore(i,j,k,ispec))*(dvxdxl(i,j,k)+dvzdzl(i,j,k))+(kappastore(i,j,k,ispec)+4./3.*mustore(i,j,k,ispec))*dvydyl(i,j,k);
-           stress_zz(i,j,k,ispec)=(kappastore(i,j,k,ispec)-2./3.*mustore(i,j,k,ispec))*(dvydyl(i,j,k)+dvxdxl(i,j,k))+(kappastore(i,j,k,ispec)+4./3.*mustore(i,j,k,ispec))*dvzdzl(i,j,k);
+           stress_xx(i,j,k,ispec)=(kappastore(i,j,k,ispec)-2./3.*mustore(i,j,k,ispec)*dvxdxl(i,j,k))*(dvydyl(i,j,k)+dvzdzl(i,j,k))+(kappastore(i,j,k,ispec)+4./3.*mustore(i,j,k,ispec)*dvxdxl(i,j,k))*dvxdxl(i,j,k);
+           stress_yy(i,j,k,ispec)=(kappastore(i,j,k,ispec)-2./3.*mustore(i,j,k,ispec)*dvxdxl(i,j,k))*(dvxdxl(i,j,k)+dvzdzl(i,j,k))+(kappastore(i,j,k,ispec)+4./3.*mustore(i,j,k,ispec)*dvxdxl(i,j,k))*dvydyl(i,j,k);
+           stress_zz(i,j,k,ispec)=(kappastore(i,j,k,ispec)-2./3.*mustore(i,j,k,ispec)*dvxdxl(i,j,k))*(dvydyl(i,j,k)+dvxdxl(i,j,k))+(kappastore(i,j,k,ispec)+4./3.*mustore(i,j,k,ispec)*dvzdzl(i,j,k))*dvzdzl(i,j,k);
            stress_xy(i,j,k,ispec)=mustore(i,j,k,ispec)*(dvxdyl(i,j,k)+dvydxl(i,j,k))
            stress_xz(i,j,k,ispec)=mustore(i,j,k,ispec)*(dvxdzl(i,j,k)+dvzdxl(i,j,k))
            stress_yz(i,j,k,ispec)=mustore(i,j,k,ispec)*(dvydzl(i,j,k)+dvzdyl(i,j,k))
@@ -1607,7 +1565,7 @@
       enddo
     enddo
   enddo !NSPEC_AB
-!    write(*,*) 'stress calculated!'
+    write(*,*) 'stress calculated!'
   do i=1,NGLOB_AB
     ! checks if point has a contribution
     ! note: might not be the case for points in acoustic elements

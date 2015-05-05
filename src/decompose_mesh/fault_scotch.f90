@@ -15,13 +15,14 @@ module fault_scotch
   double precision, dimension(:,:), allocatable, save :: nodes_coords_open
   logical, save :: ANY_FAULT = .false.
 
-  logical, parameter :: PARALLEL_FAULT = .true.
+  logical, parameter :: PARALLEL_FAULT = .TRUE.
  ! NOTE: PARALLEL_FAULT has to be the same
  !       in fault_solver_common.f90, fault_generate_databases.f90 and fault_scotch.f90
 
   integer, parameter :: long = SELECTED_INT_KIND(18)
 
   double precision, parameter :: FAULT_GAP_TOLERANCE = 1.0d0
+  integer, parameter :: NGNOD2D = 9
                               ! must be larger than the fault offset in the mesh,
                               ! but smaller than the smallest element size
 
@@ -61,7 +62,8 @@ CONTAINS
 !---------------------------------------------------------------------------------------------------
 
   Subroutine read_single_fault_file(f,ifault,localpath_name)
-
+  
+!  use decompose_mesh,only: NGNOD2D 
   type(fault_type), intent(inout) :: f
   character(len=256),intent(in) :: localpath_name
 
@@ -96,13 +98,15 @@ CONTAINS
   f%nspec = nspec_side1
   allocate(f%ispec1(f%nspec))
   allocate(f%ispec2(f%nspec))
-  allocate(f%inodes1(4,f%nspec))
-  allocate(f%inodes2(4,f%nspec))
+  allocate(f%inodes1(NGNOD2D,f%nspec))
+  allocate(f%inodes2(NGNOD2D,f%nspec))
   do e=1,f%nspec
     read(101,*) f%ispec1(e),f%inodes1(:,e)
+    write(*,*) f%ispec1(e),f%inodes1(:,e)
   enddo
   do e=1,f%nspec
     read(101,*) f%ispec2(e),f%inodes2(:,e)
+    write(*,*) f%ispec2(e),f%inodes2(:,e)
   enddo
  ! If we ever figure out how to export "ifaces" from CUBIT:
   !allocate(f%iface1(f%nspec))
@@ -169,13 +173,13 @@ CONTAINS
   logical :: found_it
 
   do i = 1,f%nspec
-    do k2=1,4
+    do k2=1,NGNOD2D
       iglob2 = f%inodes2(k2,i)
       found_it = .false.
       xyz_2 = nodes_coords(:,iglob2)
 
       do j = 1,f%nspec
-        do k1=1,4
+        do k1=1,NGNOD2D
           iglob1 = f%inodes1(k1,j)
           xyz_1 = nodes_coords(:,iglob1)
           xyz = xyz_2-xyz_1
@@ -198,8 +202,10 @@ CONTAINS
       enddo
 
       ! jpa: If the two fault sides have been meshed independently they might not match. Test it here:
-      if (.not.found_it) stop 'Inconsistent fault mesh: corresponding node in the other fault face was not found'
-
+      if (.not.found_it) then
+         write(*,*)i, j , xyz_2
+         stop 'Inconsistent fault mesh: corresponding node in the other fault face was not found'
+      endif
     enddo
   enddo
 
@@ -504,7 +510,7 @@ CONTAINS
 
   integer  :: i,j,k,iflt,e
   integer  :: nspec_fault_1,nspec_fault_2
-  integer :: loc_nodes(4),inodes(4)
+  integer :: loc_nodes(NGNOD2D),inodes(NGNOD2D)
 
   do iflt=1,size(faults)
 
@@ -530,7 +536,7 @@ CONTAINS
       e = faults(iflt)%ispec1(i)
       if (part(e-1) == iproc) then
         inodes = faults(iflt)%inodes1(:,i)
-        do k=1,4
+        do k=1,NGNOD2D
           do j = glob2loc_nodes_nparts(inodes(k)-1), glob2loc_nodes_nparts(inodes(k))-1
             if (glob2loc_nodes_parts(j) == iproc ) then
               loc_nodes(k) = glob2loc_nodes(j) + 1
@@ -547,7 +553,7 @@ CONTAINS
       e = faults(iflt)%ispec2(i)
       if(part(e-1) == iproc) then
         inodes = faults(iflt)%inodes2(:,i)
-        do k=1,4
+        do k=1,NGNOD2D
           do j = glob2loc_nodes_nparts(inodes(k)-1), glob2loc_nodes_nparts(inodes(k))-1
             if (glob2loc_nodes_parts(j) == iproc ) then
               loc_nodes(k) = glob2loc_nodes(j)+1

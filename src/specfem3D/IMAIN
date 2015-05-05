@@ -1,0 +1,494 @@
+assemble_MPI_vector.f90:    !write(IMAIN,*) "sending MPI_wait"
+assemble_MPI_vector.f90.fix:    !write(IMAIN,*) "sending MPI_wait"
+check_stability.f90:    write(IMAIN,*) 'Time step # ',it
+check_stability.f90:    write(IMAIN,*) 'Time: ',sngl((it-1)*DT-t0),' seconds'
+check_stability.f90:    write(IMAIN,*) 'Elapsed time in seconds = ',tCPU
+check_stability.f90:    write(IMAIN,"(' Elapsed time in hh:mm:ss = ',i4,' h ',i2.2,' m ',i2.2,' s')") ihours,iminutes,iseconds
+check_stability.f90:    write(IMAIN,*) 'Mean elapsed time per time step in seconds = ',sngl(tCPU/dble(it))
+check_stability.f90:      write(IMAIN,*) 'Max norm displacement vector U in all slices (m) = ',Usolidnorm_all
+check_stability.f90:      write(IMAIN,*) 'Max norm pressure P in all slices (Pa) = ',Usolidnormp_all
+check_stability.f90:      write(IMAIN,*) 'Max norm displacement vector Us in all slices (m) = ',Usolidnorms_all
+check_stability.f90:      write(IMAIN,*) 'Max norm displacement vector W in all slices (m) = ',Usolidnormw_all
+check_stability.f90:        write(IMAIN,*) 'Max norm displacement vector U (backward) in all slices (m) = ',b_Usolidnorm_all
+check_stability.f90:        write(IMAIN,*) 'Max norm pressure P (backward) in all slices (Pa) = ',b_Usolidnormp_all
+check_stability.f90:        write(IMAIN,*) 'Max norm displacement vector Us (backward) in all slices (m) = ',b_Usolidnorms_all
+check_stability.f90:        write(IMAIN,*) 'Max norm displacement vector W (backward) in all slices (m) = ',b_Usolidnormw_all
+check_stability.f90:    write(IMAIN,*) 'Time steps done = ',it,' out of ',NSTEP
+check_stability.f90:    write(IMAIN,*) 'Time steps remaining = ',NSTEP - it
+check_stability.f90:    write(IMAIN,*) 'Estimated remaining time in seconds = ',sngl(t_remain)
+check_stability.f90:    write(IMAIN,"(' Estimated remaining time in hh:mm:ss = ',i4,' h ',i2.2,' m ',i2.2,' s')") &
+check_stability.f90:    write(IMAIN,*) 'Estimated total run time in seconds = ',sngl(t_total)
+check_stability.f90:    write(IMAIN,"(' Estimated total run time in hh:mm:ss = ',i4,' h ',i2.2,' m ',i2.2,' s')") &
+check_stability.f90:    write(IMAIN,*) 'We have done ',sngl(100.d0*dble(it)/dble(NSTEP)),'% of that'
+check_stability.f90:      write(IMAIN,*) '************************************************************'
+check_stability.f90:      write(IMAIN,*) '**** BEWARE: the above time estimates are not reliable'
+check_stability.f90:      write(IMAIN,*) '**** because fewer than 100 iterations have been performed'
+check_stability.f90:      write(IMAIN,*) '************************************************************'
+check_stability.f90:    write(IMAIN,*)
+check_stability.f90:    ! flushes file buffer for main output file (IMAIN)
+check_stability.f90:    call flush_IMAIN()
+compute_add_sources_acoustic.f90:                    !  write(IMAIN,*) 'using a source of dominant frequency ',f0
+compute_add_sources_acoustic.f90:                    !  write(IMAIN,*) 'lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
+compute_add_sources_acoustic.f90:                    !  write(IMAIN,*) 'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
+compute_add_sources_acoustic.f90:                    !  write(IMAIN,*) 'using a source of dominant frequency ',f0
+compute_add_sources_acoustic.f90:                    !  write(IMAIN,*) 'lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
+compute_add_sources_acoustic.f90:                    !  write(IMAIN,*) 'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
+compute_add_sources_poroelastic.f90:               !   write(IMAIN,*) 'using a source of dominant frequency ',f0
+compute_add_sources_poroelastic.f90:               !   write(IMAIN,*) 'lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
+compute_add_sources_poroelastic.f90:               !   write(IMAIN,*) 'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
+compute_add_sources_viscoelastic.f90:                  !  write(IMAIN,*) 'using a source of dominant frequency ',f0
+compute_add_sources_viscoelastic.f90:                  !  write(IMAIN,*) 'lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
+compute_add_sources_viscoelastic.f90:                  !  write(IMAIN,*) 'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
+compute_add_sources_viscoelastic.f90:                   !   write(IMAIN,*) 'using a source of dominant frequency ',f0
+compute_add_sources_viscoelastic.f90:                   !   write(IMAIN,*) 'lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
+compute_add_sources_viscoelastic.f90:                   !   write(IMAIN,*) 'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
+compute_forces_viscoelastic_noDev.f90:  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,N_SLS,SAVE_MOHO_MESH,ONE_THIRD,FOUR_THIRDS  !IMAIN WAS ADDED BY Kangchen
+compute_forces_viscoelastic_noDev.f90:     !           write(IMAIN,*) 'sigma_xy',sigma_xy,'mul',mul   !added by Kangchen
+Binary file constants.mod matches
+create_color_image.f90:  use constants,only: CUSTOM_REAL,IMAIN
+create_color_image.f90:    write(IMAIN,*)
+create_color_image.f90:    write(IMAIN,*) '********'
+create_color_image.f90:    if( IMAGE_TYPE == 1 ) write(IMAIN,*) 'PNM image: velocity V_x component'
+create_color_image.f90:    if( IMAGE_TYPE == 2 ) write(IMAIN,*) 'PNM image: velocity V_y component'
+create_color_image.f90:    if( IMAGE_TYPE == 3 ) write(IMAIN,*) 'PNM image: velocity V_z component'
+create_color_image.f90:    if( IMAGE_TYPE == 4 ) write(IMAIN,*) 'PNM image: velocity norm'
+create_color_image.f90:    write(IMAIN,*) '  image points: ',npgeo_glob
+create_color_image.f90:    write(IMAIN,*) '  xmin/xmax: ',xmin_color_image,'/',xmax_color_image
+create_color_image.f90:    write(IMAIN,*) '  zmin/zmax: ',zmin_color_image,'/',zmax_color_image
+create_color_image.f90:    write(IMAIN,*) '  pixel numbers: ',NX_IMAGE_color,' x ',NZ_IMAGE_color
+create_color_image.f90:    write(IMAIN,*) '  pixel sizes  : ',size_pixel_horizontal,' x ',size_pixel_vertical
+create_color_image.f90:    write(IMAIN,*) '******** '
+create_color_image.f90:    write(IMAIN,*)
+fault_solver_common.f90:    if (myrank==0) write(IMAIN,*) 'Fatal error opening FAULT_STATIONS file. Abort.'
+Binary file fault_solver_common.mod matches
+fault_solver_dynamic.f90:    if (myrank==0) write(IMAIN,*) 'File DATA/Par_file_faults not found: assume no faults'
+fault_solver_dynamic.f90:    if (myrank==0) write(IMAIN,*) 'No faults found in file DATA/Par_file_faults'
+fault_solver_dynamic.f90:    if (myrank==0) write(IMAIN,*) 'There is 1 fault in file DATA/Par_file_faults'
+fault_solver_dynamic.f90:    if (myrank==0) write(IMAIN,*) 'There are ', nbfaults, ' faults in file DATA/Par_file_faults'
+fault_solver_dynamic.f90:    write(IMAIN,*) 'Fatal error: file ',trim(filename),' not found. Abort'
+fault_solver_dynamic.f90:    write(IMAIN,*) 'Fatal error: file ',trim(filename),' not found. Abort'
+fault_solver_dynamic.f90:100 if (myrank==0) write(IMAIN,*) 'Fatal error: did not find BEGIN_FAULT input block in file DATA/Par_file_faults. Abort.'
+fault_solver_dynamic.f90:    write(IMAIN,*) bc%coord(1,i) , sigma0(ipar)
+fault_solver_dynamic.f90rsf:    if (myrank==0) write(IMAIN,*) 'File DATA/Par_file_faults not found: assume no faults'
+fault_solver_dynamic.f90rsf:    if (myrank==0) write(IMAIN,*) 'No faults found in file DATA/Par_file_faults'
+fault_solver_dynamic.f90rsf:    if (myrank==0) write(IMAIN,*) 'There is 1 fault in file DATA/Par_file_faults'
+fault_solver_dynamic.f90rsf:    if (myrank==0) write(IMAIN,*) 'There are ', nbfaults, ' faults in file DATA/Par_file_faults'
+fault_solver_dynamic.f90rsf:    write(IMAIN,*) 'Fatal error: file ',trim(filename),' not found. Abort'
+fault_solver_dynamic.f90rsf:    write(IMAIN,*) 'Fatal error: file ',trim(filename),' not found. Abort'
+fault_solver_dynamic.f90rsf:100 if (myrank==0) write(IMAIN,*) 'Fatal error: did not find BEGIN_FAULT input block in file DATA/Par_file_faults. Abort.'
+fault_solver_dynamic.f90rsf:    write(IMAIN,*) bc%coord(1,i) , sigma0(ipar)
+fault_solver_dynamic.f90swf:    if (myrank==0) write(IMAIN,*) 'File DATA/Par_file_faults not found: assume no faults'
+fault_solver_dynamic.f90swf:    if (myrank==0) write(IMAIN,*) 'No faults found in file DATA/Par_file_faults'
+fault_solver_dynamic.f90swf:    if (myrank==0) write(IMAIN,*) 'There is 1 fault in file DATA/Par_file_faults'
+fault_solver_dynamic.f90swf:    if (myrank==0) write(IMAIN,*) 'There are ', nbfaults, ' faults in file DATA/Par_file_faults'
+fault_solver_dynamic.f90swf:    write(IMAIN,*) 'Fatal error: file ',trim(filename),' not found. Abort'
+fault_solver_dynamic.f90swf:    write(IMAIN,*) 'Fatal error: file ',trim(filename),' not found. Abort'
+fault_solver_dynamic.f90swf:100 if (myrank==0) write(IMAIN,*) 'Fatal error: did not find BEGIN_FAULT input block in file DATA/Par_file_faults. Abort.'
+fault_solver_dynamic.f90swf:    write(IMAIN,*) bc%coord(1,i) , sigma0(ipar)
+fault_solver_kinematic.f90:    if (myrank==0) write(IMAIN,*) 'File DATA/Par_file_faults not found: assume no faults'
+fault_solver_kinematic.f90:    if (myrank==0) write(IMAIN,*) 'No faults found in file DATA/Par_file_faults'
+fault_solver_kinematic.f90:    if (myrank==0) write(IMAIN,*) 'There is 1 fault in file DATA/Par_file_faults'
+fault_solver_kinematic.f90:    if (myrank==0) write(IMAIN,*) 'There are ', nbfaults, ' faults in file DATA/Par_file_faults'
+fault_solver_kinematic.f90:    write(IMAIN,*) 'Fatal error: file ',trim(filename),' not found. Abort'
+fault_solver_kinematic.f90:100 if (myrank==0) write(IMAIN,*) 'Fatal error: did not find BEGIN_FAULT input block in file DATA/Par_file_faults. Abort.'
+finalize_simulation.f90:    write(IMAIN,*)
+finalize_simulation.f90:    write(IMAIN,*) 'End of the simulation'
+finalize_simulation.f90:    write(IMAIN,*)
+finalize_simulation.f90:    close(IMAIN)
+gravity_perturbation.f90:       NGNOD, ibool, myrank, IMAIN
+gravity_perturbation.f90:      write(IMAIN,*)
+gravity_perturbation.f90:      write(IMAIN,*) 'no gravity simulation'
+gravity_perturbation.f90:      write(IMAIN,*)
+gravity_perturbation.f90:    write(IMAIN,*)
+gravity_perturbation.f90:    write(IMAIN,*) 'incorporating gravity simulation'
+gravity_perturbation.f90:    write(IMAIN,*) '    gravity stations: ',nstat
+gravity_perturbation.f90:    write(IMAIN,*)
+Binary file image_pnm_par.mod matches
+initialize_simulation.f90:  if(myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) &
+initialize_simulation.f90:    open(unit=IMAIN,file=trim(OUTPUT_FILES)//'/output_solver.txt',status='unknown')
+initialize_simulation.f90:    write(IMAIN,*)
+initialize_simulation.f90:    write(IMAIN,*) '**********************************************'
+initialize_simulation.f90:    write(IMAIN,*) '**** Specfem 3-D Solver - MPI version f90 ****'
+initialize_simulation.f90:    write(IMAIN,*) '**********************************************'
+initialize_simulation.f90:    write(IMAIN,*)
+initialize_simulation.f90:    write(IMAIN,*)
+initialize_simulation.f90:    if(FIX_UNDERFLOW_PROBLEM) write(IMAIN,*) 'Fixing slow underflow trapping problem using small initial field'
+initialize_simulation.f90:    write(IMAIN,*)
+initialize_simulation.f90:    write(IMAIN,*) 'There are ',NPROC,' MPI processes'
+initialize_simulation.f90:    write(IMAIN,*) 'Processes are numbered from 0 to ',NPROC-1
+initialize_simulation.f90:    write(IMAIN,*)
+initialize_simulation.f90:    write(IMAIN,*) 'There is a total of ',NPROC,' slices'
+initialize_simulation.f90:    write(IMAIN,*)
+initialize_simulation.f90:    write(IMAIN,*) ' NDIM = ',NDIM
+initialize_simulation.f90:    write(IMAIN,*)
+initialize_simulation.f90:    write(IMAIN,*) ' NGLLX = ',NGLLX
+initialize_simulation.f90:    write(IMAIN,*) ' NGLLY = ',NGLLY
+initialize_simulation.f90:    write(IMAIN,*) ' NGLLZ = ',NGLLZ
+initialize_simulation.f90:    write(IMAIN,*)
+initialize_simulation.f90:      write(IMAIN,*) 'using single precision for the calculations'
+initialize_simulation.f90:      write(IMAIN,*) 'using double precision for the calculations'
+initialize_simulation.f90:    write(IMAIN,*)
+initialize_simulation.f90:    write(IMAIN,*) 'smallest and largest possible floating-point numbers are: ',&
+initialize_simulation.f90:    write(IMAIN,*)
+initialize_simulation.f90:    write(IMAIN,'(a)',advance='no') ' velocity model: '
+initialize_simulation.f90:    write(IMAIN,'(a)',advance='yes') '  default '
+initialize_simulation.f90:    write(IMAIN,'(a)',advance='yes') '  gll'
+initialize_simulation.f90:    write(IMAIN,'(a)',advance='yes') '  1d_prem'
+initialize_simulation.f90:    write(IMAIN,'(a)',advance='yes') '  1d_cascadia'
+initialize_simulation.f90:    write(IMAIN,'(a)',advance='yes') '  1d_socal'
+initialize_simulation.f90:    write(IMAIN,'(a)',advance='yes') '  salton_trough'
+initialize_simulation.f90:    write(IMAIN,'(a)',advance='yes') '  tomo'
+initialize_simulation.f90:    write(IMAIN,'(a)',advance='yes') '  external'
+initialize_simulation.f90:    write(IMAIN,'(a)',advance='yes') '  ipati'
+initialize_simulation.f90:    write(IMAIN,'(a)',advance='yes') '  ipati_water'
+initialize_simulation.f90:    write(IMAIN,*)
+initialize_simulation.f90:    call flush_IMAIN()
+initialize_simulation.f90:      write(IMAIN,*) 'error: number of processors supposed to run on: ',NPROC
+initialize_simulation.f90:      write(IMAIN,*) 'error: number of MPI processors actually run on: ',sizeprocs
+initialize_simulation.f90:        write(IMAIN,*) 'STACEY_INSTEAD_OF_FREE_SURFACE:',STACEY_INSTEAD_OF_FREE_SURFACE,ABSORB_FREE_SURFACE_VAL
+initialize_simulation.f90:    write(IMAIN,*)
+initialize_simulation.f90:    write(IMAIN,*) "GPU_MODE Active."
+initialize_simulation.f90:    call flush_IMAIN()
+initialize_simulation.f90:    write(IMAIN,*) "GPU number of devices per node: min =",ncuda_devices_min
+initialize_simulation.f90:    write(IMAIN,*) "                                max =",ncuda_devices_max
+initialize_simulation.f90:    write(IMAIN,*)
+initialize_simulation.f90:    call flush_IMAIN()
+iterate_time.F90:  if(myrank == 0) write(IMAIN,*) 'All processes are synchronized before time loop'
+iterate_time.F90:    write(IMAIN,*)
+iterate_time.F90:    write(IMAIN,*) 'Starting time iteration loop...'
+iterate_time.F90:    write(IMAIN,*)
+iterate_time.F90:    call flush_IMAIN()
+iterate_time.F90:    WRITE(IMAIN,*) 'current step:',it
+iterate_time.F90:    write(IMAIN,*) 'Time-Loop Complete. Timing info:'
+iterate_time.F90:    write(IMAIN,*) 'Total elapsed time in seconds = ',tCPU
+iterate_time.F90:    write(IMAIN,"(' Total elapsed time in hh:mm:ss = ',i4,' h ',i2.2,' m ',i2.2,' s')") ihours,iminutes,iseconds
+locate_receivers.f90:    write(IMAIN,*)
+locate_receivers.f90:    write(IMAIN,*) '********************'
+locate_receivers.f90:    write(IMAIN,*) ' locating receivers'
+locate_receivers.f90:    write(IMAIN,*) '********************'
+locate_receivers.f90:    write(IMAIN,*)
+locate_receivers.f90:    write(IMAIN,'(1x,a,a,a)') 'reading receiver information from ', trim(rec_filename), ' file'
+locate_receivers.f90:    write(IMAIN,*)
+locate_receivers.f90:    call flush_IMAIN()
+locate_receivers.f90:        write(IMAIN,*) 'station details from SU_stations_info.bin'
+locate_receivers.f90:        call flush_IMAIN()
+locate_receivers.f90:        write(IMAIN,*)
+locate_receivers.f90:        write(IMAIN,*) 'Elapsed time for receiver detection in seconds = ',tCPU
+locate_receivers.f90:        write(IMAIN,*)
+locate_receivers.f90:        write(IMAIN,*) 'End of receiver detection - done'
+locate_receivers.f90:        write(IMAIN,*)
+locate_receivers.f90:        call flush_IMAIN()
+locate_receivers.f90:        write(IMAIN,*) 'Station #',irec,': ',station_name(irec)(1:len_trim(station_name(irec))), &
+locate_receivers.f90:        write(IMAIN,*) 'error locating station # ',irec,'    ',station_name(irec),network_name(irec)
+locate_receivers.f90:      write(IMAIN,*)
+locate_receivers.f90:      write(IMAIN,*) 'station # ',irec,'    ',station_name(irec),network_name(irec)
+locate_receivers.f90:      write(IMAIN,*) '     original latitude: ',sngl(stlat(irec))
+locate_receivers.f90:      write(IMAIN,*) '     original longitude: ',sngl(stlon(irec))
+locate_receivers.f90:        write(IMAIN,*) '     original x: ',sngl(stutm_x(irec))
+locate_receivers.f90:        write(IMAIN,*) '     original y: ',sngl(stutm_y(irec))
+locate_receivers.f90:        write(IMAIN,*) '     original UTM x: ',sngl(stutm_x(irec))
+locate_receivers.f90:        write(IMAIN,*) '     original UTM y: ',sngl(stutm_y(irec))
+locate_receivers.f90:        write(IMAIN,*) '     original z: ',sngl(stbur(irec))
+locate_receivers.f90:        write(IMAIN,*) '     original depth: ',sngl(stbur(irec)),' m'
+locate_receivers.f90:      write(IMAIN,*) '     horizontal distance: ',sngl(horiz_dist(irec))
+locate_receivers.f90:      write(IMAIN,*) '     target x, y, z: ',sngl(x_target(irec)),sngl(y_target(irec)),sngl(z_target(irec))
+locate_receivers.f90:      write(IMAIN,*) '     closest estimate found: ',sngl(final_distance(irec)),' m away'
+locate_receivers.f90:      write(IMAIN,*) '     in slice ',islice_selected_rec(irec),' in element ',ispec_selected_rec(irec)
+locate_receivers.f90:        write(IMAIN,*) '     in point i,j,k = ',nint(xi_receiver(irec)), &
+locate_receivers.f90:        write(IMAIN,*) '     nu1 = ',nu(1,:,irec)
+locate_receivers.f90:        write(IMAIN,*) '     nu2 = ',nu(2,:,irec)
+locate_receivers.f90:        write(IMAIN,*) '     nu3 = ',nu(3,:,irec)
+locate_receivers.f90:        write(IMAIN,*) '     at coordinates: '
+locate_receivers.f90:        write(IMAIN,*) '     xi    = ',xi_receiver(irec)
+locate_receivers.f90:        write(IMAIN,*) '     eta   = ',eta_receiver(irec)
+locate_receivers.f90:        write(IMAIN,*) '     gamma = ',gamma_receiver(irec)
+locate_receivers.f90:        write(IMAIN,*) '     x: ',x_found(irec)
+locate_receivers.f90:        write(IMAIN,*) '     y: ',y_found(irec)
+locate_receivers.f90:        write(IMAIN,*) '     UTM x: ',x_found(irec)
+locate_receivers.f90:        write(IMAIN,*) '     UTM y: ',y_found(irec)
+locate_receivers.f90:        write(IMAIN,*) '     z: ',z_found(irec)
+locate_receivers.f90:        write(IMAIN,*) '     depth: ',dabs(z_found(irec) - elevation(irec)),' m'
+locate_receivers.f90:        write(IMAIN,*) '     z: ',z_found(irec)
+locate_receivers.f90:      write(IMAIN,*)
+locate_receivers.f90:        write(IMAIN,*) '*******************************************************'
+locate_receivers.f90:        write(IMAIN,*) '***** WARNING: receiver location estimate is poor *****'
+locate_receivers.f90:        write(IMAIN,*) '*******************************************************'
+locate_receivers.f90:      write(IMAIN,*)
+locate_receivers.f90:    write(IMAIN,*) 'maximum error in location of all the receivers: ',sngl(final_distance_max),' m'
+locate_receivers.f90:      write(IMAIN,*)
+locate_receivers.f90:      write(IMAIN,*) '************************************************************'
+locate_receivers.f90:      write(IMAIN,*) '************************************************************'
+locate_receivers.f90:      write(IMAIN,*) '***** WARNING: at least one receiver is poorly located *****'
+locate_receivers.f90:      write(IMAIN,*) '************************************************************'
+locate_receivers.f90:      write(IMAIN,*) '************************************************************'
+locate_receivers.f90:    write(IMAIN,*)
+locate_receivers.f90:    write(IMAIN,*) 'Elapsed time for receiver detection in seconds = ',tCPU
+locate_receivers.f90:    write(IMAIN,*)
+locate_receivers.f90:    write(IMAIN,*) 'End of receiver detection - done'
+locate_receivers.f90:    write(IMAIN,*)
+locate_receivers.f90:    call flush_IMAIN()
+locate_receivers.f90:    write(IMAIN,*)
+locate_receivers.f90:    write(IMAIN,*) 'there are ',nrec,' stations in file ', trim(filename)
+locate_receivers.f90:    write(IMAIN,*) 'saving ',nrec_filtered,' stations inside the model in file ', trim(filtered_filename)
+locate_receivers.f90:    write(IMAIN,*) 'excluding ',nrec - nrec_filtered,' stations located outside the model'
+locate_receivers.f90:    write(IMAIN,*)
+locate_receivers.f90:      write(IMAIN,*) 'error filtered stations:'
+locate_receivers.f90:      write(IMAIN,*) '  simulation needs at least 1 station but got ',nrec_filtered
+locate_receivers.f90:      write(IMAIN,*)
+locate_receivers.f90:      write(IMAIN,*) '  check that stations in file '//trim(filename)//' are within'
+locate_receivers.f90:        write(IMAIN,*) '    latitude min/max : ',LATITUDE_MIN,LATITUDE_MAX
+locate_receivers.f90:        write(IMAIN,*) '    longitude min/max: ',LONGITUDE_MIN,LONGITUDE_MAX
+locate_receivers.f90:        write(IMAIN,*) '    longitude min/max: ',minlon,maxlon
+locate_receivers.f90:        write(IMAIN,*) '    latitude min/max : ',minlat,maxlat
+locate_receivers.f90:        write(IMAIN,*) '    UTM x min/max: ',LONGITUDE_MIN,LONGITUDE_MAX
+locate_receivers.f90:        write(IMAIN,*) '    UTM y min/max : ',LATITUDE_MIN,LATITUDE_MAX
+locate_receivers.f90:      write(IMAIN,*)
+locate_source.f90:      write(IMAIN,*) 'no UTM projection:'
+locate_source.f90:      write(IMAIN,*) 'UTM projection:'
+locate_source.f90:      write(IMAIN,*) '  UTM zone: ',UTM_PROJECTION_ZONE
+locate_source.f90:      write(IMAIN,*) '  (depth) becomes directly (z) coordinate'
+locate_source.f90:        write(IMAIN,*)
+locate_source.f90:        write(IMAIN,*) '*************************************'
+locate_source.f90:        write(IMAIN,*) ' locating source ',isource
+locate_source.f90:        write(IMAIN,*) '*************************************'
+locate_source.f90:        write(IMAIN,*)
+locate_source.f90:        write(IMAIN,*) 'source located in slice ',islice_selected_source(isource)
+locate_source.f90:        write(IMAIN,*) '               in element ',ispec_selected_source(isource)
+locate_source.f90:          write(IMAIN,*) '               in acoustic domain'
+locate_source.f90:          write(IMAIN,*) '               in elastic domain'
+locate_source.f90:          write(IMAIN,*) '               in poroelastic domain'
+locate_source.f90:          write(IMAIN,*) '               in unknown domain'
+locate_source.f90:        write(IMAIN,*)
+locate_source.f90:          write(IMAIN,*) 'using force point source: '
+locate_source.f90:          write(IMAIN,*) '  xi coordinate of source in that element: ',xi_source(isource)
+locate_source.f90:          write(IMAIN,*) '  eta coordinate of source in that element: ',eta_source(isource)
+locate_source.f90:          write(IMAIN,*) '  gamma coordinate of source in that element: ',gamma_source(isource)
+locate_source.f90:          write(IMAIN,*)
+locate_source.f90:          write(IMAIN,*) '  component of direction vector in East direction: ',comp_dir_vect_source_E(isource)
+locate_source.f90:          write(IMAIN,*) '  component of direction vector in North direction: ',comp_dir_vect_source_N(isource)
+locate_source.f90:          write(IMAIN,*) '  component of direction vector in Vertical direction: ',comp_dir_vect_source_Z_UP(isource)
+locate_source.f90:          write(IMAIN,*)
+locate_source.f90:          write(IMAIN,*) '  nu1 = ',nu_source(1,:,isource)
+locate_source.f90:          write(IMAIN,*) '  nu2 = ',nu_source(2,:,isource)
+locate_source.f90:          write(IMAIN,*) '  nu3 = ',nu_source(3,:,isource)
+locate_source.f90:          write(IMAIN,*)
+locate_source.f90:          write(IMAIN,*) '  at (x,y,z) coordinates = ',x_found_source(isource),y_found_source(isource),z_found_source(isource)
+locate_source.f90:          write(IMAIN,*) '  using a source of dominant frequency ',f0
+locate_source.f90:          write(IMAIN,*) '  lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
+locate_source.f90:          write(IMAIN,*) '  lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
+locate_source.f90:             write(IMAIN,*) '  t0_ricker = ',t0_ricker
+locate_source.f90:          write(IMAIN,*) '  time shift = ',tshift_src(isource)
+locate_source.f90:          write(IMAIN,*)
+locate_source.f90:          write(IMAIN,*) '  half duration -> frequency: ',hdur(isource),' seconds**(-1)'
+locate_source.f90:          write(IMAIN,*) 'using moment tensor source: '
+locate_source.f90:          write(IMAIN,*) '  xi coordinate of source in that element: ',xi_source(isource)
+locate_source.f90:          write(IMAIN,*) '  eta coordinate of source in that element: ',eta_source(isource)
+locate_source.f90:          write(IMAIN,*) '  gamma coordinate of source in that element: ',gamma_source(isource)
+locate_source.f90:          write(IMAIN,*)
+locate_source.f90:            write(IMAIN,*)
+locate_source.f90:            write(IMAIN,*) 'Source time function is a Heaviside, convolve later'
+locate_source.f90:            write(IMAIN,*)
+locate_source.f90:          write(IMAIN,*) '  half duration: ',hdur(isource),' seconds'
+locate_source.f90:        write(IMAIN,*) '  time shift: ',tshift_src(isource),' seconds'
+locate_source.f90:        write(IMAIN,*)
+locate_source.f90:        write(IMAIN,*) 'original (requested) position of the source:'
+locate_source.f90:        write(IMAIN,*)
+locate_source.f90:        write(IMAIN,*) '          latitude: ',lat(isource)
+locate_source.f90:        write(IMAIN,*) '         longitude: ',long(isource)
+locate_source.f90:        write(IMAIN,*)
+locate_source.f90:          write(IMAIN,*) '             x: ',utm_x_source(isource)
+locate_source.f90:          write(IMAIN,*) '             y: ',utm_y_source(isource)
+locate_source.f90:          write(IMAIN,*) '         UTM x: ',utm_x_source(isource)
+locate_source.f90:          write(IMAIN,*) '         UTM y: ',utm_y_source(isource)
+locate_source.f90:          write(IMAIN,*) '         z: ',depth(isource),' km'
+locate_source.f90:          write(IMAIN,*) '         depth: ',depth(isource),' km'
+locate_source.f90:          write(IMAIN,*) 'topo elevation: ',elevation(isource)
+locate_source.f90:        write(IMAIN,*)
+locate_source.f90:        write(IMAIN,*) 'position of the source that will be used:'
+locate_source.f90:        write(IMAIN,*)
+locate_source.f90:          write(IMAIN,*) '             x: ',x_found_source(isource)
+locate_source.f90:          write(IMAIN,*) '             y: ',y_found_source(isource)
+locate_source.f90:          write(IMAIN,*) '         UTM x: ',x_found_source(isource)
+locate_source.f90:          write(IMAIN,*) '         UTM y: ',y_found_source(isource)
+locate_source.f90:          write(IMAIN,*) '             z: ',z_found_source(isource)
+locate_source.f90:          write(IMAIN,*) '         depth: ',dabs(z_found_source(isource) - elevation(isource))/1000.,' km'
+locate_source.f90:          write(IMAIN,*) '             z: ',z_found_source(isource)
+locate_source.f90:        write(IMAIN,*)
+locate_source.f90:        write(IMAIN,*) 'error in location of the source: ',sngl(final_distance_source(isource)),' m'
+locate_source.f90:          write(IMAIN,*)
+locate_source.f90:          write(IMAIN,*) '*****************************************************'
+locate_source.f90:          write(IMAIN,*) '*****************************************************'
+locate_source.f90:          write(IMAIN,*) '***** WARNING: source location estimate is poor *****'
+locate_source.f90:          write(IMAIN,*) '*****************************************************'
+locate_source.f90:          write(IMAIN,*) '*****************************************************'
+locate_source.f90:            write(IMAIN,*)
+locate_source.f90:            write(IMAIN,*) ' error CMTSOLUTION format for acoustic source:'
+locate_source.f90:            write(IMAIN,*) '   acoustic source needs explosive moment tensor with'
+locate_source.f90:            write(IMAIN,*) '      Mrr = Mtt = Mpp '
+locate_source.f90:            write(IMAIN,*) '   and '
+locate_source.f90:            write(IMAIN,*) '      Mrt = Mrp = Mtp = zero'
+locate_source.f90:            write(IMAIN,*)
+locate_source.f90:        write(IMAIN,*)
+locate_source.f90:        write(IMAIN,*) '*************************************'
+locate_source.f90:        write(IMAIN,*) ' using sources ',NSOURCES
+locate_source.f90:        write(IMAIN,*) '*************************************'
+locate_source.f90:        write(IMAIN,*)
+locate_source.f90:        call flush_IMAIN()
+locate_source.f90:      write(IMAIN,*)
+locate_source.f90:      write(IMAIN,*) 'printing the source-time function'
+locate_source.f90:    write(IMAIN,*)
+locate_source.f90:    write(IMAIN,*) 'maximum error in location of the sources: ',sngl(maxval(final_distance_source)),' m'
+locate_source.f90:    write(IMAIN,*)
+locate_source.f90:    call flush_IMAIN()
+locate_source.f90:    write(IMAIN,*)
+locate_source.f90:    write(IMAIN,*) 'Elapsed time for detection of sources in seconds = ',tCPU
+locate_source.f90:    write(IMAIN,*)
+locate_source.f90:    write(IMAIN,*) 'End of source detection - done'
+locate_source.f90:    write(IMAIN,*)
+locate_source.f90:    call flush_IMAIN()
+pml_output_VTKs.f90:  use constants, only: NGLLX,NGLLY,NGLLZ,IMAIN
+pml_output_VTKs.f90:  if(myrank == 0) write(IMAIN,*) 'Writing informations about C-PML elements in VTK-file format'
+pml_output_VTKs.f90:  if(myrank == 0) write(IMAIN,*) 'Generating CPML_regions VTK file'
+pml_output_VTKs.f90:  if(myrank == 0) write(IMAIN,*) 'Generating CPML_damping_dx, CPML_damping_dy and CPML_damping_dz VTK files'
+prepare_timerun.F90:    write(IMAIN,*)
+prepare_timerun.F90:    write(IMAIN,*) 'Elapsed time for preparing timerun in seconds = ',tCPU
+prepare_timerun.F90:    write(IMAIN,*)
+prepare_timerun.F90:    write(IMAIN,*) 'time loop:'
+prepare_timerun.F90:    write(IMAIN,*)
+prepare_timerun.F90:    write(IMAIN,*) '           time step: ',sngl(DT),' s'
+prepare_timerun.F90:    write(IMAIN,*) 'number of time steps: ',NSTEP
+prepare_timerun.F90:    write(IMAIN,*) 'total simulated time: ',sngl(NSTEP*DT),' seconds'
+prepare_timerun.F90:    write(IMAIN,*) 'start time:',sngl(-t0),' seconds'
+prepare_timerun.F90:    write(IMAIN,*)
+prepare_timerun.F90:    ! flushes file buffer for main output file (IMAIN)
+prepare_timerun.F90:    call flush_IMAIN()
+prepare_timerun.F90:    write(IMAIN,*)
+prepare_timerun.F90:      write(IMAIN,*) 'incorporating attenuation using ',N_SLS,' standard linear solids'
+prepare_timerun.F90:        write(IMAIN,*) 'using Olsen''s attenuation'
+prepare_timerun.F90:        write(IMAIN,*) 'not using Olsen''s attenuation'
+prepare_timerun.F90:      write(IMAIN,*) 'no attenuation'
+prepare_timerun.F90:    write(IMAIN,*)
+prepare_timerun.F90:      write(IMAIN,*) 'incorporating anisotropy'
+prepare_timerun.F90:      write(IMAIN,*) 'no anisotropy'
+prepare_timerun.F90:    write(IMAIN,*)
+prepare_timerun.F90:      write(IMAIN,*) 'incorporating the oceans using equivalent load'
+prepare_timerun.F90:      write(IMAIN,*) 'no oceans'
+prepare_timerun.F90:    write(IMAIN,*)
+prepare_timerun.F90:      write(IMAIN,*) 'incorporating gravity'
+prepare_timerun.F90:      write(IMAIN,*) 'no gravity'
+prepare_timerun.F90:    write(IMAIN,*)
+prepare_timerun.F90:      write(IMAIN,*) 'incorporating acoustic simulation'
+prepare_timerun.F90:      write(IMAIN,*) 'no acoustic simulation'
+prepare_timerun.F90:    write(IMAIN,*)
+prepare_timerun.F90:      write(IMAIN,*) 'incorporating elastic simulation'
+prepare_timerun.F90:      write(IMAIN,*) 'no elastic simulation'
+prepare_timerun.F90:    write(IMAIN,*)
+prepare_timerun.F90:      write(IMAIN,*) 'incorporating poroelastic simulation'
+prepare_timerun.F90:      write(IMAIN,*) 'no poroelastic simulation'
+prepare_timerun.F90:    write(IMAIN,*)
+prepare_timerun.F90:      write(IMAIN,*) 'incorporating movie simulation'
+prepare_timerun.F90:      write(IMAIN,*) 'no movie simulation'
+prepare_timerun.F90:    write(IMAIN,*)
+prepare_timerun.F90:    write(IMAIN,*)
+prepare_timerun.F90:    call flush_IMAIN()
+prepare_timerun.F90:      write(IMAIN,*)
+prepare_timerun.F90:      write(IMAIN,*) "attenuation: "
+prepare_timerun.F90:      write(IMAIN,*) "  reference period (s)   : ",sngl(1.0/ATTENUATION_f0_REFERENCE), &
+prepare_timerun.F90:      write(IMAIN,*) "  period band min/max (s): ",sngl(MIN_ATTENUATION_PERIOD),sngl(MAX_ATTENUATION_PERIOD)
+prepare_timerun.F90:      write(IMAIN,*) "  central period (s)     : ",sngl(1.0/f_c_source), &
+prepare_timerun.F90:      write(IMAIN,*)
+prepare_timerun.F90:      call flush_IMAIN()
+prepare_timerun.F90:    use constants, only: IMAIN,NGNOD_EIGHT_CORNERS
+prepare_timerun.F90:      write(IMAIN,*)
+prepare_timerun.F90:      write(IMAIN,*) 'incorporating C-PML  '
+prepare_timerun.F90:      write(IMAIN,*)
+prepare_timerun.F90:      write(IMAIN,*) 'number of C-PML spectral elements in the global mesh: ', NSPEC_CPML_GLOBAL
+prepare_timerun.F90:      write(IMAIN,*)
+prepare_timerun.F90:      write(IMAIN,*) 'thickness of C-PML layer in X direction: ', CPML_width_x
+prepare_timerun.F90:      write(IMAIN,*) 'thickness of C-PML layer in Y direction: ', CPML_width_y
+prepare_timerun.F90:      write(IMAIN,*) 'thickness of C-PML layer in Z direction: ', CPML_width_z
+prepare_timerun.F90:      write(IMAIN,*)
+prepare_timerun.F90:      call flush_IMAIN()
+prepare_timerun.F90:    write(IMAIN,*)
+prepare_timerun.F90:    write(IMAIN,*) "GPU Preparing Fields and Constants on Device."
+prepare_timerun.F90:    call flush_IMAIN()
+prepare_timerun.F90:    write(IMAIN,*) "GPU usage: free  =",free_mb," MB",nint(free_mb/total_mb*100.0),"%"
+prepare_timerun.F90:    write(IMAIN,*) "           used  =",used_mb," MB",nint(used_mb/total_mb*100.0),"%"
+prepare_timerun.F90:    write(IMAIN,*) "           total =",total_mb," MB",nint(total_mb/total_mb*100.0),"%"
+prepare_timerun.F90:    write(IMAIN,*)
+prepare_timerun.F90:    call flush_IMAIN()
+prepare_timerun.F90:      write(IMAIN,*)
+prepare_timerun.F90:      write(IMAIN,*) 'Using:',NUM_THREADS, ' OpenMP threads'
+prepare_timerun.F90:      write(IMAIN,*)
+prepare_timerun.F90:      call flush_IMAIN()
+read_mesh_databases_adios.F90:    write(IMAIN,*) 'total acoustic elements    :',inum
+read_mesh_databases_adios.F90:    write(IMAIN,*) 'total elastic elements     :',inum
+read_mesh_databases_adios.F90:    write(IMAIN,*) 'total poroelastic elements :',inum
+read_mesh_databases_adios.F90:    call flush_IMAIN()
+read_mesh_databases_adios.F90:  !  write(IMAIN,*) 'number of MPI partition interfaces: ',inum
+read_mesh_databases_adios.F90:  !  write(IMAIN,*)
+read_mesh_databases.F90:    write(IMAIN,*) 'total acoustic elements    :',inum
+read_mesh_databases.F90:    write(IMAIN,*) 'total elastic elements     :',inum
+read_mesh_databases.F90:    write(IMAIN,*) 'total poroelastic elements :',inum
+read_mesh_databases.F90:    call flush_IMAIN()
+read_mesh_databases.F90:  !  write(IMAIN,*) 'number of MPI partition interfaces: ',inum
+read_mesh_databases.F90:  !  write(IMAIN,*)
+setup_GLL_points.f90:    write(IMAIN,*) '******************************************'
+setup_GLL_points.f90:    write(IMAIN,*) 'There is a total of ',NPROC,' slices'
+setup_GLL_points.f90:    write(IMAIN,*) '******************************************'
+setup_GLL_points.f90:    write(IMAIN,*)
+setup_movie_meshes.f90:      write(IMAIN,*) 'movie cross-sections:'
+setup_movie_meshes.f90:      write(IMAIN,*) 'movie surface:'
+setup_movie_meshes.f90:    write(IMAIN,*) '  nfaces_surface_ext_mesh:',nfaces_surface_ext_mesh
+setup_movie_meshes.f90:    write(IMAIN,*) '  nfaces_perproc_surface_ext_mesh:',nfaces_perproc_surface_ext_mesh
+setup_movie_meshes.f90:    write(IMAIN,*) '  nfaces_surface_glob_ext_mesh:',nfaces_surface_glob_ext_mesh
+setup_sources_receivers.f90:    write(IMAIN,*)
+setup_sources_receivers.f90:    write(IMAIN,*) 'Total number of samples for seismograms = ',NSTEP
+setup_sources_receivers.f90:    write(IMAIN,*)
+setup_sources_receivers.f90:    write(IMAIN,*) 'found a total of ',nrec_tot_found,' receivers in all the slices'
+setup_sources_receivers.f90:    if(NSOURCES > 1) write(IMAIN,*) 'Using ',NSOURCES,' point sources'
+setup_sources_receivers.f90:    write(IMAIN,*)
+setup_sources_receivers.f90:      write(IMAIN,*)
+setup_sources_receivers.f90:      write(IMAIN,*) 'Each source is being convolved with HDUR_MOVIE = ',HDUR_MOVIE
+setup_sources_receivers.f90:      write(IMAIN,*)
+setup_sources_receivers.f90:      write(IMAIN,*) 'USER_T0: ',USER_T0
+setup_sources_receivers.f90:      write(IMAIN,*) 't0: ',t0,'min_tshift_src_original: ',min_tshift_src_original
+setup_sources_receivers.f90:      write(IMAIN,*)
+setup_sources_receivers.f90:        write(IMAIN,*) '  set new simulation start time: ', - t0
+setup_sources_receivers.f90:        write(IMAIN,*)
+setup_sources_receivers.f90:        write(IMAIN,*) 'error: USER_T0 is too small'
+setup_sources_receivers.f90:        write(IMAIN,*) '       must make one of three adjustements:'
+setup_sources_receivers.f90:        write(IMAIN,*) '       - increase USER_T0 to be at least: ',t0-min_tshift_src_original
+setup_sources_receivers.f90:        write(IMAIN,*) '       - decrease time shift in CMTSOLUTION file'
+setup_sources_receivers.f90:        write(IMAIN,*) '       - decrease hdur in CMTSOLUTION file'
+setup_sources_receivers.f90:      write(IMAIN,*) 'error: USER_T0 is negative, must be set zero or positive!'
+setup_sources_receivers.f90:      write(IMAIN,*) '**********************************************************************'
+setup_sources_receivers.f90:      write(IMAIN,*) '*** source: ',isource,'                                          ***'
+setup_sources_receivers.f90:      write(IMAIN,*) '*** Warning: acoustic source located exactly on the free surface ***'
+setup_sources_receivers.f90:      write(IMAIN,*) '*** will be zeroed                                                                           ***'
+setup_sources_receivers.f90:      write(IMAIN,*) '**********************************************************************'
+setup_sources_receivers.f90:      write(IMAIN,*)
+setup_sources_receivers.f90:    write(IMAIN,*)
+setup_sources_receivers.f90:      write(IMAIN,*) 'Total number of receivers = ', nrec
+setup_sources_receivers.f90:      write(IMAIN,*) 'Total number of adjoint sources = ', nrec
+setup_sources_receivers.f90:    write(IMAIN,*)
+setup_sources_receivers.f90:        write(IMAIN,*) '**********************************************************************'
+setup_sources_receivers.f90:        write(IMAIN,*) '*** station:',irec,'                                          ***'
+setup_sources_receivers.f90:        write(IMAIN,*) '*** Warning: acoustic receiver located exactly on the free surface ***'
+setup_sources_receivers.f90:        write(IMAIN,*) '*** Warning: tangential component will be zero there               ***'
+setup_sources_receivers.f90:        write(IMAIN,*) '**********************************************************************'
+setup_sources_receivers.f90:        write(IMAIN,*)
+setup_sources_receivers.f90:      write(IMAIN,*)
+setup_sources_receivers.f90:      write(IMAIN,*) '    ',nadj_files_found_tot,' adjoint component traces found in all slices'
+Binary file sum_par.mod matches
+write_movie_output.f90:       write(IMAIN,*) 'we are here!' 
+write_movie_output.f90:       write(IMAIN,*) NSPEC_AB
+write_movie_output.f90:       write(IMAIN,*) NGLOB_AB
+write_movie_output.f90:       write(IMAIN,*) size(stress_xx_glob)
+write_movie_output.f90:       write(IMAIN,*) size(displ)
+write_movie_output.f90:       write(IMAIN,*) size(valency)
+write_movie_output.f90:write(IMAIN,*)   'VALUE GIVEN SUCCESSFULLY!'
+write_movie_output.f90:write(IMAIN,*) 'VALUE VALENCY GIVEN SUCCESSFULLY!'
+write_seismograms.f90:      write(IMAIN,*) 'Component: .sem'//component
+write_seismograms.f90:      write(IMAIN,*) '  total number of receivers saved is ',total_seismos,' out of ',nrec
+write_seismograms.f90:      write(IMAIN,*)

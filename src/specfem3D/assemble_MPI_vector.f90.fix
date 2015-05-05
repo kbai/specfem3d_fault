@@ -110,9 +110,9 @@
           compareerror(:,ipoin,iinterface) =   array_val(:,ibool_interfaces_ext_mesh(ipoin,iinterface))-buffer_recv_vector(:,ipoin,iinterface) 
       enddo
     enddo
-!    write(*,*) myrank
-!    write(*,*) maxval(compareerror)
-!    write(*,*) maxloc(compareerror)
+    write(*,*) myrank
+    write(*,*) maxval(compareerror)
+    write(*,*) maxloc(compareerror)
 
     ! wait for communications completion (send)
     do iinterface = 1, num_interfaces_ext_mesh

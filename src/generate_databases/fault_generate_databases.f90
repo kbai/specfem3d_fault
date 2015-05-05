@@ -30,12 +30,13 @@ module fault_generate_databases
   type(fault_db_type), allocatable, save :: fault_db(:)
   ! fault_db(i) is the database of the i-th fault in the mesh
   real(kind=CUSTOM_REAL), allocatable, save :: Kelvin_Voigt_eta(:)
+!  integer, allocatable, save :: KV_direction(:)
   double precision, allocatable, save :: nodes_coords_open(:,:)
   integer, save :: nnodes_coords_open
   logical, save :: ANY_FAULT_IN_THIS_PROC = .false.
   logical, save :: ANY_FAULT = .false.
 
-  logical, parameter :: PARALLEL_FAULT = .true.
+  logical, parameter :: PARALLEL_FAULT = .TRUE.
  ! NOTE: PARALLEL_FAULT has to be the same
  !       in fault_solver_common.f90, fault_generate_databases.f90 and fault_scotch.f90
 
@@ -110,9 +111,9 @@ subroutine fault_read_input(prname,myrank)
     ANY_FAULT_IN_THIS_PROC = .true.
 
     allocate(fault_db(iflt)%ispec1(nspec))
-    allocate(fault_db(iflt)%inodes1(4,nspec))
+    allocate(fault_db(iflt)%inodes1(NGNOD2D,nspec))
     allocate(fault_db(iflt)%ispec2(nspec))
-    allocate(fault_db(iflt)%inodes2(4,nspec))
+    allocate(fault_db(iflt)%inodes2(NGNOD2D,nspec))
 
     do i=1,nspec
       read(IIN_PAR) fault_db(iflt)%ispec1(i), fault_db(iflt)%inodes1(:,i)
@@ -267,10 +268,14 @@ end subroutine setup_ijk
   if (fdb%eta > 0.0_CUSTOM_REAL) then
     if (.not.allocated(Kelvin_Voigt_eta)) then
       allocate(Kelvin_Voigt_eta(nspec))
+!      allocate(KV_direction(nspec))
       Kelvin_Voigt_eta(:) = 0.0_CUSTOM_REAL
+!      KV_direction(:) = 0
     endif
     Kelvin_Voigt_eta(fdb%ispec1) = fdb%eta
     Kelvin_Voigt_eta(fdb%ispec2) = fdb%eta
+!    KV_direction(fdb%ispec1) = fdb%iface1
+!    KV_direction(fdb%ispec2) = fdb%iface2
   endif
 
  end subroutine
@@ -543,33 +548,33 @@ subroutine save_one_fault_test(f,IOUT)
   integer :: e,k
   character(15) :: fmt1,fmt2
 
-  write(fmt1,'("(a,",I0,"(x,I7))")') NGLLSQUARE+1   ! fmt = (a,(NGLL^2+1)(x,I7))
-  write(fmt2,'("(a,",I0,"(x,F0.4))")') NGLLSQUARE+1   ! fmt = (a,(NGLL^2+1)(x,F0.16))
+ ! write(fmt1,'("(a,",I0,"(x,I7))")') NGLLSQUARE+1   ! fmt = (a,(NGLL^2+1)(x,I7))
+ ! write(fmt2,'("(a,",I0,"(x,F0.4))")') NGLLSQUARE+1   ! fmt = (a,(NGLL^2+1)(x,F0.16))
 
   write(IOUT,*) 'NSPEC NGLOB NGLL = ',f%nspec,f%nglob,NGLLX
   if (f%nspec==0) return
-  do e=1,f%nspec
-    write(IOUT,*) 'FLT_ELEM = ',e
-    write(IOUT,*) 'ISPEC1 ISPEC2 = ',f%ispec1(e),f%ispec2(e)
-    write(IOUT,fmt1) 'IBOOL1 = ',f%ibool1(:,e)
-    write(IOUT,fmt1) 'IBOOL2 = ',f%ibool2(:,e)
-    write(IOUT,fmt1) 'I1 = ',f%ijk1(1,:,e)
-    write(IOUT,fmt1) 'J1 = ',f%ijk1(2,:,e)
-    write(IOUT,fmt1) 'K1 = ',f%ijk1(3,:,e)
-    write(IOUT,fmt1) 'I2 = ',f%ijk2(1,:,e)
-    write(IOUT,fmt1) 'J2 = ',f%ijk2(2,:,e)
-    write(IOUT,fmt1) 'K2 = ',f%ijk2(3,:,e)
-    write(IOUT,fmt2) 'JAC2DW = ',f%jacobian2Dw(:,e)
-    write(IOUT,fmt2) 'N1 = ',f%normal(1,:,e)
-    write(IOUT,fmt2) 'N2 = ',f%normal(2,:,e)
-    write(IOUT,fmt2) 'N3 = ',f%normal(3,:,e)
-  enddo
+ ! do e=1,f%nspec
+ !   write(IOUT,*) 'FLT_ELEM = ',e
+ !   write(IOUT,*) 'ISPEC1 ISPEC2 = ',f%ispec1(e),f%ispec2(e)
+!    write(IOUT,fmt1) 'IBOOL1 = ',f%ibool1(:,e)
+!    write(IOUT,fmt1) 'IBOOL2 = ',f%ibool2(:,e)
+!    write(IOUT,fmt1) 'I1 = ',f%ijk1(1,:,e)
+!    write(IOUT,fmt1) 'J1 = ',f%ijk1(2,:,e)
+!    write(IOUT,fmt1) 'K1 = ',f%ijk1(3,:,e)
+!    write(IOUT,fmt1) 'I2 = ',f%ijk2(1,:,e)
+!    write(IOUT,fmt1) 'J2 = ',f%ijk2(2,:,e)
+!    write(IOUT,fmt1) 'K2 = ',f%ijk2(3,:,e)
+!    write(IOUT,fmt2) 'JAC2DW = ',f%jacobian2Dw(:,e)
+!    write(IOUT,fmt2) 'N1 = ',f%normal(1,:,e)
+!    write(IOUT,fmt2) 'N2 = ',f%normal(2,:,e)
+!    write(IOUT,fmt2) 'N3 = ',f%normal(3,:,e)
+!  enddo
 
-  write(IOUT,*) 'FLT_NODE IBULK1 IBULK2'
-  do k=1,f%nglob
-    write(IOUT,*) k,f%ibulk1(k),f%ibulk2(k)
-  enddo
-
+!  write(IOUT,*) 'FLT_NODE IBULK1 IBULK2'
+!  do k=1,f%nglob
+!    write(IOUT,*) k,f%ibulk1(k),f%ibulk2(k)
+!  enddo
+!commented by Kangchen Bai
   write(IOUT,*) 'FLT_NODE xcoordbulk ycoordbulk zcoordbulk'
   do k=1,f%nglob
     write(IOUT,*) f%ibulk1(k),f%xcoordbulk1(k),f%ycoordbulk1(k),f%zcoordbulk1(k)
@@ -607,7 +612,10 @@ subroutine fault_save_arrays(prname)
     size_Kelvin_Voigt = 0
   endif
   write(IOUT) size_Kelvin_Voigt
-  if (size_Kelvin_Voigt /= 0) Write(IOUT) Kelvin_Voigt_eta
+  if (size_Kelvin_Voigt /= 0) then
+        Write(IOUT) Kelvin_Voigt_eta 
+!        Write(IOUT) KV_direction
+  endif
   close(IOUT)
 
 ! saves mesh file proc***_fault_db.bin

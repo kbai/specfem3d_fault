@@ -325,6 +325,8 @@
     IMODEL = IMODEL_SALTON_TROUGH
   case( 'tomo' )
     IMODEL = IMODEL_TOMO
+  case( 'layer' )
+    IMODEL = IMODEL_1D_LAYER
 
   case default
     print*

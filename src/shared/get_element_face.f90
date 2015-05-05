@@ -142,10 +142,22 @@
       iglob = ibool(i,j,k,ispec)
       print*,'error corner:',icorner,'xyz:',xstore_dummy(iglob),ystore_dummy(iglob),zstore_dummy(iglob)
     enddo
+    do ifa=1,6
+    do icorner=1,NGNOD2D_FOUR_CORNERS
+      i = iface_all_corner_ijk(1,icorner,ifa)
+      j = iface_all_corner_ijk(2,icorner,ifa)
+      k = iface_all_corner_ijk(3,icorner,ifa)
+      iglob = ibool(i,j,k,ispec)
+      print*,'error corner:',icorner,'xyz:',xstore_dummy(iglob),ystore_dummy(iglob),zstore_dummy(iglob)
+      print*,'iglob:',iglob
+    enddo
+    enddo 
     ! stop
     print*,'xcoord:', xcoord(:)
     print*,'ycoord:', ycoord(:)
     print*,'zcoord:', zcoord(:)
+    print*,'ispec:',ispec
+    print*,'iglob:',iglob
     stop 'error element face midpoint'
   else
     iface_id = iloc(1)

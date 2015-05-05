@@ -1,0 +1,32 @@
+create_regions_mesh.f90:                              kappastore,mustore,rho_vp,rho_vs, &
+create_regions_mesh.f90:                              mustore,rho_vs,kappastore,rho_vp,qkappa_attenuation_store,qmu_attenuation_store, &
+create_regions_mesh.f90:  deallocate(kappastore,mustore,rho_vp,rho_vs)
+create_regions_mesh.f90:           mustore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+generate_databases_par.f90:  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rhostore,kappastore,mustore
+get_model.f90:            mustore(i,j,k,ispec) = rho*vs*vs
+get_model.f90:            mustore(i,j,k,ispec) = mu_fr
+memory_eval.f90:  ! kappastore,mustore
+model_gll_adios.F90:  !  where ( mustore > 100.0 )  &
+model_gll_adios.F90:  !   where ( mustore > 100.0 )       vs_read = vp_read / sqrt(3.0)
+model_gll_adios.F90:  mustore     = rhostore * vs_read * vs_read
+model_gll.f90:  !  where ( mustore > 100.0 )  &
+model_gll.f90:  !   where ( mustore > 100.0 )       vs_read = vp_read / sqrt(3.0)
+model_gll.f90:  mustore     = rhostore * vs_read * vs_read
+model_ipati_adios.F90:  mustore     = rhostore * vs_read * vs_read
+model_ipati_adios.F90:      mustore(:,:,:,ispec) = rhostore(:,:,:,ispec) * vs_read(:,:,:,ispec) * vs_read(:,:,:,ispec)
+model_ipati.f90:  mustore     = rhostore * vs_read * vs_read
+model_ipati.f90:      mustore(:,:,:,ispec) = rhostore(:,:,:,ispec) * vs_read(:,:,:,ispec) * vs_read(:,:,:,ispec)
+save_arrays_solver_adios.F90:                                   local_dim, "", STRINGIFY_VAR(mustore))
+save_arrays_solver_adios.F90:                                   local_dim, STRINGIFY_VAR(mustore))
+save_arrays_solver_adios.F90:  !  vp_tmp = (FOUR_THIRDS * mustore + kappastore) / rho_vp
+save_arrays_solver_adios.F90:  where( rho_vp /= 0._CUSTOM_REAL ) vp_tmp = (FOUR_THIRDS * mustore + kappastore) / rho_vp
+save_arrays_solver_adios.F90:  !  vs_tmp = mustore / rho_vs
+save_arrays_solver_adios.F90:  where( rho_vs /= 0._CUSTOM_REAL )  vs_tmp = mustore / rho_vs
+save_arrays_solver_adios.F90:  where( rho_vp /= 0._CUSTOM_REAL ) rho_tmp = rho_vp**2 / (FOUR_THIRDS * mustore + kappastore)
+save_arrays_solver.f90:  write(IOUT) mustore
+save_arrays_solver.f90:  !  v_tmp = (FOUR_THIRDS * mustore + kappastore) / rho_vp
+save_arrays_solver.f90:  where( rho_vp /= 0._CUSTOM_REAL ) v_tmp = (FOUR_THIRDS * mustore + kappastore) / rho_vp
+save_arrays_solver.f90:  !  v_tmp = mustore / rho_vs
+save_arrays_solver.f90:  where( rho_vs /= 0._CUSTOM_REAL )  v_tmp = mustore / rho_vs
+save_arrays_solver.f90:  where( rho_vp /= 0._CUSTOM_REAL ) v_tmp = rho_vp**2 / (FOUR_THIRDS * mustore + kappastore)
+setup_color_perm.f90:  call permute_elements_real(mustore,temp_array_real,perm,nspec)

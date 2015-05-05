@@ -113,6 +113,7 @@
   if( ier /= 0 ) stop 'error allocating array rhostore'
   read(27) rhostore
 
+!  call add_layered_structure
   ! elastic
   ! number of elastic elements in this partition
   nspec_elastic = count(ispec_is_elastic(:))
@@ -752,6 +753,43 @@
   ! reads adjoint parameters
   call read_mesh_databases_adjoint()
 
+contains
+subroutine add_layered_structure
+  integer num_lay,ier,ilay,II,JJ,KK
+  real,dimension(:),allocatable ::  Vp,Vs,Den,Top,Bot,Kap,Muu
+   num_lay=4;
+   allocate(Vp(num_lay),stat=ier)
+   allocate(Vs(num_lay),stat=ier)
+   allocate(Den(num_lay),stat=ier)
+   allocate(Top(num_lay),stat=ier)
+   allocate(Bot(num_lay),stat=ier)
+   allocate(Kap(num_lay),stat=ier)
+   allocate(Muu(num_lay),stat=ier)
+
+   Vp=(/3.44e3,4.25e3,4.53e3,4.80e3/)
+   Vs=(/1.00e3,1.45e3,1.60e3,2.90e3/)
+   Top=(/0.01,-4.0e3,-16.0e3,-30.0e3/)
+   Bot=(/-4.0e3,-16.0e3,-30.0e3,-42.0e3/)
+   Den=(/2.5e3,2.6e3,2.7e3,2.9e3/)
+   Muu=Vs*Vs*Den
+   Kap=Vp*Vp*Den-4.0/3.0*Muu 
+  write(IMAIN,*) 'the layered model:'
+  
+  do ilay=1,num_lay
+     do II=1,NGLLX
+       do JJ=1,NGLLY
+         do KK=1,NGLLZ
+        write(IMAIN,*) 'the ',ilay,' ', Vp(ilay),' ', Vs(ilay),' ',Top(ilay),' ',Bot(ilay),' ',Den(ilay),' ',Muu(ilay),' ',Kap(ilay)
+        
+        kappastore(II,JJ,KK,:)=kappastore(II,JJ,KK,:)+(-kappastore(II,JJ,KK,:)+Kap(ilay))*((zstore>=Bot(ilay))*(zstore<Top(ilay)))
+        mustore(II,JJ,KK,:)=mustore(II,JJ,KK,:)+(-mustore(II,JJ,KK,:)+Muu(ilay))*((zstore>=Bot(ilay))*(zstore<Top(ilay)))
+        rhostore(II,JJ,KK,:)=rhostore(II,JJ,KK,:)+(-rhostore(II,JJ,KK,:)+Den(ilay))*((zstore>=Bot(ilay))*(zstore<Top(ilay)))
+ enddo
+ enddo
+ enddo  
+ enddo
+  end subroutine add_layered_structure
+  
   end subroutine read_mesh_databases
 
 
@@ -1151,3 +1189,6 @@
   endif
 
   end subroutine read_mesh_databases_adjoint
+
+
+  

@@ -226,7 +226,10 @@ contains
        do el = 0, nnodes_elmnts(num_node)-1
           parts_node(part(nodes_elmnts(el+nsize*num_node))) = 1
        enddo
-
+!nodes_elemnts stores the elements that contains a specific node
+!nnodes_elemnts stores the number of elements that shares a node
+!size_glob2loc_nodes is the total times that each node exist in all elements)
+!glob2loc_nodes_npart stores the index of beginning and ending of a node in 
        do num_part = 0, nparts-1
           if ( parts_node(num_part) == 1 ) then
              size_glob2loc_nodes = size_glob2loc_nodes + 1
@@ -255,7 +258,8 @@ contains
           parts_node(part(nodes_elmnts(el+nsize*num_node))) = 1
        enddo
        do num_part = 0, nparts-1
-
+!glob2loc_nodes_parts stores all processor that a node belongs to
+!glob2loc_nodes stores the numbering of the node in a processor
           if ( parts_node(num_part) == 1 ) then
              glob2loc_nodes_parts(size_glob2loc_nodes) = num_part
              glob2loc_nodes(size_glob2loc_nodes) = num_parts(num_part)
