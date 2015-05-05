@@ -78,6 +78,9 @@ module fault_solver_dynamic
 
   logical, save :: TPV29 = .FALSE.
 
+  logical, save :: TPV10x= .FALSE.
+  ! this is for some of the rate and state friction SCEC benchmarks.
+
   logical, save :: RATE_AND_STATE = .TRUE.
 
   logical, save :: BALOCHI = .FALSE.
@@ -1028,6 +1031,8 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
 
  ! WARNING: below is an ad-hoc setting of a(x,z) for some SCEC benchmark
  !          This should be instead an option in init_2d_distribution
+  if (TPV10x) then
+
   W1=15000._CUSTOM_REAL
   W2=7500._CUSTOM_REAL
   w=3000._CUSTOM_REAL
@@ -1073,6 +1078,7 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
     endif
 
   enddo
+  endif
 
  ! WARNING: The line below scratches an earlier initialization of theta through theta_init
  !          We should implement it as an option for the user
