@@ -226,7 +226,7 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
   integer :: n1,n2,n3
   real(kind=CUSTOM_REAL) :: Sigma(6)
   real(kind=CUSTOM_REAL) :: GradientZ
-
+  integer :: ier
   NAMELIST /UNIFORM/ Sigma, GradientZ
 
   NAMELIST / INIT_STRESS / S1,S2,S3,n1,n2,n3
@@ -253,8 +253,10 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
     n1=0
     n2=0
     n3=0
-    read(IIN_PAR,nml=UNIFORM)
-    read(IIN_PAR, nml=INIT_STRESS)
+    read(IIN_PAR,nml=UNIFORM,IOSTAT=IER)
+    if(ier /= 0) STOP 'error: cannot locate nml UNIFORM'
+    read(IIN_PAR, nml=INIT_STRESS,IOSTAT=IER)
+    if(ier /= 0) STOP 'error: cannot locate nml INIT_STRESS'
     bc%T0(1,:) = S1
     bc%T0(2,:) = S2
     bc%T0(3,:) = S3
@@ -435,7 +437,7 @@ subroutine init_2d_distribution(a,coord,iin,n)
   character(len=20) :: shape
   real(kind=CUSTOM_REAL) :: val,valh, xc, yc, zc, r,rc, l, lx,ly,lz
   real(kind=CUSTOM_REAL) :: r1(size(a))
-  integer :: i,ij
+  integer :: i,ij,ier
   real(kind=CUSTOM_REAL) :: SMALLVAL
   real(kind=CUSTOM_REAL) :: PI
   real(kind=CUSTOM_REAL) :: Mu(size(a)),Mu0,Vp,Vs,Att,Rho,Muc  !Kangchen added for TPV31
@@ -460,7 +462,8 @@ subroutine init_2d_distribution(a,coord,iin,n)
     lz = 0e0_CUSTOM_REAL
     rc = 0e0_CUSTOM_REAL
 
-    read(iin,DIST2D)
+    read(iin,DIST2D,IOSTAT=IER)
+    if(ier /= 0) STOP 'error: cannot locate nml DIST2D'
     select case(shape)
     case ('cylindertaper')
      r1=sqrt(((coord(1,:)-xc)**2 + (coord(3,:)-zc)**2 ));
@@ -842,7 +845,7 @@ subroutine swf_init(f,mu,coord,IIN_PAR)
   real(kind=CUSTOM_REAL), intent(in)  :: coord(:,:)
   integer, intent(in) :: IIN_PAR
 
-  integer :: nglob
+  integer :: nglob，ier
   real(kind=CUSTOM_REAL) :: mus,mud,dc,C,T
   integer :: nmus,nmud,ndc,nC,nForcedRup
 
@@ -870,7 +873,9 @@ subroutine swf_init(f,mu,coord,IIN_PAR)
   nC = 0
   nForcedRup = 0
 
-  read(IIN_PAR, nml=SWF)
+  read(IIN_PAR, nml=SWF, iostat=ier)
+  if(ier /= 0) STOP 'error: cannot locate nml SWF'
+
 
   f%mus = mus
   f%mud = mud
@@ -938,14 +943,13 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
   real(kind=CUSTOM_REAL), intent(in) :: coord(:,:)
   real(kind=CUSTOM_REAL), pointer :: nucFload(:)
   integer, intent(in) :: IIN_PAR
-
   real(kind=CUSTOM_REAL) :: V0,f0,a,b,L,theta_init,V_init,fw,Vw, C,T
   integer :: nV0,nf0,na,nb,nL,nV_init,ntheta_init,nfw,nVw, nC,nForcedRup
   real(kind=CUSTOM_REAL) :: W1,W2,w,hypo_z
   real(kind=CUSTOM_REAL) :: x,z
   logical :: c1,c2,c3,c4
   real(kind=CUSTOM_REAL) :: b11,b12,b21,b22,B1,B2
-  integer :: i !,nglob_bulk
+  integer :: i,ier !,nglob_bulk
   real(kind=CUSTOM_REAL) :: Fload
   integer :: nFload
 !  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: init_vel
@@ -992,7 +996,8 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
   nfw =0
   nVw =0
 
-  read(IIN_PAR, nml=RSF)
+  read(IIN_PAR, nml=RSF,iostat=ier)
+  if(ier /= 0) STOP 'error: cannot locate nml RSF'
 
   f%V0 = V0
   f%f0 = f0
@@ -1096,7 +1101,8 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
   allocate( nucFload(nglob) )
   Fload = 0.e0_CUSTOM_REAL
   nFload = 0
-  read(IIN_PAR, nml=ASP)
+  read(IIN_PAR, nml=ASP,iostat=ier)
+  if(ier /= 0) STOP 'error: cannot locate nml SWF'
   nucFload = Fload
   call init_2d_distribution(nucFload,coord,IIN_PAR,nFload)
 
