@@ -845,7 +845,7 @@ subroutine swf_init(f,mu,coord,IIN_PAR)
   real(kind=CUSTOM_REAL), intent(in)  :: coord(:,:)
   integer, intent(in) :: IIN_PAR
 
-  integer :: nglob，ier
+  integer :: nglob,ier
   real(kind=CUSTOM_REAL) :: mus,mud,dc,C,T
   integer :: nmus,nmud,ndc,nC,nForcedRup
 
