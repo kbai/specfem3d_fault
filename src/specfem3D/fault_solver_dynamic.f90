@@ -83,6 +83,8 @@ module fault_solver_dynamic
 
   logical, save :: RATE_AND_STATE = .TRUE.
 
+  logical, save :: BALOCHI_LAYER = .TRUE.
+
   logical, save :: BALOCHI = .FALSE.
 
   real(kind=CUSTOM_REAL), allocatable, save :: Kelvin_Voigt_eta(:)
@@ -1685,10 +1687,33 @@ Sigma_TPV29(6)*bc%R(3,1,ij)+Sigma_TPV29(5)*bc%R(3,2,ij)+Sigma_TPV29(3)*bc%R(3,3,
  
     enddo
   endif 
-  
-  Traction = rotate(bc,Traction,1)    
+
+
+  if(BALOCHI_LAYER) then
+   Mu0=32.03812032e9
+   do ij=1,bc%nglob
+   call model_1D_layer(bc%coord(1,ij),bc%coord(2,ij),bc%coord(3,ij),Rho,Vp,Vs,Att)
+
+   Mu=Rho*Vs*Vs
+!   Sigma_TPV29(1)=-60.0e6*Mu/Mu0
+!   Sigma_TPV29(2)=-60.0e6*Mu/Mu0
+!   Sigma_TPV29(3)=0.0
+!   Sigma_TPV29(4)=30.0e6*Mu/Mu0
+!   Sigma_TPV29(5)=0.0
+!   Sigma_TPV29(6)=0.0
+   Traction(1,ij) = Traction(1,ij)*Mu/Mu0
+!   Sigma_TPV29(1)*bc%R(3,1,ij)+Sigma_TPV29(4)*bc%R(3,2,ij)+Sigma_TPV29(6)*bc%R(3,3,ij)
+   Traction(2,ij) = Traction(2,ij)*Mu/Mu0
+!   Sigma_TPV29(4)*bc%R(3,1,ij)+Sigma_TPV29(2)*bc%R(3,2,ij)+Sigma_TPV29(5)*bc%R(3,3,ij)
+   Traction(3,ij) = Traction(3,ij)*Mu/Mu0
+!   Sigma_TPV29(6)*bc%R(3,1,ij)+Sigma_TPV29(5)*bc%R(3,2,ij)+Sigma_TPV29(3)*bc%R(3,3,ij)
+
+  enddo
+  endif
+
+  Traction = rotate(bc,Traction,1)
   bc%T0 =bc%T0+ Traction
- 
+
 end subroutine init_fault_traction
 
 
