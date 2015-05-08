@@ -78,7 +78,7 @@
   depth = -zmesh
 !  write(*,*) zmesh,TABLE(:,1)
   ! assigns model parameters
-  do counter=1,size(TABLE,1)
+  do counter=1,size(TABLE,1)－1
     if (depth>=TABLE(counter,1) .and. depth<=TABLE(counter+1,1)) then
      alpha=(depth-TABLE(counter,1))/(TABLE(counter+1,1)-TABLE(counter,1));
      Vp=(1.0-alpha)*TABLE(counter,2)+(alpha)*TABLE(counter+1,2)
