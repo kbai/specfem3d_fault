@@ -226,11 +226,11 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
 
   real(kind=CUSTOM_REAL) :: S1,S2,S3
   integer :: n1,n2,n3
-  real(kind=CUSTOM_REAL) :: Sigma(6)
+  real(kind=CUSTOM_REAL) :: Sigma_NORTH(6),Sigma_SOUTH(6)
   real(kind=CUSTOM_REAL) :: GradientZ
   integer :: ier
-  NAMELIST /UNIFORM/ Sigma, GradientZ
-
+  NAMELIST /UNIFORM_NORTH/ Sigma_NORTH, GradientZ
+  NAMELIST /UNIFORM_SOUTH/ Sigma_SOUTH, GradientZ
   NAMELIST / INIT_STRESS / S1,S2,S3,n1,n2,n3
 
   call initialize_fault(bc,IIN_BIN)
@@ -255,7 +255,8 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
     n1=0
     n2=0
     n3=0
-    read(IIN_PAR,nml=UNIFORM,IOSTAT=IER)
+    read(IIN_PAR,nml=UNIFORM_NORTH,IOSTAT=IER)     !CUSTOMIZED FOR BALOCHISTAN SIMULATION
+    read(IIN_PAR,nml=UNIFORM_SOUTH,IOSTAT=IER)     !CUSTOMIZED FOR BALOCHISTAM SIMULATION
     if(ier /= 0) STOP 'error: cannot locate nml UNIFORM'
     read(IIN_PAR, nml=INIT_STRESS,IOSTAT=IER)
     if(ier /= 0) STOP 'error: cannot locate nml INIT_STRESS'
@@ -265,7 +266,7 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
     call init_2d_distribution(bc%T0(1,:),bc%coord,IIN_PAR,n1)
     call init_2d_distribution(bc%T0(2,:),bc%coord,IIN_PAR,n2)
     call init_2d_distribution(bc%T0(3,:),bc%coord,IIN_PAR,n3)
-    call init_fault_traction(bc,Sigma,GradientZ) !added the fault traction caused by a regional stress field 
+    call init_fault_traction(bc,Sigma_NORTH,Sigma_SOUTH,GradientZ) !added the fault traction caused by a regional stress field
 !    call add_depth_dependence
      if (BALOCHI) then
        call make_frictional_stress
@@ -1601,9 +1602,10 @@ end function rtsafe
 !=====================================================================
 !---------------------------------------------------------------------
 !Kangchen Bai---------------------------------------------------------
-subroutine init_fault_traction(bc,Sigma,GradientZ)
+subroutine init_fault_traction(bc,Sigma_NORTH,Sigma_SOUTH,GradientZ)
   type(bc_dynandkinflt_type), intent(inout) :: bc
-  real(kind=CUSTOM_REAL),dimension(6), intent(in) :: Sigma
+  real(kind=CUSTOM_REAL),dimension(6), intent(in) :: Sigma_NORTH,Sigma_SOUTH
+  real(kind=CUSTOM_REAL),dimension(6,bc%nglob) :: Sigma
   real(kind=CUSTOM_REAL),dimension(6) :: Sigma_TPV29
 
   real(kind=CUSTOM_REAL),dimension(3,bc%nglob) :: Traction
@@ -1611,8 +1613,16 @@ subroutine init_fault_traction(bc,Sigma,GradientZ)
   real(kind=CUSTOM_REAL) :: GradientZ
   logical :: TPV29=.FALSE.
   logical :: TPV31=.FALSE.
+  real(kind=CUSTOM_REAL) :: nEND,sEND
   real(kind=CUSTOM_REAL) :: Pf,Omega,Depth,b11,b33,b13
   real(kind=CUSTOM_REAL) :: Vs,Vp,Rho,Att,Mu,Mu0
+
+  nEND = 150.0e3_CUSTOM_REAL
+  sEND = -150.0e3_CUSTOM_REAL
+  do ij=1,6
+        Sigma(ij,:) = Sigma_NORTH(ij)*(bc%coord(2,:)-sEND)/(nEND-sEND) &
+        + Sigma_SOUTH(ij)*(bc%coord(2,:)-nEND)/(sEND-nEND)
+  enddo
   !sigma_xx :: sigma(1)
   !sigma_yy :: sigma(2)
   !sigma_zz :: sigma(3)
@@ -1620,11 +1630,11 @@ subroutine init_fault_traction(bc,Sigma,GradientZ)
   !sigma_yz :: sigma(5)
   !sigma_xz :: sigma(6)
   Traction(1,:) = &
-    Sigma(1)*bc%R(3,1,:)+Sigma(4)*bc%R(3,2,:)+Sigma(6)*bc%R(3,3,:)
+    Sigma(1,:)*bc%R(3,1,:)+Sigma(4,:)*bc%R(3,2,:)+Sigma(6,:)*bc%R(3,3,:)
   Traction(2,:) = &
-    Sigma(4)*bc%R(3,1,:)+Sigma(2)*bc%R(3,2,:)+Sigma(5)*bc%R(3,3,:)
+    Sigma(4,:)*bc%R(3,1,:)+Sigma(2,:)*bc%R(3,2,:)+Sigma(5,:)*bc%R(3,3,:)
   Traction(3,:) = &
-    Sigma(6)*bc%R(3,1,:)+Sigma(5)*bc%R(3,2,:)+(Sigma(3)+(bc%coord(3,:)*GradientZ))*bc%R(3,3,:)
+    Sigma(6,:)*bc%R(3,1,:)+Sigma(5,:)*bc%R(3,2,:)+(Sigma(3,:)+(bc%coord(3,:)*GradientZ))*bc%R(3,3,:)
 !  Traction = rotate(bc,Traction,1)    
 !  bc%T0 =bc%T0+ Traction
   if(TPV29) then
