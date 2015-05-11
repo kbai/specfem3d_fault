@@ -1,0 +1,10 @@
+#! /bin/bash
+bn=`basename $PWD`
+NPROC=`grep NPROC DATA/Par_file | cut -d = -f 2 `
+
+# total number of nodes is the product of the values read
+numnodes=$((NPROC+0))
+
+
+qsub  -N $bn -v pd=`pwd` -l nodes=$numnodes -l walltime=72:00:00 ./go_solver_lsf.bash  
+

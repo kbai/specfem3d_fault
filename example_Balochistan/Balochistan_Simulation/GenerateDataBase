@@ -1,0 +1,8 @@
+#!/bin/bash
+NPROC=`grep NPROC DATA/Par_file | cut -d = -f 2 `
+
+nodes=$NPROC
+echo $NPROC
+NN=$((NPROC+0))
+qsub -v pd=`pwd` -l nodes=$NN -l walltime=03:03:00 -N MESHER31 ./go_generate_databases_lsf.bash  
+
