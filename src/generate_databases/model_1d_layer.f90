@@ -34,7 +34,7 @@
 !--------------------------------------------------------------------------------------------------
 
   subroutine model_1D_layer(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
-
+! Warning: If you change velocity model in this file you have to also change the same file in ../specfem3d folder Kangchen
 ! given a GLL point, returns super-imposed velocity model values
 
   use create_regions_mesh_ext_par
