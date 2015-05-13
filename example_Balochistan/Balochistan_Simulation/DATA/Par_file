@@ -32,7 +32,7 @@ NGNOD                       = 27
 #   1d_prem,1d_socal,1d_cascadia
 # 3D models available are:
 #   aniso,external,gll,salton_trough,tomo
-MODEL                           = default
+MODEL                           = layer
 
 # parameters describing the model
 APPROXIMATE_OCEAN_LOAD                          = .false.
@@ -84,7 +84,7 @@ HDUR_MOVIE                      = 1.0
 SAVE_MESH_FILES                 = .false.
 
 # path to store the local database file on each node
-LOCAL_PATH                      = ../DATABASES_MPI
+LOCAL_PATH                      = ../../Strong_weakening/DATABASES_MPI
 
 # interval at which we output time step info and max of norm of displacement
 NTSTEP_BETWEEN_OUTPUT_INFO      = 500
