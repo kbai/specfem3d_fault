@@ -42,3 +42,4 @@ sigma_zz=sigma_3
 settings="&UNIFORM_NORTH Sigma_NORTH=%f,%f,%f,%f,0.0,0.0,GradientZ = 0.0/ !stress field at NORTH favors strike-slip motion"%(sigma_xx,sigma_yy,sigma_zz,sigma_xy)
 s = "awk '{if($0~/UNIFORM_NORTH/) printf(\"%s\\n\");else print $0}'  Par_file_faults_new > Par_file_faults_new_2" %(settings)
 os.system(s)
+os.system("mv Par_file_faults_new_2 Par_file_faults")

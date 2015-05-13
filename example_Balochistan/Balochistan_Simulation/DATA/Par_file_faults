@@ -7,7 +7,7 @@
 1e-3                                            ! V_RUPT
 
 &BEGIN_FAULT /
-&UNIFORM_NORTH Sigma_NORTH=-40000000.000000,-40000000.000000,320000000.000000,-0.000000,0.0,0.0,GradientZ = 0.0/ !stress field at NORTH favors strike-slip motion
+&UNIFORM_NORTH Sigma_NORTH=-49772116.295183,-20227883.704817,-20000000.000000,2604722.665004,0.0,0.0,GradientZ = 0.0/ !stress field at NORTH favors strike-slip motion
 &UNIFORM_SOUTH Sigma_SOUTH=-39134560.337255,-30865439.662745,-20000000.000000,14418925.439075,0.0,0.0,GradientZ = 0.0/ !stress field at SOUTH favors dip-slip motion
 &INIT_STRESS S1=0.0e6,S2=0.0e0,S3=0.0e6,n1=0,n2=0,n3=0 /
 &RSF V0 =1.e-6, f0 =0.4, a =0.01, b =0.014, L =0.4, V_init =1.e-16, theta_init =0.363591842632738, C=0.e0, nV0 =0, nf0 =1, na=0, nb=0, nL=0, nV_init=0, ntheta_init=1 /
