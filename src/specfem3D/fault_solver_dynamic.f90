@@ -763,7 +763,7 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
     bc%T = T
 
     ! Subtract initial stress
-    T = T - bc%T0
+    
 
     if (RATE_AND_STATE) T(1,:) = T(1,:) - TxExt
     !JPA: this eliminates the effect of TxExt on the equations of motion. Why is it needed?
