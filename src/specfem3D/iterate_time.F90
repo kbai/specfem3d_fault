@@ -1,31 +1,3 @@
-!=====================================================================
-!
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
-!               ---------------------------------------
-!
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
-!
-! This program is free software; you can redistribute it and/or modify
-! it under the terms of the GNU General Public License as published by
-! the Free Software Foundation; either version 2 of the License, or
-! (at your option) any later version.
-!
-! This program is distributed in the hope that it will be useful,
-! but WITHOUT ANY WARRANTY; without even the implied warranty of
-! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-! GNU General Public License for more details.
-!
-! You should have received a copy of the GNU General Public License along
-! with this program; if not, write to the Free Software Foundation, Inc.,
-! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-!
-!=====================================================================
-!
-! United States and French Government Sponsorship Acknowledged.
-
   subroutine iterate_time()
 
   use specfem_par
@@ -37,60 +9,9 @@
 
   implicit none
 
-  !----  create a Gnuplot script to display the energy curve in log scale
-  if( OUTPUT_ENERGY .and. myrank == 0) then
-    open(unit=IOUT_ENERGY,file=trim(OUTPUT_FILES)//'plot_energy.gnu',status='unknown',action='write')
-    write(IOUT_ENERGY,*) 'set term wxt'
-    write(IOUT_ENERGY,*) '#set term postscript landscape color solid "Helvetica" 22'
-    write(IOUT_ENERGY,*) '#set output "energy.ps"'
-    write(IOUT_ENERGY,*) 'set logscale y'
-    write(IOUT_ENERGY,*) 'set xlabel "Time step number"'
-    write(IOUT_ENERGY,*) 'set ylabel "Energy (J)"'
-    write(IOUT_ENERGY,'(a152)') '#plot "energy.dat" us 1:2 t ''Kinetic Energy'' w l lc 1, "energy.dat" us 1:3 &
-                         &t ''Potential Energy'' w l lc 2, "energy.dat" us 1:4 t ''Total Energy'' w l lc 4'
-    write(IOUT_ENERGY,*) '#pause -1 "Hit any key..."'
-    write(IOUT_ENERGY,*) '#plot "energy.dat" us 1:2 t ''Kinetic Energy'' w l lc 1'
-    write(IOUT_ENERGY,*) '#pause -1 "Hit any key..."'
-    write(IOUT_ENERGY,*) '#plot "energy.dat" us 1:3 t ''Potential Energy'' w l lc 2'
-    write(IOUT_ENERGY,*) '#pause -1 "Hit any key..."'
-    write(IOUT_ENERGY,*) 'plot "energy.dat" us 1:4 t ''Total Energy'' w l lc 4'
-    write(IOUT_ENERGY,*) 'pause -1 "Hit any key..."'
-    close(IOUT_ENERGY)
-  endif
-
-  ! open the file in which we will store the energy curve
-  if( OUTPUT_ENERGY .and. myrank == 0 ) &
-    open(unit=IOUT_ENERGY,file=trim(OUTPUT_FILES)//'energy.dat',status='unknown',action='write')
-
-!
-!   s t a r t   t i m e   i t e r a t i o n s
-!
-
-! synchronize all processes to make sure everybody is ready to start time loop
-  call sync_all()
-  if(myrank == 0) write(IMAIN,*) 'All processes are synchronized before time loop'
-
-  if(myrank == 0) then
-    write(IMAIN,*)
-    write(IMAIN,*) 'Starting time iteration loop...'
-    write(IMAIN,*)
-    call flush_IMAIN()
-  endif
-
-! create an empty file to monitor the start of the simulation
-  if(myrank == 0) then
-    open(unit=IOUT,file=trim(OUTPUT_FILES)//'/starttimeloop.txt',status='unknown')
-    write(IOUT,*) 'starting time loop'
-    close(IOUT)
-  endif
-
-! get MPI starting time
   time_start = wtime()
 
 
-! *********************************************************
-! ************* MAIN LOOP OVER THE TIME STEPS *************
-! *********************************************************
 
   do it = 1,1
     ! simulation status output and stability check
@@ -98,52 +19,18 @@
       call check_stability()
 
     ! simulation status output and stability check
-    if( OUTPUT_ENERGY ) then
-      if( mod(it,NTSTEP_BETWEEN_OUTPUT_ENERGY) == 0 .or. it == 5 .or. it == NSTEP ) &
-        call compute_total_energy()
-    endif
-
     ! updates wavefields using Newmark time scheme
-    call update_displacement_scheme()
 
     ! calculates stiffness term
     if( .not. GPU_MODE )then
       ! wavefields on CPU
 
-      ! note: the order of the computations for acoustic and elastic domains is crucial for coupled simulations
-      if( SIMULATION_TYPE == 3 ) then
-        ! kernel/adjoint simulations
-
-        ! adjoint wavefields
-        if( ELASTIC_SIMULATION .and. ACOUSTIC_SIMULATION )then
-          ! coupled acoustic-elastic simulations
-          ! 1. elastic domain w/ adjoint wavefields
-          call compute_forces_viscoelastic()
-          ! 2. acoustic domain w/ adjoint wavefields
-          call compute_forces_acoustic()
-        else
-          ! non-coupled simulations
-          ! (purely acoustic or elastic)
-          if( ACOUSTIC_SIMULATION ) call compute_forces_acoustic()
-          if( ELASTIC_SIMULATION ) call compute_forces_viscoelastic()
-        endif
-
-        ! backward/reconstructed wavefields
-        ! acoustic solver
-        ! (needs to be done after elastic one)
-        if( ACOUSTIC_SIMULATION ) call compute_forces_acoustic_bpwf()
-        ! elastic solver
-        ! (needs to be done first, before poroelastic one)
-        if( ELASTIC_SIMULATION ) call compute_forces_viscoelastic_bpwf()
-
-      else
-        ! forward simulations
+       ! forward simulations
 
         ! 1. acoustic domain
         if( ACOUSTIC_SIMULATION ) call compute_forces_acoustic()
         ! 2. elastic domain
         if( ELASTIC_SIMULATION ) call compute_forces_viscoelastic()
-      endif
 
       ! poroelastic solver
       if( POROELASTIC_SIMULATION ) call compute_forces_poroelastic()
@@ -157,46 +44,11 @@
       if( ELASTIC_SIMULATION ) call compute_forces_viscoelastic_GPU()
     endif
 
-    ! restores last time snapshot saved for backward/reconstruction of wavefields
-    ! note: this must be read in after the Newmark time scheme
-    if( SIMULATION_TYPE == 3 .and. it == 1 ) then
-      call it_read_forward_arrays()
-    endif
-
-    ! write the seismograms with time shift (GPU_MODE transfer included)
-    if( nrec_local > 0 .or. ( WRITE_SEISMOGRAMS_BY_MASTER .and. myrank == 0 ) ) then
-      call write_seismograms()
-    endif
-
-    ! calculating gravity field at current timestep
-    if( GRAVITY_SIMULATION ) call gravity_timeseries()
-
-    ! resetting d/v/a/R/eps for the backward reconstruction with attenuation
-    if( ATTENUATION ) then
-      call it_store_attenuation_arrays()
-    endif
-
-    ! adjoint simulations: kernels
-    if( SIMULATION_TYPE == 3 ) then
-      call compute_kernels()
-    endif
-
-    ! outputs movie files
-    if( MOVIE_SIMULATION ) then
+   if( MOVIE_SIMULATION ) then
       call write_movie_output()
     endif
 
     ! first step of noise tomography, i.e., save a surface movie at every time step
-    if( NOISE_TOMOGRAPHY == 1 ) then
-      if( num_free_surface_faces > 0) then
-        call noise_save_surface_movie(displ,ibool, &
-                            noise_surface_movie,it, &
-                            NSPEC_AB,NGLOB_AB, &
-                            num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
-                            Mesh_pointer,GPU_MODE)
-      endif
-    endif
-
 !
 !---- end of time iteration loop
 !
