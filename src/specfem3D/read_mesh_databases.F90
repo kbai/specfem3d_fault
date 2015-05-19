@@ -128,6 +128,7 @@
     if( ier /= 0 ) stop 'error allocating array veloc'
     allocate(accel(NDIM,NGLOB_AB),stat=ier)
     if( ier /= 0 ) stop 'error allocating array accel'
+    allocate(load(NDIM,NGLOB_AB),stat=ier)
     if( SIMULATION_TYPE /= 1 ) then
       allocate(accel_adj_coupling(NDIM,NGLOB_AB),stat=ier)
       if( ier /= 0 ) stop 'error allocating array accel_adj_coupling'

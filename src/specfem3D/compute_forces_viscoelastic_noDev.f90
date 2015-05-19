@@ -25,7 +25,7 @@
 !=====================================================================
 
 subroutine compute_forces_viscoelastic_noDev(iphase, &
-                        NSPEC_AB,NGLOB_AB,displ,veloc,accel, &
+                        NSPEC_AB,NGLOB_AB,displ,veloc,accel,load, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_yy,hprime_zz, &
                         hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,&
@@ -65,16 +65,17 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                      rmemory_duy_dxl_y, rmemory_duy_dzl_y, rmemory_duz_dyl_y, rmemory_dux_dyl_y, &
                      rmemory_dux_dxl_z, rmemory_duy_dyl_z, rmemory_duz_dzl_z, &
                      rmemory_duz_dxl_z, rmemory_duz_dyl_z, rmemory_duy_dzl_z, rmemory_dux_dzl_z, &
-                     rmemory_displ_elastic,displ_old
+                     rmemory_displ_elastic,displ_old 
   use fault_solver_dynamic, only : Kelvin_Voigt_eta!, KV_direction
-  use specfem_par, only : PI,FULL_ATTENUATION_SOLID, xigll, yigll, zigll, ystore
+  use specfem_par, only : PI,FULL_ATTENUATION_SOLID, xigll, yigll, zigll, ystore 
+  use specfem_par_elastic, only : rmassx ,rmassy ,rmassz
 
   implicit none
 
   integer :: NSPEC_AB,NGLOB_AB
 
 ! displacement, velocity and acceleration
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displ,veloc,accel
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displ,veloc,accel,load,delta_accel
 
 ! time step
   real(kind=CUSTOM_REAL) :: deltat
@@ -817,98 +818,26 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
 
           ! sum contributions from each element to the global mesh using indirect addressing
           iglob = ibool(i,j,k,ispec)
-          accel(1,iglob) = accel(1,iglob) - fac1*newtempx1(i,j,k) - &
+          delta_accel(1,iglob) = - fac1*newtempx1(i,j,k) - &
                                 fac2*newtempx2(i,j,k) - fac3*newtempx3(i,j,k)
-          accel(2,iglob) = accel(2,iglob) - fac1*newtempy1(i,j,k) - &
+          delta_accel(2,iglob) = - fac1*newtempy1(i,j,k) - &
                                 fac2*newtempy2(i,j,k) - fac3*newtempy3(i,j,k)
-          accel(3,iglob) = accel(3,iglob) - fac1*newtempz1(i,j,k) - &
+          delta_accel(3,iglob) = - fac1*newtempz1(i,j,k) - &
                                 fac2*newtempz2(i,j,k) - fac3*newtempz3(i,j,k)
 
-          !  update memory variables based upon the Runge-Kutta scheme
-          if(ATTENUATION) then
-
-             ! use Runge-Kutta scheme to march in time
-             do i_sls = 1,N_SLS
-
-                alphaval_loc = alphaval(i_sls)
-                betaval_loc = betaval(i_sls)
-                gammaval_loc = gammaval(i_sls)
-
-                if(FULL_ATTENUATION_SOLID) then
-                   ! term in trace
-                   factor_loc = kappastore(i,j,k,ispec) * factor_common_kappa(i_sls,i,j,k,ispec)
-
-                   Sn   = factor_loc * epsilondev_trace(i,j,k,ispec)
-                   Snp1   = factor_loc * epsilondev_trace_loc(i,j,k)
-                   R_trace(i,j,k,ispec,i_sls) = alphaval_loc * R_trace(i,j,k,ispec,i_sls) + &
-                        betaval_loc * Sn + gammaval_loc * Snp1
-                endif
-
-                ! term in xx yy zz xy xz yz
-                factor_loc = mustore(i,j,k,ispec) * factor_common(i_sls,i,j,k,ispec)
-
-                ! term in xx
-                Sn   = factor_loc * epsilondev_xx(i,j,k,ispec)
-                Snp1   = factor_loc * epsilondev_xx_loc(i,j,k)
-                R_xx(i,j,k,ispec,i_sls) = alphaval_loc * R_xx(i,j,k,ispec,i_sls) + &
-                     betaval_loc * Sn + gammaval_loc * Snp1
-                ! term in yy
-                Sn   = factor_loc * epsilondev_yy(i,j,k,ispec)
-                Snp1   = factor_loc * epsilondev_yy_loc(i,j,k)
-                R_yy(i,j,k,ispec,i_sls) = alphaval_loc * R_yy(i,j,k,ispec,i_sls) + &
-                     betaval_loc * Sn + gammaval_loc * Snp1
-                ! term in zz not computed since zero trace
-                ! term in xy
-                Sn   = factor_loc * epsilondev_xy(i,j,k,ispec)
-                Snp1   = factor_loc * epsilondev_xy_loc(i,j,k)
-                R_xy(i,j,k,ispec,i_sls) = alphaval_loc * R_xy(i,j,k,ispec,i_sls) + &
-                     betaval_loc * Sn + gammaval_loc * Snp1
-                ! term in xz
-                Sn   = factor_loc * epsilondev_xz(i,j,k,ispec)
-                Snp1   = factor_loc * epsilondev_xz_loc(i,j,k)
-                R_xz(i,j,k,ispec,i_sls) = alphaval_loc * R_xz(i,j,k,ispec,i_sls) + &
-                     betaval_loc * Sn + gammaval_loc * Snp1
-                ! term in yz
-                Sn   = factor_loc * epsilondev_yz(i,j,k,ispec)
-                Snp1   = factor_loc * epsilondev_yz_loc(i,j,k)
-                R_yz(i,j,k,ispec,i_sls) = alphaval_loc * R_yz(i,j,k,ispec,i_sls) + &
-                     betaval_loc * Sn + gammaval_loc * Snp1
-             enddo   ! end of loop on memory variables
-
-          endif  !  end of if attenuation
-
+          accel(1,iglob) = accel(1,iglob) + delta_accel(1,iglob)
+          accel(2,iglob) = accel(2,iglob) + delta_accel(2,iglob)
+          accel(3,iglob) = accel(3,iglob) + delta_accel(3,iglob)
+          
+ !         displ(1,iglob) = displ(1,iglob) + load(1,iglob) + delta_accel(1,iglob)*deltat*deltat*rmassx(iglob)  
+ !         displ(2,iglob) = displ(2,iglob) + load(2,iglob) + delta_accel(2,iglob)*deltat*deltat*rmassy(iglob)  
+ !         displ(3,iglob) = displ(3,iglob) + load(3,iglob) + delta_accel(3,iglob)*deltat*deltat*rmassz(iglob)  
         enddo
-      enddo
-    enddo
+     enddo
+  enddo
 
-        if (PML_CONDITIONS .and. (.not. backward_simulation)  .and. NSPEC_CPML > 0) then
-          ! do not merge this second line with the first using an ".and." statement
-          ! because array is_CPML() is unallocated when PML_CONDITIONS is false
-          if(is_CPML(ispec)) then
 
-            do k = 1,NGLLZ
-              do j = 1,NGLLY
-                do i = 1,NGLLX
-                  iglob = ibool(i,j,k,ispec)
-                  accel(1,iglob) = accel(1,iglob) - accel_elastic_CPML(1,i,j,k)
-                  accel(2,iglob) = accel(2,iglob) - accel_elastic_CPML(2,i,j,k)
-                  accel(3,iglob) = accel(3,iglob) - accel_elastic_CPML(3,i,j,k)
-               enddo
-             enddo
-           enddo
-         endif
-       endif
-
-        ! save deviatoric strain for Runge-Kutta scheme
-        if ( COMPUTE_AND_STORE_STRAIN ) then
-          if(FULL_ATTENUATION_SOLID) epsilondev_trace(:,:,:,ispec) = epsilondev_trace_loc(:,:,:)
-          epsilondev_xx(:,:,:,ispec) = epsilondev_xx_loc(:,:,:)
-          epsilondev_yy(:,:,:,ispec) = epsilondev_yy_loc(:,:,:)
-          epsilondev_xy(:,:,:,ispec) = epsilondev_xy_loc(:,:,:)
-          epsilondev_xz(:,:,:,ispec) = epsilondev_xz_loc(:,:,:)
-          epsilondev_yz(:,:,:,ispec) = epsilondev_yz_loc(:,:,:)
-        endif
-
+          !  update memory variables based upon the Runge-Kutta scheme
   enddo  ! spectral element loop
 
 

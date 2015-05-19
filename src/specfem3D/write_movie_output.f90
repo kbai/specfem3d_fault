@@ -1181,7 +1181,7 @@
     if( ier /= 0 ) stop 'error allocating arrays for movie div and curl'
 
     ! calculates divergence and curl of velocity field note that this subroutine also calculats the velocity field 
-   call wmo_movie_div_curl(NSPEC_AB,NGLOB_AB,veloc, &
+   call wmo_movie_div_curl(NSPEC_AB,NGLOB_AB,displ, &
                                div_glob,curl_glob,valency, &
                                div,curl_x,curl_y,curl_z, &
                                velocity_x,velocity_y,velocity_z, &

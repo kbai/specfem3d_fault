@@ -359,6 +359,7 @@
     displ(:,:) = 0._CUSTOM_REAL
     veloc(:,:) = 0._CUSTOM_REAL
     accel(:,:) = 0._CUSTOM_REAL
+    load(:,:) = 0._CUSTOM_REAL
     ! put negligible initial value to avoid very slow underflow trapping
     if(FIX_UNDERFLOW_PROBLEM) displ(:,:) = VERYSMALLVAL
   endif

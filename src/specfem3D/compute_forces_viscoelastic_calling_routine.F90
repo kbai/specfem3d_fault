@@ -67,10 +67,18 @@ subroutine compute_forces_viscoelastic()
 ! distinguishes two runs: for points on MPI interfaces, and points within the partitions
 
 
+  if (SIMULATION_TYPE_DYN) call bc_dynflt_set3d_all(load,veloc,displ)
+  if (SIMULATION_TYPE_KIN) call bc_kinflt_set_all(load,veloc,displ)
+
+  load(1,:) = load(1,:)*rmassx(:)*deltat*deltat
+  load(2,:) = load(2,:)*rmassy(:)*deltat*deltat
+  load(3,:) = load(3,:)*rmassz(:)*deltat*deltat
+ 
+
 
 !write(*,*) myrank,'my maximum value is', maxval(abs(displ))
 !write(*,*) '1 ',myrank,'my location is', maxloc(abs(displ),2)
-  do  num_iteration = 1,5
+  do  num_iteration = 1,5000
   do iphase=1,2
 
     !first for points on MPI interfaces
@@ -88,7 +96,7 @@ subroutine compute_forces_viscoelastic()
     else
       ! no optimizations used
       call compute_forces_viscoelastic_noDev(iphase,NSPEC_AB,NGLOB_AB, &
-                        displ,veloc,accel, &
+                        displ,veloc,accel,load, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_yy,hprime_zz, &
                         hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
@@ -116,9 +124,27 @@ subroutine compute_forces_viscoelastic()
                         phase_ispec_inner_elastic,.false.)
 
     endif
+   if (phase_is_inner .eqv. .false.) then
+       ! sends accel values to corresponding MPI interface neighbors
+       call assemble_MPI_vector_async_send(NPROC,NGLOB_AB,accel, &
+               buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
+               num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+               nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,&
+               my_neighbours_ext_mesh, &
+               request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
+
+    else
+      ! waits for send/receive requests to be completed and assembles values
+      call assemble_MPI_vector_async_w_ord(NPROC,NGLOB_AB,accel, &
+                            buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh,&
+                            max_nibool_interfaces_ext_mesh, &
+                            nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                            request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &
+                            my_neighbours_ext_mesh,myrank)
+    endif
+ 
 
 
-   enddo
    enddo
   !accel(1,:) = accel(1,:)*rmassx(:)
   !accel(2,:) = accel(2,:)*rmassy(:)
@@ -126,19 +152,23 @@ subroutine compute_forces_viscoelastic()
 
 !Percy , Fault boundary term B*tau is added to the assembled forces
 !        which at this point are stored in the array 'accel'
-  if (SIMULATION_TYPE_DYN) call bc_dynflt_set3d_all(accel,veloc,displ)
-  if (SIMULATION_TYPE_KIN) call bc_kinflt_set_all(accel,veloc,displ)
- !  write(*,*) SIMULATION_TYPE_DYN
+!  write(*,*) SIMULATION_TYPE_DYN
  ! multiplies with inverse of mass matrix (note: rmass has been inverted already)
-  accel(1,:) = accel(1,:)*rmassx(:)
-  accel(2,:) = accel(2,:)*rmassy(:)
-  accel(3,:) = accel(3,:)*rmassz(:)
+!  accel(1,:) = accel(1,:)*rmassx(:)
+!  accel(2,:) = accel(2,:)*rmassy(:)
+!  accel(3,:) = accel(3,:)*rmassz(:)
 
-!    call check_MPI_vector(NPROC,NGLOB_AB,accel, &
-!                                     num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-!                                     nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-!                                     my_neighbours_ext_mesh,myrank)
+  accel(1,:)=accel(1,:)*deltat*deltat*rmassx(:) + load(1,:)
+  accel(2,:)=accel(2,:)*deltat*deltat*rmassy(:) + load(2,:)
+  accel(3,:)=accel(3,:)*deltat*deltat*rmassz(:) + load(3,:)
+
+  write(*,*) maxval(accel(2,:))
+  displ(1,:) = displ(1,:) + accel(1,:)
+  displ(2,:) = displ(2,:) + accel(2,:)
+  displ(3,:) = displ(3,:) + accel(3,:)
+          
 !   
+
 !  
 ! updates acceleration with ocean load term
 
@@ -158,12 +188,10 @@ subroutine compute_forces_viscoelastic()
 !
 ! corrector:
 !   updates the velocity term which requires a(t+delta)
-  displ(:,:) = displ(:,:) - deltat*deltat*accel(:,:)
-
+!  displ(:,:) = displ(:,:) + load(:,:) + deltat*deltat*accel(:,:)
+  enddo
 !  if( PML_CONDITIONS ) then
 !    if( SIMULATION_TYPE == 1 .and. SAVE_FORWARD ) then
-!      if( nglob_interface_PML_elastic > 0 ) then
-!        call save_field_on_pml_interface(displ,veloc,accel,nglob_interface_PML_elastic,&
 !                                         b_PML_field,b_reclen_PML_field)
 !      endif
 !    endif
