@@ -1,6 +1,6 @@
 
 subroutine compute_forces_viscoelastic_noDev(iphase, &
-                        NSPEC_AB,NGLOB_AB,displ,veloc,accel,load, &
+                        NSPEC_AB,NGLOB_AB,X,veloc,AX,load, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_yy,hprime_zz, &
                         hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,&
@@ -50,7 +50,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
   integer :: NSPEC_AB,NGLOB_AB
 
 ! displacement, velocity and acceleration
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displ,veloc,accel,load,delta_accel
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: X,veloc,AX,load,delta_accel
 
 ! time step
   real(kind=CUSTOM_REAL) :: deltat
@@ -170,16 +170,17 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
   integer :: ispec_CPML
 
   imodulo_N_SLS = mod(N_SLS,3)
-
+!  write(*,*) 'entering compute forces viscoelastic noDev'
   ! choses inner/outer elements
   if( iphase == 1 ) then
     num_elements = nspec_outer_elastic
   else
     num_elements = nspec_inner_elastic
   endif
-
+!  WRITE(*,*) num_elements
+!  write(*,*) X(1,3)
   do ispec_p = 1,num_elements
-
+!        write(*,*) ispec_p
         ! returns element id from stored element list
         ispec = phase_ispec_inner_elastic(ispec_p,iphase)
 
@@ -220,17 +221,19 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
 !                   case (6)
 !                     eta_p = (1.0_CUSTOM_REAL-zigll(k))*0.5_CUSTOM_REAL
 !               end select
-!
+              !   write(*,*)  'ibool'
+              !   write(*,*) 'size of X :',size(X)
                  iglob = ibool(i,j,k,ispec)
-
+!             !    write(*,*) ibool(i,j,k,ispec)
+!             !    write(*,*) 'X:',X(1,iglob),'velocity:',veloc(1,iglob)
 !                eta_decay = eta*sngl(exp(-PI*eta_p*eta_p))
                  eta_decay = eta * 1.0_CUSTOM_REAL
 !                if (eta_decay>0.0_CUSTOM_REAL) then
 !                write(*,*) 'ystore is',ystore(iglob), eta_decay
 !                endif
-                dummyx_loc(i,j,k) = displ(1,iglob) + eta_decay*veloc(1,iglob)
-                dummyy_loc(i,j,k) = displ(2,iglob) + eta_decay*veloc(2,iglob)
-                dummyz_loc(i,j,k) = displ(3,iglob) + eta_decay*veloc(3,iglob)
+                dummyx_loc(i,j,k) = X(1,iglob) + eta_decay*veloc(1,iglob)
+                dummyy_loc(i,j,k) = X(2,iglob) + eta_decay*veloc(2,iglob)
+                dummyz_loc(i,j,k) = X(3,iglob) + eta_decay*veloc(3,iglob)
               enddo
             enddo
           enddo
@@ -240,9 +243,18 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
             do j=1,NGLLY
               do i=1,NGLLX
                 iglob = ibool(i,j,k,ispec)
-                dummyx_loc(i,j,k) = displ(1,iglob)
-                dummyy_loc(i,j,k) = displ(2,iglob)
-                dummyz_loc(i,j,k) = displ(3,iglob)
+
+              !   write(*,*)  'ibool'
+              !   write(*,*) 'size of X :',size(X)
+                 iglob = ibool(i,j,k,ispec)
+              !   write(*,*) ibool(i,j,k,ispec)
+              !   write(*,*) 'X:',X(1,iglob),'velocity:',veloc(1,iglob)
+!
+
+
+                dummyx_loc(i,j,k) = X(1,iglob)
+                dummyy_loc(i,j,k) = X(2,iglob)
+                dummyz_loc(i,j,k) = X(3,iglob)
               enddo
             enddo
           enddo
@@ -722,7 +734,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
 
                  tempx2(i,j,k) = jacobianl * (sigma_xx*etaxl + sigma_yx*etayl + sigma_zx*etazl) ! this goes to accel_x
                  tempy2(i,j,k) = jacobianl * (sigma_xy*etaxl + sigma_yy*etayl + sigma_zy*etazl) ! this goes to accel_y
-                 tempz2(i,j,k) = jacobianl * (sigma_xz*etaxl + sigma_yz*etayl + sigma_zz*etazl) ! this goes to accel_z
+                 tempz2(i,j,k) = jacobianl * (sigma_xz*etaxl + sigma_yz*etayl + sigma_zz*etazl) ! this goes to ccel_z
 
                  tempx3(i,j,k) = jacobianl * (sigma_xx*gammaxl + sigma_yx*gammayl + sigma_zx*gammazl) ! this goes to accel_x
                  tempy3(i,j,k) = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_zy*gammazl) ! this goes to accel_y
@@ -747,7 +759,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                                     rmemory_duz_dxl_z, rmemory_duz_dyl_z, rmemory_duy_dzl_z, rmemory_dux_dzl_z)
 
           ! calculates contribution from each C-PML element to update acceleration
-          call pml_compute_accel_contribution_elastic(ispec,ispec_CPML,displ,veloc,rmemory_displ_elastic)
+          call pml_compute_accel_contribution_elastic(ispec,ispec_CPML,X,veloc,rmemory_displ_elastic)
        endif
     endif
 
@@ -767,7 +779,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
           newtempx3(i,j,k) = 0._CUSTOM_REAL
           newtempy3(i,j,k) = 0._CUSTOM_REAL
           newtempz3(i,j,k) = 0._CUSTOM_REAL
-
+!          write(*,*) 'BKpoint 1'
           do l=1,NGLLX
             fac1 = hprimewgll_xx(l,i)
             newtempx1(i,j,k) = newtempx1(i,j,k) + tempx1(l,j,k)*fac1
@@ -800,21 +812,21 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
           delta_accel(3,iglob) = - fac1*newtempz1(i,j,k) - &
                                 fac2*newtempz2(i,j,k) - fac3*newtempz3(i,j,k)
 
-          accel(1,iglob) = accel(1,iglob) + delta_accel(1,iglob)
-          accel(2,iglob) = accel(2,iglob) + delta_accel(2,iglob)
-          accel(3,iglob) = accel(3,iglob) + delta_accel(3,iglob)
+          AX(1,iglob) = AX(1,iglob) + delta_accel(1,iglob)
+          AX(2,iglob) = AX(2,iglob) + delta_accel(2,iglob)
+          AX(3,iglob) = AX(3,iglob) + delta_accel(3,iglob)
           
- !         displ(1,iglob) = displ(1,iglob) + load(1,iglob) + delta_accel(1,iglob)*deltat*deltat*rmassx(iglob)  
- !         displ(2,iglob) = displ(2,iglob) + load(2,iglob) + delta_accel(2,iglob)*deltat*deltat*rmassy(iglob)  
- !         displ(3,iglob) = displ(3,iglob) + load(3,iglob) + delta_accel(3,iglob)*deltat*deltat*rmassz(iglob)  
+ !         X(1,iglob) = X(1,iglob) + load(1,iglob) + delta_accel(1,iglob)*deltat*deltat*rmassx(iglob)  
+ !         X(2,iglob) = X(2,iglob) + load(2,iglob) + delta_accel(2,iglob)*deltat*deltat*rmassy(iglob)  
+ !         X(3,iglob) = X(3,iglob) + load(3,iglob) + delta_accel(3,iglob)*deltat*deltat*rmassz(iglob)  
         enddo
      enddo
   enddo
-
+! write(*,*) 'BKpoint2 '
 
           !  update memory variables based upon the Runge-Kutta scheme
   enddo  ! spectral element loop
-
+!write(*,*) 'finish the loop in single processor!'
 
 end subroutine compute_forces_viscoelastic_noDev
 

@@ -190,6 +190,7 @@ SOLVER_ARRAY_OBJECTS = \
 	$O/fault_solver_common.o \
 	$O/fault_solver_dynamic.o \
 	$O/fault_solver_kinematic.o \
+        $O/conjugate_gradient_method.o \
 	$O/gravity_perturbation.o \
 	$O/compute_add_sources_acoustic.o \
 	$O/compute_add_sources_viscoelastic.o \
@@ -207,6 +208,7 @@ SOLVER_ARRAY_OBJECTS = \
 	$O/compute_forces_viscoelastic_calling_routine.o \
 	$O/compute_forces_viscoelastic_Dev.o \
 	$O/compute_forces_viscoelastic_noDev.o \
+        $O/compute_AX.o \
 	$O/compute_forces_poro_fluid_part.o \
 	$O/compute_forces_poroelastic_calling_routine.o \
 	$O/compute_forces_poro_solid_part.o \
@@ -222,6 +224,7 @@ SOLVER_ARRAY_OBJECTS = \
 	$O/finalize_simulation.o \
 	$O/initialize_simulation.o \
 	$O/iterate_time.o \
+        $O/iterate_time_static_solver.o \
 	$O/make_gravity.o \
 	$O/noise_tomography.o \
 	$O/pml_allocate_arrays.o \
