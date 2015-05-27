@@ -1,6 +1,6 @@
 
 subroutine compute_forces_viscoelastic_noDev(iphase, &
-                        NSPEC_AB,NGLOB_AB,X,veloc,AX,load, &
+                        NSPEC_AB,NGLOB_AB,X,veloc,AX, load, MASKX, MASKAX, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_yy,hprime_zz, &
                         hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,&
@@ -51,7 +51,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
 
 ! displacement, velocity and acceleration
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: X,veloc,AX,load,delta_accel
-
+  logical, dimension(NDIM,NGLOB_AB),intent(in) :: MASKX, MASKAX
 ! time step
   real(kind=CUSTOM_REAL) :: deltat
 
@@ -170,7 +170,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
   integer :: ispec_CPML
 
   imodulo_N_SLS = mod(N_SLS,3)
-!  write(*,*) 'entering compute forces viscoelastic noDev'
+  write(*,*) 'entering compute forces viscoelastic noDev'
   ! choses inner/outer elements
   if( iphase == 1 ) then
     num_elements = nspec_outer_elastic
@@ -221,11 +221,13 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
 !                   case (6)
 !                     eta_p = (1.0_CUSTOM_REAL-zigll(k))*0.5_CUSTOM_REAL
 !               end select
-              !   write(*,*)  'ibool'
-              !   write(*,*) 'size of X :',size(X)
+!                 write(*,*)  'ibool'
+!                 write(*,*) 'size of X :',size(X)
+!                 write(*,*) 'size of Maks',size(MASKX)
                  iglob = ibool(i,j,k,ispec)
-!             !    write(*,*) ibool(i,j,k,ispec)
-!             !    write(*,*) 'X:',X(1,iglob),'velocity:',veloc(1,iglob)
+!                 write(*,*) X(3,20)
+!                 write(*,*) ibool(i,j,k,ispec)
+!                 write(*,*) 'X:',X(1,iglob),'velocity:',veloc(1,iglob)
 !                eta_decay = eta*sngl(exp(-PI*eta_p*eta_p))
                  eta_decay = eta * 1.0_CUSTOM_REAL
 !                if (eta_decay>0.0_CUSTOM_REAL) then
@@ -234,6 +236,11 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                 dummyx_loc(i,j,k) = X(1,iglob) + eta_decay*veloc(1,iglob)
                 dummyy_loc(i,j,k) = X(2,iglob) + eta_decay*veloc(2,iglob)
                 dummyz_loc(i,j,k) = X(3,iglob) + eta_decay*veloc(3,iglob)
+!                 write(*,*) 'before MASK is used'
+                dummyx_loc(i,j,k) = dummyx_loc(i,j,k)*MASKX(1,iglob) * (-1.0e0_CUSTOM_REAL) 
+                dummyy_loc(i,j,k) = dummyy_loc(i,j,k)*MASKX(2,iglob) * (-1.0e0_CUSTOM_REAL)  
+                dummyz_loc(i,j,k) = dummyz_loc(i,j,k)*MASKX(3,iglob) * (-1.0e0_CUSTOM_REAL)  
+!                 write(*,*)  'after mask is used'
               enddo
             enddo
           enddo
@@ -242,23 +249,24 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
           do k=1,NGLLZ
             do j=1,NGLLY
               do i=1,NGLLX
-                iglob = ibool(i,j,k,ispec)
 
-              !   write(*,*)  'ibool'
-              !   write(*,*) 'size of X :',size(X)
+
                  iglob = ibool(i,j,k,ispec)
-              !   write(*,*) ibool(i,j,k,ispec)
-              !   write(*,*) 'X:',X(1,iglob),'velocity:',veloc(1,iglob)
-!
-
-
+!                    write(*,*) MASKX(1,iglob)
                 dummyx_loc(i,j,k) = X(1,iglob)
                 dummyy_loc(i,j,k) = X(2,iglob)
                 dummyz_loc(i,j,k) = X(3,iglob)
+                dummyx_loc(i,j,k) = dummyx_loc(i,j,k)*MASKX(1,iglob) * (-1.0e0_CUSTOM_REAL)  
+                dummyy_loc(i,j,k) = dummyy_loc(i,j,k)*MASKX(2,iglob) * (-1.0e0_CUSTOM_REAL)  
+                dummyz_loc(i,j,k) = dummyz_loc(i,j,k)*MASKX(3,iglob) * (-1.0e0_CUSTOM_REAL)  
+
+ 
+
               enddo
             enddo
           enddo
         endif
+
 
         ! use first order Taylor expansion of displacement for local storage of stresses
         ! at this current time step, to fix attenuation in a consistent way
@@ -812,9 +820,10 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
           delta_accel(3,iglob) = - fac1*newtempz1(i,j,k) - &
                                 fac2*newtempz2(i,j,k) - fac3*newtempz3(i,j,k)
 
-          AX(1,iglob) = AX(1,iglob) + delta_accel(1,iglob)
-          AX(2,iglob) = AX(2,iglob) + delta_accel(2,iglob)
-          AX(3,iglob) = AX(3,iglob) + delta_accel(3,iglob)
+          AX(1,iglob) = AX(1,iglob) + delta_accel(1,iglob) * MASKAX(1,iglob) * (-1.0e0_CUSTOM_REAL)
+          AX(2,iglob) = AX(2,iglob) + delta_accel(2,iglob) * MASKAX(2,iglob) * (-1.0e0_CUSTOM_REAL)
+          AX(3,iglob) = AX(3,iglob) + delta_accel(3,iglob) * MASKAX(3,iglob) * (-1.0e0_CUSTOM_REAL)
+
           
  !         X(1,iglob) = X(1,iglob) + load(1,iglob) + delta_accel(1,iglob)*deltat*deltat*rmassx(iglob)  
  !         X(2,iglob) = X(2,iglob) + load(2,iglob) + delta_accel(2,iglob)*deltat*deltat*rmassy(iglob)  

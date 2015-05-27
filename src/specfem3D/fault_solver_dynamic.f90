@@ -90,7 +90,7 @@ module fault_solver_dynamic
   real(kind=CUSTOM_REAL), allocatable, save :: Kelvin_Voigt_eta(:)
 !  integer, allocatable, save :: KV_direction(:)
 
-  public :: BC_DYNFLT_init, BC_DYNFLT_set3d_all, Kelvin_Voigt_eta, SIMULATION_TYPE_DYN
+  public :: BC_DYNFLT_init, BC_DYNFLT_set3d_all, Kelvin_Voigt_eta, SIMULATION_TYPE_DYN,faults
 
 
 contains

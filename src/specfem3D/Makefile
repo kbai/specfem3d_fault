@@ -225,6 +225,7 @@ SOLVER_ARRAY_OBJECTS = \
 	$O/initialize_simulation.o \
 	$O/iterate_time.o \
         $O/iterate_time_static_solver.o \
+        $O/iterate_time_static_solver2.o \
 	$O/make_gravity.o \
 	$O/noise_tomography.o \
 	$O/pml_allocate_arrays.o \

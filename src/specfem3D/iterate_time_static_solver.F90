@@ -14,7 +14,10 @@
   implicit none
 
   type(CG_data) ::  CG_problem
+  type(CG_Vector) :: CG_size
 
+  CG_size%NDIM = 3
+  CG_size%NELE = NGLOB_AB
 
 
   time_start = wtime()
@@ -27,7 +30,7 @@
   load(2,:) = load(2,:)
   load(3,:) = load(3,:)
   write(*,*) 'compute the load vector'
-  call CG_initialize(CG_problem,displ,load)
+  call CG_initialize(CG_problem,CG_size,displ,load)
   write(*,*) 'successfully initialize the CG_Problem'
 !  write(*,*) size(CG_problem%Pdirection)
   do it = 1,1000

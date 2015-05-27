@@ -38,7 +38,7 @@
 
 
 ! steps through time iterations
-  call iterate_time_static_solver()
+  call iterate_time_static_solver2()
 
 ! saves last time frame and finishes kernel calculations
   call finalize_simulation()
