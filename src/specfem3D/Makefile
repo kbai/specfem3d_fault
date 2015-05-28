@@ -189,8 +189,8 @@ SOLVER_ARRAY_OBJECTS = \
 	$O/check_stability.o \
 	$O/fault_solver_common.o \
 	$O/fault_solver_dynamic.o \
-        $O/fault_solver_qd.o \
 	$O/fault_solver_kinematic.o \
+        $O/fault_solver_qd.o \
         $O/conjugate_gradient_method.o \
 	$O/gravity_perturbation.o \
 	$O/compute_add_sources_acoustic.o \

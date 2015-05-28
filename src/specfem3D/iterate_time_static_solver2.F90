@@ -7,8 +7,9 @@
   use specfem_par_poroelastic
   use specfem_par_movie
   use gravity_perturbation, only : gravity_timeseries, GRAVITY_SIMULATION
-  use fault_solver_dynamic, only : bc_dynflt_set3d_all,SIMULATION_TYPE_DYN,faults
-  use fault_solver_kinematic, only : bc_kinflt_set_all,SIMULATION_TYPE_KIN
+!  use fault_solver_dynamic, only : bc_dynflt_set3d_all,SIMULATION_TYPE_DYN,faults
+!  use fault_solver_kinematic, only : bc_kinflt_set_all,SIMULATION_TYPE_KIN
+  use fault_solver_qstatic, only: bc_qstaticflt_set3d_all,faults
 
 
   implicit none
@@ -57,12 +58,16 @@
   write(*,*) 'successfully get the ',it,'step'
   write(*,*) maxval(abs(CG_problem%Residue))
   enddo   ! end of main time loop
+   
+  call compute_AX(load , displ , MASK_default, MASK_default)
+ 
+  !call bc_qstaticflt_set3d_all(load,veloc,displ)
 
    if( MOVIE_SIMULATION ) then
       call write_movie_output()
     endif
 
-  write(*,*) maxval(displ(1,:)),minval(CG_problem%X(1,:))
+!  write(*,*) maxval(displ(1,:)),minval(CG_problem%X(1,:))
   call it_print_elapsed_time()
 
   end subroutine iterate_time_static_solver2

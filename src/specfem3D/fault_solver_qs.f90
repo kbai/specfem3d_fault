@@ -8,7 +8,7 @@
 ! Surendra Nadh Somala : rate and state friction
 ! Somala & Ampuero : fault parallelization
 
-module fault_solver_qstatic
+module fault_solver_dynamic
 
   use fault_solver_common
   use constants
@@ -90,7 +90,7 @@ module fault_solver_qstatic
   real(kind=CUSTOM_REAL), allocatable, save :: Kelvin_Voigt_eta(:)
 !  integer, allocatable, save :: KV_direction(:)
 
-  public :: BC_QSTATICFLT_init, BC_QSTATICFLT_set3d_all, Kelvin_Voigt_eta, SIMULATION_TYPE_DYN,faults
+  public :: BC_DYNFLT_init, BC_DYNFLT_set3d_all, Kelvin_Voigt_eta, SIMULATION_TYPE_DYN,faults
 
 
 contains
@@ -102,7 +102,7 @@ contains
 ! Minv          inverse mass matrix
 ! dt            global time step
 !
-subroutine BC_QSTATICFLT_init(prname,DTglobal,myrank)
+subroutine BC_DYNFLT_init(prname,DTglobal,myrank)
 
   use specfem_par, only : nt=>NSTEP
   character(len=256), intent(in) :: prname ! 'proc***'
@@ -194,7 +194,7 @@ subroutine BC_QSTATICFLT_init(prname,DTglobal,myrank)
     stop
   ! WARNING TO DO: should be an MPI abort
 
-end subroutine BC_QSTATICFLT_init
+end subroutine BC_DYNFLT_init
 
 !---------------------------------------------------------------------
 subroutine find_fault_node(bc,myrank)
@@ -205,7 +205,7 @@ subroutine find_fault_node(bc,myrank)
   integer :: pos,myrank
   real(kind=CUSTOM_REAL),dimension(bc%nglob) :: error
   if(bc%nglob>0) then 
-
+  error = abs(bc%coord(1,:)-488.9_CUSTOM_REAL)+abs(bc%coord(2,:)-0._CUSTOM_REAL)+abs(bc%coord(3,:)+7807.0_CUSTOM_REAL)
   minvalue = minval(error)
   pos = minloc(error,1)
 !  write(*,*) 'I am processor',myrank,'and my minimum is ',minvalue
@@ -268,10 +268,10 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
     call init_2d_distribution(bc%T0(3,:),bc%coord,IIN_PAR,n3)
     call init_fault_traction(bc,Sigma_NORTH,Sigma_SOUTH,GradientZ) !added the fault traction caused by a regional stress field
 !    call add_depth_dependence
-!     if (BALOCHI) then
-!       call make_frictional_stress
-!       call load_stress_drop
-!     endif
+     if (BALOCHI) then
+       call make_frictional_stress
+       call load_stress_drop
+     endif
      bc%T = bc%T0
      
 
@@ -289,7 +289,7 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
     else
       allocate(bc%swf)
       call swf_init(bc%swf,bc%MU,bc%coord,IIN_PAR)
-!      if (TPV16) call TPV16_init(iflt) !WARNING: ad hoc, initializes T0 and swf
+      if (TPV16) call TPV16_init(iflt) !WARNING: ad hoc, initializes T0 and swf
     endif !RATE_AND_STATE
 
 
@@ -333,6 +333,32 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
 
 !--------------------------------------------------------
 contains
+subroutine make_frictional_stress
+    real(kind=CUSTOM_REAL),dimension(bc%nglob) :: T1tmp, T2tmp
+    T1tmp=sign(abs(bc%T0(3,:)*0.3*abs(bc%T0(1,:))/sqrt(bc%T0(1,:)*bc%T0(1,:)+bc%T0(2,:)*bc%T0(2,:))),bc%T0(1,:))
+    T2tmp=sign(abs(bc%T0(3,:)*0.3*abs(bc%T0(2,:))/sqrt(bc%T0(1,:)*bc%T0(1,:)+bc%T0(2,:)*bc%T0(2,:))),bc%T0(2,:))
+bc%T0(1,:)=T1tmp
+bc%T0(2,:)=T2tmp
+end  subroutine make_frictional_stress
+
+subroutine load_stress_drop   !added by kangchen this is specially made for Balochistan Simulation
+
+   use specfem_par, only:prname
+
+   real(kind=CUSTOM_REAL),dimension(bc%nglob) :: T1tmp, T2tmp
+   character(len=70) :: filename
+   integer :: IIN_STR,ier 
+   filename = prname(1:len_trim(prname))//'fault_prestr.bin'
+   open(unit=IIN_STR,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
+   read(IIN_STR) T1tmp
+   read(IIN_STR) T2tmp
+   close(IIN_STR)
+   bc%T0(1,:)=bc%T0(1,:)-T1tmp
+   bc%T0(2,:)=bc%T0(2,:)-T2tmp
+
+
+end subroutine load_stress_drop
+
 
 
 subroutine add_depth_dependence  !ADD BY Kangchen
@@ -352,6 +378,52 @@ subroutine add_depth_dependence  !ADD BY Kangchen
 !    bc%T0(2,:) = bc%T0(2,i)+tau0_dip(ipar)
 end subroutine add_depth_dependence
 
+subroutine TPV16_init(iflt)
+
+  integer :: ier, ipar ,iflt
+  integer, parameter :: IIN_NUC =270 ! WARNING: not safe, should look for an available unit
+  real(kind=CUSTOM_REAL), dimension(bc%nglob) :: loc_str,loc_dip,sigma0,tau0_str,tau0_dip,Rstress_str,Rstress_dip,static_fc, &
+       dyn_fc,swcd,cohes,tim_forcedRup
+  integer, dimension(bc%nglob) :: inp_nx,inp_nz
+  real(kind=CUSTOM_REAL) :: minX, siz_str,siz_dip, hypo_loc_str,hypo_loc_dip,rad_T_str,rad_T_dip
+  integer :: relz_num,sub_relz_num, num_cell_str,num_cell_dip, hypo_cell_str,hypo_cell_dip
+  integer :: i
+  character(len=70) :: fn  
+
+  write(fn,"('../DATA/input_file_fault',I0,'.txt')") iflt
+!  write(*,*) fn
+  open(unit=IIN_NUC,file=trim(fn),status='old',iostat=ier)
+  if(ier/=0) stop('error open input_file_fault')
+  read(IIN_NUC,*) relz_num,sub_relz_num
+  read(IIN_NUC,*) num_cell_str,num_cell_dip,siz_str,siz_dip
+  read(IIN_NUC,*) hypo_cell_str,hypo_cell_dip,hypo_loc_str,hypo_loc_dip,rad_T_str,rad_T_dip
+  do ipar=1,bc%nglob
+    read(IIN_NUC,*) inp_nx(ipar),inp_nz(ipar),loc_str(ipar),loc_dip(ipar),sigma0(ipar),tau0_str(ipar),tau0_dip(ipar), &
+         Rstress_str(ipar),Rstress_dip(ipar),static_fc(ipar),dyn_fc(ipar),swcd(ipar),cohes(ipar),tim_forcedRup(ipar)
+  enddo
+  close(IIN_NUC)
+
+  minX = minval(bc%coord(1,:))
+
+  do i=1,bc%nglob
+
+   ! WARNING: nearest neighbor interpolation
+    ipar = minloc( (minX+loc_str(:)-bc%coord(1,i))**2 + (-loc_dip(:)-bc%coord(3,i))**2 , 1)
+   !loc_dip is negative of Z-coord
+
+    bc%T0(3,i) = bc%T0(3,i)-sigma0(ipar);
+    bc%T0(1,i) = bc%T0(1,i)+tau0_str(ipar)
+    bc%T0(2,i) = bc%T0(2,i)+tau0_dip(ipar)
+    write(IMAIN,*) bc%coord(1,i) , sigma0(ipar)
+    bc%swf%mus(i) = static_fc(ipar)
+    bc%swf%mud(i) = dyn_fc(ipar)
+    bc%swf%Dc(i) = swcd(ipar)
+    bc%swf%C(i) = cohes(ipar)
+    bc%swf%T(i) = tim_forcedRup(ipar)
+
+  enddo
+
+end subroutine TPV16_init
 
 end subroutine init_one_fault
 
@@ -524,7 +596,7 @@ end function heaviside
 ! NOTE: On non-split nodes at fault edges, dD=dV=dA=0
 ! and the net contribution of B*T is =0
 !
-subroutine bc_QSTATICFLT_set3d_all(F,V,D)
+subroutine bc_dynflt_set3d_all(F,V,D)
 
   real(kind=CUSTOM_REAL), dimension(:,:), intent(in) :: V,D
   real(kind=CUSTOM_REAL), dimension(:,:), intent(inout) :: F
@@ -533,13 +605,13 @@ subroutine bc_QSTATICFLT_set3d_all(F,V,D)
 
   if (.not. allocated(faults)) return
   do i=1,size(faults)
-    call BC_QSTATICFLT_set3d(faults(i),F,V,D,i)
+    call BC_DYNFLT_set3d(faults(i),F,V,D,i)
   enddo
 
-end subroutine bc_QSTATICFLT_set3d_all
+end subroutine bc_dynflt_set3d_all
 
 !---------------------------------------------------------------------
-subroutine BC_QSTATICFLT_set3d(bc,MxA,V,D,iflt)
+subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
 
   use specfem_par, only: it,NSTEP,myrank
 
@@ -564,11 +636,21 @@ subroutine BC_QSTATICFLT_set3d(bc,MxA,V,D,iflt)
     Vf_old = sqrt(bc%V(1,:)*bc%V(1,:)+bc%V(2,:)*bc%V(2,:))
 
     ! get predicted values
-
+    dD = get_dis1(bc,D)
+    bc%dbg3=dD(3,:)
+    
+    dD = get_dis2(bc,D)
+    bc%dbg4=dD(3,:)
     dD = get_jump(bc,D) ! dD_predictor
     dV = get_jump(bc,V) ! dV_predictor
 !    dA = get_jump(bc,MxA)
 !    bc%dbg2=dA(3,:); 
+    
+    dA=get_acceleration1(bc,MxA)
+    bc%dbg1=dA(3,:)
+    dA=get_acceleration2(bc,MxA)
+    
+    bc%dbg2=dA(3,:) 
 
     dA = get_weighted_jump(bc,MxA) ! dA_free
 !    dMV=get_mass_jump(bc,V)
@@ -585,9 +667,9 @@ subroutine BC_QSTATICFLT_set3d(bc,MxA,V,D,iflt)
 !    dMV=rotate(bc,dMV,1)
 !    dMA=rotate(bc,dMA,1)
     ! T_stick
-    T(1,:) = bc%Z * ( dA(1,:) )
-    T(2,:) = bc%Z * ( dA(2,:) )
-    T(3,:) = bc%Z * ( dA(3,:) )
+    T(1,:) = bc%Z * ( dV(1,:) + half_dt*dA(1,:) )
+    T(2,:) = bc%Z * ( dV(2,:) + half_dt*dA(2,:) )
+    T(3,:) = bc%Z * ( dV(3,:) + half_dt*dA(3,:) )
  !   T(1,:)=(dMV(1,:)+half_dt*dMA(1,:))/bc%B/half_dt
 !    bc%dbg1=dV(3,:);
 
@@ -608,10 +690,50 @@ subroutine BC_QSTATICFLT_set3d(bc,MxA,V,D,iflt)
 
     ! smooth loading within nucleation patch
     !WARNING : ad hoc for SCEC benchmark TPV10x
+    if (RATE_AND_STATE) then
+      TxExt = 0._CUSTOM_REAL
+      TLoad = 1.0_CUSTOM_REAL
+      DTau0 = 45e6_CUSTOM_REAL
+      time = it*bc%dt !time will never be zero. it starts from 1
+      if (time <= TLoad) then
+        GLoad = exp( (time-TLoad)*(time-Tload) / (time*(time-2.0_CUSTOM_REAL*TLoad)) )
+      else
+        GLoad = 1.0_CUSTOM_REAL
+      endif
+    !  TxExt = DTau0 * bc%Fload * GLoad
+      TxExt = bc%Fload * GLoad
+      T(1,:) = T(1,:) + TxExt
+    endif
 
     tStick = sqrt( T(1,:)*T(1,:) + T(2,:)*T(2,:))
 
-         !JPA the solver below can be refactored into a loop with two passes
+    if (.not. RATE_AND_STATE) then   ! Update slip weakening friction:
+      ! Update slip state variable
+      ! WARNING: during opening the friction state variable should not evolve
+      theta_old = bc%swf%theta
+      call swf_update_state(bc%D,dD,bc%V,bc%swf)
+
+      ! Update friction coeficient
+      bc%MU = swf_mu(bc%swf)
+
+      ! combined with time-weakening for nucleation
+      !  if (associated(bc%twf)) bc%MU = min( bc%MU, twf_mu(bc%twf,bc%coord,time) )
+      if (TPV29) then
+      bc%MU = min( bc%MU, twf_mu(bc%swf,it*bc%dt) )
+      endif
+
+      if (TPV16) then
+        where (bc%swf%T <= it*bc%dt) bc%MU = bc%swf%mud
+      endif
+
+      ! Update strength
+      strength = -bc%MU * min(T(3,:),0.e0_CUSTOM_REAL) + bc%swf%C
+
+      ! Solve for shear stress
+      tnew = min(tStick,strength)
+
+    else  ! Update rate and state friction:
+      !JPA the solver below can be refactored into a loop with two passes
 
       ! first pass
       theta_old = bc%rsf%theta
@@ -629,47 +751,52 @@ subroutine BC_QSTATICFLT_set3d(bc,MxA,V,D,iflt)
                          bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
       enddo
 
- !     tnew = tStick - bc%Z*Vf_new
+      tnew = tStick - bc%Z*Vf_new
 
+    endif
 
-!    tStick = max(tStick,1e0_CUSTOM_REAL) ! to avoid division by zero
-!    T(1,:) = tnew * T(1,:)/tStick
-!    T(2,:) = tnew * T(2,:)/tStick
+    tStick = max(tStick,1e0_CUSTOM_REAL) ! to avoid division by zero
+    T(1,:) = tnew * T(1,:)/tStick
+    T(2,:) = tnew * T(2,:)/tStick
 
     ! Save total tractions
-!    bc%T = T
+    bc%T = T
 
     ! Subtract initial stress
     
 
-      !JPA: this eliminates the effect of TxExt on the equations of motion. Why is it needed?
+    if (RATE_AND_STATE) T(1,:) = T(1,:) - TxExt
+    !JPA: this eliminates the effect of TxExt on the equations of motion. Why is it needed?
 
     ! Update slip acceleration da=da_free-T/(0.5*dt*Z)
-!    dA(1,:) = dA(1,:) - T(1,:)/(bc%Z*half_dt)
-!    dA(2,:) = dA(2,:) - T(2,:)/(bc%Z*half_dt)
-!    dA(3,:) = dA(3,:) - T(3,:)/(bc%Z*half_dt)
+    dA(1,:) = dA(1,:) - T(1,:)/(bc%Z*half_dt)
+    dA(2,:) = dA(2,:) - T(2,:)/(bc%Z*half_dt)
+    dA(3,:) = dA(3,:) - T(3,:)/(bc%Z*half_dt)
 
     ! Update slip and slip rate, in fault frame
-!    bc%D = dD
-!    bc%V = dV + half_dt*dA
+    bc%D = dD
+    bc%V = dV + half_dt*dA
 
     ! Rotate tractions back to (x,y,z) frame
-!    T = rotate(bc,T,-1)
+    T = rotate(bc,T,-1)
 
     ! Add boundary term B*T to M*a
- !  call add_BT(bc,MxA,T)  ! kbai comment out this temporarily
+   call add_BT(bc,MxA,T)  ! kbai comment out this temporarily
 
     !-- intermediate storage of outputs --
- !   Vf_new = sqrt(bc%V(1,:)*bc%V(1,:)+bc%V(2,:)*bc%V(2,:))
-
+    Vf_new = sqrt(bc%V(1,:)*bc%V(1,:)+bc%V(2,:)*bc%V(2,:))
+    if(.not. RATE_AND_STATE) then
+      theta_new = bc%swf%theta
+      dc = bc%swf%dc
+    else
       theta_new = bc%rsf%theta
       dc = bc%rsf%L
-
+    endif
 
     call store_dataXZ(bc%dataXZ, strength, theta_old, theta_new, dc, &
-        Vf_old, Vf_new, it*bc%dt,bc%dt)
+         Vf_old, Vf_new, it*bc%dt,bc%dt)
 
-  !  call store_dataT(bc%dataT,bc%D,bc%V,bc%T,it)
+    call store_dataT(bc%dataT,bc%D,bc%V,bc%T,it)
     if (RATE_AND_STATE) then
       if (bc%rsf%StateLaw==1) then
         bc%dataT%dat(8,it,:) = log10(theta_new(bc%dataT%iglob))
@@ -685,32 +812,32 @@ subroutine BC_QSTATICFLT_set3d(bc,MxA,V,D,iflt)
   endif
 
   ! write dataXZ every NSNAP time step
- ! if ( mod(it,NSNAP) == 0) then
- !   if (.NOT. PARALLEL_FAULT) then
- !     if (bc%nspec > 0) call write_dataXZ(bc%dataXZ,it,iflt)
- !   else
- !     call gather_dataXZ(bc)
- !     if (myrank==0) call write_dataXZ(bc%dataXZ_all,it,iflt)
- !   endif
- ! endif
+  if ( mod(it,NSNAP) == 0) then
+    if (.NOT. PARALLEL_FAULT) then
+      if (bc%nspec > 0) call write_dataXZ(bc%dataXZ,it,iflt)
+    else
+      call gather_dataXZ(bc)
+      if (myrank==0) call write_dataXZ(bc%dataXZ_all,it,iflt)
+    endif
+  endif
 
- ! if ( it == NSTEP) then
- !   if (.NOT. PARALLEL_FAULT) then
- !     call SCEC_Write_RuptureTime(bc%dataXZ,iflt)
- !   else
- !       call gather_dataXZ(bc)
- !     if (myrank==0) then
+  if ( it == NSTEP) then
+    if (.NOT. PARALLEL_FAULT) then
+      call SCEC_Write_RuptureTime(bc%dataXZ,iflt)
+    else
+        call gather_dataXZ(bc)
+      if (myrank==0) then
            
- !            call SCEC_Write_RuptureTime(bc%dataXZ_all,iflt)
- !     endif     ! Kangchen added it
- !
- !   endif
- ! endif
+             call SCEC_Write_RuptureTime(bc%dataXZ_all,iflt)
+      endif     ! Kangchen added it 
+         
+    endif
+  endif
 !     if(myrank==44)         write(*,*) 'from 44', bc%V(:,1075),bc%T(:,1075)
 
  !    if(myrank==45)          write(*,*) 'from 45', bc%V(:,9748),bc%T(:,1075) for dbg Kangchen
          
-end subroutine BC_QSTATICFLT_set3d
+end subroutine BC_DYNFLT_set3d
 
 !===============================================================
 
@@ -1601,4 +1728,4 @@ end subroutine init_fault_traction
 
 
 
-end module fault_solver_qstatic
+end module fault_solver_dynamic
