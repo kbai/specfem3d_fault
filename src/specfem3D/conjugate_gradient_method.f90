@@ -37,21 +37,21 @@ subroutine CG_initialize(CG_variable,CG_dim,Displ,Load)
   CG_variable%X=>Displ
   CG_variable%L=>Load
   CG_variable%CG_size = CG_dim
-  write(*,*) CG_variable%CG_size%NELE,'internal of the program'
+!  write(*,*) CG_variable%CG_size%NELE,'internal of the program'
   allocate(CG_variable%MASKX(CG_variable%CG_size%NDIM,CG_variable%CG_size%NELE))
   allocate(CG_variable%MASKAX(CG_variable%CG_size%NDIM,CG_variable%CG_size%NELE))
-  write(*,*) 'ier',ier
+!  write(*,*) 'ier',ier
   allocate(CG_variable%Pdirection(CG_variable%CG_size%NDIM,CG_variable%CG_size%NELE))
 !  write(*,*),'size',size(CG_variable%Pdirection)
   allocate(CG_variable%Residue(CG_variable%CG_size%NDIM,CG_variable%CG_size%NELE))
 !  allocate(Norm_old(CG_variable%CG_size%NDIM,CG_variable%CG_size%NELE))
-  write(*,*) 'ier',ier,size(CG_variable%Pdirection),size(CG_variable%MASKX)
+!  write(*,*) 'ier',ier,size(CG_variable%Pdirection),size(CG_variable%MASKX)
   CG_variable%Residue(:,:) = Load(:,:)
   CG_variable%Pdirection(:,:) = Load(:,:)
   CG_variable%MASKX(:,:) =.true.
   CG_variable%MASKAX(:,:) = .true.
 !  call Ax(CG_variable)
-  write(*,*) CG_variable%MASKX
+!  write(*,*) CG_variable%MASKX
 end subroutine CG_initialize
 !==================================================================
 subroutine CG_mask(CG_variable,X_setfalse,AX_setfalse)
