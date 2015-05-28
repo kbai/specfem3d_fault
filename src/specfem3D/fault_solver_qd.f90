@@ -8,7 +8,7 @@
 ! Surendra Nadh Somala : rate and state friction
 ! Somala & Ampuero : fault parallelization
 
-module fault_solver_qd
+module fault_solver_qstatic
 
   use fault_solver_common
   use constants
@@ -48,7 +48,7 @@ module fault_solver_qd
 !                                                    fw=>null(), Vw=>null()
 ! end type rsf_type
 
-! type, extends (fault_type) :: bc_qstaticflt_type
+! type, extends (fault_type) :: bc_dynandkinflt_type
 !   private
 !   real(kind=CUSTOM_REAL), dimension(:,:), pointer :: T0=>null()
 !   real(kind=CUSTOM_REAL), dimension(:),   pointer :: MU=>null(), Fload=>null()
@@ -58,9 +58,9 @@ module fault_solver_qd
 !   type(swf_type), pointer :: swf => null()
 !   type(rsf_type), pointer :: rsf => null()
 !   logical                 :: allow_opening = .false. ! default : do not allow opening
-! end type bc_qstaticflt_type
+! end type bc_dynandkinflt_type
 
-  type(bc_qstaticflt_type), allocatable, save :: faults(:)
+  type(bc_dynandkinflt_type), allocatable, save :: faults(:)
 
   !slip velocity threshold for healing
   !WARNING: not very robust
@@ -90,7 +90,7 @@ module fault_solver_qd
   real(kind=CUSTOM_REAL), allocatable, save :: Kelvin_Voigt_eta(:)
 !  integer, allocatable, save :: KV_direction(:)
 
-  public :: BC_DYNFLT_init, BC_DYNFLT_set3d_all, Kelvin_Voigt_eta, SIMULATION_TYPE_DYN,faults
+  public :: BC_QSTATICFLT_init, BC_QSTATICFLT_set3d_all, Kelvin_Voigt_eta, SIMULATION_TYPE_DYN,faults
 
 
 contains
@@ -102,7 +102,7 @@ contains
 ! Minv          inverse mass matrix
 ! dt            global time step
 !
-subroutine BC_DYNFLT_init(prname,DTglobal,myrank)
+subroutine BC_QSTATICFLT_init(prname,DTglobal,myrank)
 
   use specfem_par, only : nt=>NSTEP
   character(len=256), intent(in) :: prname ! 'proc***'
@@ -194,13 +194,13 @@ subroutine BC_DYNFLT_init(prname,DTglobal,myrank)
     stop
   ! WARNING TO DO: should be an MPI abort
 
-end subroutine BC_DYNFLT_init
+end subroutine BC_QSTATICFLT_init
 
 !---------------------------------------------------------------------
 subroutine find_fault_node(bc,myrank)
 
 
-  type(bc_qstaticflt_type), intent(inout) :: bc
+  type(bc_dynandkinflt_type), intent(inout) :: bc
   real(kind=CUSTOM_REAL) :: minvalue
   integer :: pos,myrank
   real(kind=CUSTOM_REAL),dimension(bc%nglob) :: error
@@ -219,7 +219,7 @@ end subroutine find_fault_node
 subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
 
 
-  type(bc_qstaticflt_type), intent(inout) :: bc
+  type(bc_dynandkinflt_type), intent(inout) :: bc
   integer, intent(in)                 :: IIN_BIN,IIN_PAR,NT,iflt
   real(kind=CUSTOM_REAL), intent(in)  :: dt
   integer, intent(in) :: myrank
@@ -524,7 +524,7 @@ end function heaviside
 ! NOTE: On non-split nodes at fault edges, dD=dV=dA=0
 ! and the net contribution of B*T is =0
 !
-subroutine bc_qdynflt_set3d_all(F,V,D)
+subroutine bc_QSTATICFLT_set3d_all(F,V,D)
 
   real(kind=CUSTOM_REAL), dimension(:,:), intent(in) :: V,D
   real(kind=CUSTOM_REAL), dimension(:,:), intent(inout) :: F
@@ -536,15 +536,15 @@ subroutine bc_qdynflt_set3d_all(F,V,D)
     call BC_DYNFLT_set3d(faults(i),F,V,D,i)
   enddo
 
-end subroutine bc_dynflt_set3d_all
+end subroutine bc_QSTATICFLT_set3d_all
 
 !---------------------------------------------------------------------
-subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
+subroutine BC_QSTATICFLT_set3d(bc,MxA,V,D,iflt)
 
   use specfem_par, only: it,NSTEP,myrank
 
   real(kind=CUSTOM_REAL), intent(inout) :: MxA(:,:)
-  type(bc_qstaticflt_type), intent(inout) :: bc
+  type(bc_dynandkinflt_type), intent(inout) :: bc
   real(kind=CUSTOM_REAL), intent(in) :: V(:,:),D(:,:)
   integer, intent(in) :: iflt
 
@@ -710,7 +710,7 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
 
  !    if(myrank==45)          write(*,*) 'from 45', bc%V(:,9748),bc%T(:,1075) for dbg Kangchen
          
-end subroutine BC_DYNFLT_set3d
+end subroutine BC_QSTATICFLT_set3d
 
 !===============================================================
 
@@ -1086,7 +1086,7 @@ subroutine init_dataXZ(dataXZ,bc)
   use specfem_par, only : NPROC,myrank
 
   type(dataXZ_type), intent(inout) :: dataXZ
-  type(bc_qstaticflt_type) :: bc
+  type(bc_dynandkinflt_type) :: bc
 
   integer :: npoin_all,iproc
 
@@ -1162,7 +1162,7 @@ subroutine gather_dataXZ(bc)
 
   use specfem_par, only : NPROC
 
-  type(bc_qstaticflt_type), intent(inout) :: bc
+  type(bc_dynandkinflt_type), intent(inout) :: bc
 
   call gatherv_all_cr(bc%dataXZ%t1,bc%dataXZ%npoin,bc%dataXZ_all%t1,bc%npoin_perproc,bc%poin_offset,bc%dataXZ_all%npoin,NPROC)
   call gatherv_all_cr(bc%dataXZ%t2,bc%dataXZ%npoin,bc%dataXZ_all%t2,bc%npoin_perproc,bc%poin_offset,bc%dataXZ_all%npoin,NPROC)
@@ -1476,7 +1476,7 @@ end function rtsafe
 !---------------------------------------------------------------------
 !Kangchen Bai---------------------------------------------------------
 subroutine init_fault_traction(bc,Sigma_NORTH,Sigma_SOUTH,GradientZ)
-  type(bc_qstaticflt_type), intent(inout) :: bc
+  type(bc_dynandkinflt_type), intent(inout) :: bc
   real(kind=CUSTOM_REAL),dimension(6), intent(in) :: Sigma_NORTH,Sigma_SOUTH
   real(kind=CUSTOM_REAL),dimension(6,bc%nglob) :: Sigma
   real(kind=CUSTOM_REAL),dimension(6) :: Sigma_TPV29
@@ -1601,4 +1601,4 @@ end subroutine init_fault_traction
 
 
 
-end module fault_solver_dynamic
+end module fault_solver_qstatic
