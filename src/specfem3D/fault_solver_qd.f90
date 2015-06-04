@@ -526,8 +526,8 @@ end function heaviside
 !
 subroutine bc_QSTATICFLT_set3d_all(F,V,D)
 
-  real(kind=CUSTOM_REAL), dimension(:,:), intent(in) :: V,D
-  real(kind=CUSTOM_REAL), dimension(:,:), intent(inout) :: F
+  real(kind=CUSTOM_REAL), dimension(:,:), intent(in) :: F,D
+  real(kind=CUSTOM_REAL), dimension(:,:), intent(inout) :: V
 
   integer :: i
 
@@ -543,9 +543,9 @@ subroutine BC_QSTATICFLT_set3d(bc,MxA,V,D,iflt)
 
   use specfem_par, only: it,NSTEP,myrank
 
-  real(kind=CUSTOM_REAL), intent(inout) :: MxA(:,:)
+  real(kind=CUSTOM_REAL), intent(inout) :: V(:,:)
   type(bc_dynandkinflt_type), intent(inout) :: bc
-  real(kind=CUSTOM_REAL), intent(in) :: V(:,:),D(:,:)
+  real(kind=CUSTOM_REAL), intent(in) :: D(:,:),MxA(:,:)
   integer, intent(in) :: iflt
 
   real(kind=CUSTOM_REAL), dimension(3,bc%nglob) :: T,dD,dV,dA
@@ -585,9 +585,11 @@ subroutine BC_QSTATICFLT_set3d(bc,MxA,V,D,iflt)
 !    dMV=rotate(bc,dMV,1)
 !    dMA=rotate(bc,dMA,1)
     ! T_stick
-    T(1,:) = bc%Z * ( dA(1,:) )
-    T(2,:) = bc%Z * ( dA(2,:) )
-    T(3,:) = bc%Z * ( dA(3,:) )
+    T(1,:) = bc%Z * (bc%dt* dA(1,:) )
+    T(2,:) = bc%Z * (bc%dt* dA(2,:) )
+    T(3,:) = bc%Z * (bc%dt* dA(3,:) )
+    write(*,*) 'max acceleration:',maxval(abs(dA(1,:)))
+   write(*,*) 'min acceleration:',minval(abs(dA(1,:)))
  !   T(1,:)=(dMV(1,:)+half_dt*dMA(1,:))/bc%B/half_dt
 !    bc%dbg1=dV(3,:);
 
@@ -601,6 +603,8 @@ subroutine BC_QSTATICFLT_set3d(bc,MxA,V,D,iflt)
 
     ! add initial stress
     T = T + bc%T0
+    bc%T = T
+    bc%D = dD
 
     ! Solve for normal stress (negative is compressive)
     ! Opening implies free stress
@@ -610,6 +614,21 @@ subroutine BC_QSTATICFLT_set3d(bc,MxA,V,D,iflt)
     !WARNING : ad hoc for SCEC benchmark TPV10x
 
     tStick = sqrt( T(1,:)*T(1,:) + T(2,:)*T(2,:))
+
+    call store_dataXZ(bc%dataXZ, strength, theta_old, theta_new, dc, &
+        Vf_old, Vf_new, it*bc%dt,bc%dt)
+  ! write dataXZ every NSNAP time step
+ if ( mod(it,NSNAP) == 0) then
+   if (.NOT. PARALLEL_FAULT) then
+     if (bc%nspec > 0) call write_dataXZ(bc%dataXZ,it,iflt)
+   else
+     call gather_dataXZ(bc)
+     if (myrank==0) call write_dataXZ(bc%dataXZ_all,it,iflt)
+   endif
+ endif
+
+
+! dirty implementation 
 
          !JPA the solver below can be refactored into a loop with two passes
 
@@ -666,8 +685,28 @@ subroutine BC_QSTATICFLT_set3d(bc,MxA,V,D,iflt)
       dc = bc%rsf%L
 
 
+    bc%V(1,:) = vf_new * T(1,:)/tstick
+    bc%V(2,:) = vf_new * T(2,:)/tstick
+    
+   V(1,bc%ibulk2) =  0.5e0_CUSTOM_REAL*bc%V(1,:) 
+   V(1,bc%ibulk1) =  -0.5e0_CUSTOM_REAL*bc%V(1,:) 
+   V(2,bc%ibulk2) =  0.5e0_CUSTOM_REAL*bc%V(2,:) 
+   V(2,bc%ibulk1) =  -0.5e0_CUSTOM_REAL*bc%V(2,:) 
+    
+ 
     call store_dataXZ(bc%dataXZ, strength, theta_old, theta_new, dc, &
         Vf_old, Vf_new, it*bc%dt,bc%dt)
+   
+
+ if ( mod(it,NSNAP) == 0) then
+   if (.NOT. PARALLEL_FAULT) then
+     if (bc%nspec > 0) call write_dataXZ(bc%dataXZ,it,iflt)
+   else
+     call gather_dataXZ(bc)
+     if (myrank==0) call write_dataXZ(bc%dataXZ_all,it,iflt)
+   endif
+ endif
+
 
   !  call store_dataT(bc%dataT,bc%D,bc%V,bc%T,it)
     if (RATE_AND_STATE) then

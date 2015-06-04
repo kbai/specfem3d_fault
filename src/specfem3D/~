@@ -14,12 +14,11 @@ module conjugate_gradient
   end type
 
   type CG_data
+!    real(kind=CUSTOM_REAL) :: Norm_old
     real(kind=CUSTOM_REAL), dimension(:,:), pointer :: X=>null(),L=>null()
     real(kind=CUSTOM_REAL), dimension(:,:), pointer :: Residue=>null() , Pdirection=>null(), M=>null()
     logical , dimension(:,:), pointer :: MASKX=>null() , MASKAX=>null()
     type(CG_Vector) :: CG_size !the dimensions and element numbers in the vector
-    real(kind=CUSTOM_REAL) :: Norm_old=0.0_CUSTOM_REAL
-
   end type CG_data
 !!!!! DK DK  private
 
@@ -62,7 +61,7 @@ subroutine CG_initialize(CG,CG_dim,Displ,Load)
   CG%M(:,:)=1.0_CUSTOM_REAL
 !  call Ax(CG)
 !  write(*,*) CG%MASKX
-  call Vector_Multiplication_Weight(CG%Norm_old,CG%Residue,CG%Residue,CG%M)
+!  call Vector_Multiplication_Weight(CG%Norm_old,CG%Residue,CG%Residue,CG%M)
  
 end subroutine CG_initialize
 !=================================================================
@@ -70,13 +69,13 @@ subroutine CG_initialize_preconditioner(CG,Mx,My,Mz)
 
   type(CG_data),intent(inout) :: CG
   real(kind=CUSTOM_REAL),target,dimension(:),intent(in) :: Mx,My,Mz
-  CG%M(1,:) = Mx**(1.0/3.0)
-  CG%M(2,:) = My**(1.0/3.0)
-  CG%M(3,:) = Mz**(1.0/3.0)
+  CG%M(1,:) = Mx
+  CG%M(2,:) = My
+  CG%M(3,:) = Mz
 !  CG%Z0 = CG%M * CG%Z0
   
-  call Vector_Multiplication_Weight(CG%Norm_old,CG%Residue,CG%Residue,CG%M)
-  CG%Pdirection = CG%Pdirection * CG%M 
+!  call Vector_Multiplication_Weight(CG%Norm_old,CG%Residue,CG%Residue,CG%M)
+ 
 end subroutine CG_initialize_preconditioner
 !========================================================
 
@@ -104,13 +103,14 @@ subroutine update_value_direction(CG)
   use specfem_par
   implicit none
 
-  real(kind=CUSTOM_REAL) :: PTW , Norm_new , alpha , beta
+  real(kind=CUSTOM_REAL) :: PTW  , Norm_old , Norm_new , alpha , beta
   real(kind=CUSTOM_REAL),dimension(:,:),allocatable :: W
   type(CG_data),intent(inout) :: CG
 
   !write(*,*) 'started to call the AXX'
 !    write(*,*) size(CG%Pdirection)
 !    write(*,*) NGLOB_AB
+    Norm_old = 1.0
     allocate(W(CG%CG_size%NDIM,CG%CG_size%NELE))
     write(*,*) size(W),size(CG%Pdirection)
     call Axx(W,CG%Pdirection,CG%MASKX,CG%MASKAX)
@@ -122,7 +122,7 @@ subroutine update_value_direction(CG)
 !    write(*,*) 'calculate PTW=',PTW
 !    call Vector_Multiplication_Weight(CG%Norm_old,CG%Residue,CG%Residue,CG%M)
     !write(*,*) 'calculate Vector Multiplication'
-    alpha = CG%Norm_old/PTW
+    alpha = Norm_old/PTW
 
     CG%X(:,:) = CG%X(:,:) + alpha * CG%Pdirection
 
@@ -130,11 +130,11 @@ subroutine update_value_direction(CG)
 
     call Vector_Multiplication_Weight(Norm_new,CG%Residue,CG%Residue,CG%M)
 
-    beta = Norm_new/CG%Norm_old
+    beta = Norm_new/Norm_old
 
-    CG%Norm_old = Norm_new
+    Norm_old = Norm_new
 
-    CG%Pdirection = CG%Residue*CG%M + beta * CG%Pdirection
+    CG%Pdirection = CG%Residue + beta * CG%Pdirection
 
     call Axx(W,CG%X,CG%MASKX,CG%MASKAX)
 
@@ -222,12 +222,7 @@ subroutine Updateresidue(CG, delta_r)
   type(CG_data),intent(inout) :: CG
   
   CG%Residue = CG%Residue + delta_r
-  CG%Pdirection = CG%Residue
-
-  
-  call Vector_Multiplication_Weight(CG%Norm_old,CG%Residue,CG%Residue,CG%M)
- 
-
+  CG%Pdirection = CG%Residue 
 end subroutine Updateresidue
 
 

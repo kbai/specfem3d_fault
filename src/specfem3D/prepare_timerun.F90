@@ -33,8 +33,9 @@
   use specfem_par_elastic
   use specfem_par_poroelastic
   use specfem_par_movie
-  use fault_solver_dynamic, only : BC_DYNFLT_init
-  use fault_solver_kinematic, only : BC_KINFLT_init
+!  use fault_solver_dynamic, only : BC_DYNFLT_init
+!  use fault_solver_kinematic, only : BC_KINFLT_init
+  use fault_solver_qstatic , only : BC_QSTATICFLT_init
   use gravity_perturbation, only : gravity_init
 
   implicit none
@@ -55,9 +56,9 @@
   call prepare_timerun_init_wavefield()
 
   ! Loading kinematic and dynamic fault solvers.
-  call BC_DYNFLT_init(prname,DT,myrank)
-
-  call BC_KINFLT_init(prname,DT,myrank)
+!  call BC_DYNFLT_init(prname,DT,myrank)
+  call BC_QSTATICFLT_init(prname,DT,myrank)
+!  call BC_KINFLT_init(prname,DT,myrank)
 
   ! sets up arrays for gravity field
   call gravity_init()
