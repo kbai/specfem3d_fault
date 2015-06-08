@@ -812,15 +812,6 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
   endif
 
   ! write dataXZ every NSNAP time step
-  if ( mod(it,NSNAP) == 0) then
-    if (.NOT. PARALLEL_FAULT) then
-      if (bc%nspec > 0) call write_dataXZ(bc%dataXZ,it,iflt)
-    else
-      call gather_dataXZ(bc)
-      if (myrank==0) call write_dataXZ(bc%dataXZ_all,it,iflt)
-    endif
-  endif
-
   if ( it == NSTEP) then
     if (.NOT. PARALLEL_FAULT) then
       call SCEC_Write_RuptureTime(bc%dataXZ,iflt)
@@ -833,6 +824,18 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
          
     endif
   endif
+  if ( mod(it,NSNAP) == 0) then
+    if (.NOT. PARALLEL_FAULT) then
+      if (bc%nspec > 0) call write_dataXZ(bc%dataXZ,it,iflt)
+    else
+      call gather_dataXZ(bc)
+      if (myrank==0) call write_dataXZ(bc%dataXZ_all,it,iflt)
+    endif
+  endif
+
+
+
+
 !     if(myrank==44)         write(*,*) 'from 44', bc%V(:,1075),bc%T(:,1075)
 
  !    if(myrank==45)          write(*,*) 'from 45', bc%V(:,9748),bc%T(:,1075) for dbg Kangchen

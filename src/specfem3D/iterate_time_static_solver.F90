@@ -33,7 +33,7 @@
   call CG_initialize(CG_problem,CG_size,displ,load)
   write(*,*) 'successfully initialize the CG_Problem'
 !  write(*,*) size(CG_problem%Pdirection)
-  do it = 1,1000
+  do it = 1,10000
    
   write(*,*) 'successfully get into the loop!'
   call update_value_direction(CG_problem)

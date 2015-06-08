@@ -1,6 +1,6 @@
   subroutine iterate_time_static_solver2()
-  
-  use conjugate_gradient 
+
+  use conjugate_gradient
   use specfem_par
   use specfem_par_acoustic
   use specfem_par_elastic
@@ -19,6 +19,17 @@
   logical,dimension(3,NGLOB_AB) :: MASK_default
   real(kind=CUSTOM_REAL) :: Max_error
   real(kind=CUSTOM_REAL) :: Max_error_all
+  integer :: max_loc
+  write(*,*) "ready to compute diagonal!"
+  call compute_Diagonal(load)
+  write(*,*) "diagonal computed!"
+  rmassx = 1.0_CUSTOM_REAL/load(1,:)
+  rmassy = 1.0_CUSTOM_REAL/load(2,:)
+  rmassz = 1.0_CUSTOM_REAL/load(3,:)
+
+  write(*,*) "mimaxload:", maxval(load)  ,minval(load)
+
+
   MASK_default(:,:) = .true.
 
 
@@ -31,7 +42,7 @@
 
  load(:,:)=0.0_CUSTOM_REAL
 !  write(*,*) 'compute the load vector'
- 
+
 !  call compute_AX(load , displ , MASK_default, MASK_default)
   if(faults(1)%nglob>0) then
   load(:,faults(1)%ibulk1) = 0.0_CUSTOM_REAL
@@ -41,42 +52,46 @@
   endif
 
   call CG_initialize(CG_problem,CG_size,displ,load)
-!  write(*,*) faults(1)%ibulk1 
+!  write(*,*) faults(1)%ibulk1
 !  call CG_mask(CG_problem,faults(1)%ibulk1,faults(1)%ibulk1)
 !  call CG_mask(CG_problem,faults(1)%ibulk2,faults(1)%ibulk2)
-!  write(*,*) CG_problem%MASKX 
+!  write(*,*) CG_problem%MASKX
   write(*,*) 'successfully initialize the CG_Problem',myrank
   write(*,*) CG_problem%CG_size%NELE
 !  write(*,*) size(CG_problem%Pdirection)
-!  call CG_initialize_preconditioner(CG_problem,rmassx,rmassy,rmassz)
+  call CG_initialize_preconditioner(CG_problem,rmassx,rmassy,rmassz)
   do it = 1,1000
-   
+
 !  write(*,*) 'successfully get into the loop!'
   call update_value_direction(CG_problem)
 !  write(*,*) 'successfully get the ',it,'step'
-  write(*,*) maxval(abs(CG_problem%Residue)),'at',it,'myrank=',myrank   
+  write(*,*) maxval(abs(CG_problem%Residue)),'at',it,'myrank=',myrank
   call it_print_elapsed_time()
 
   Max_error = maxval(abs(CG_problem%Residue))
+
+  max_loc = maxloc(abs(CG_problem%Residue(1,:)),1)
+  write(*,*) "max_loc",xstore(max_loc),ystore(max_loc),zstore(max_loc)
  call  max_all_cr(Max_error,Max_error_all)
-  if(myrank ==0) & 
+  if(myrank ==0) &
   write(IMAIN,*)  'max_error=',Max_error_all
-  
-  
-  
+
+!  if(mod(it,100) == 0) call Reinitialize(CG_problem)
+
+
   enddo   ! end of main time loop
   !displ(1,faults(1)%ibulk1) =  displ(1,faults(1)%ibulk1) + 1.0_CUSTOM_REAL
   !displ(1,faults(1)%ibulk2) =  displ(1,faults(1)%ibulk2) - 1.0_CUSTOM_REAL
-!  
+!
   call compute_AX(load , displ , MASK_default, MASK_default)
- 
+
   call bc_qstaticflt_set3d_all(load,veloc,displ)
-  
-  displ = displ + veloc 
+
+  displ = displ + veloc
 
 
   call CG_mask(CG_problem,faults(1)%ibulk1,faults(1)%ibulk1)
-  call CG_mask(CG_problem,faults(1)%ibulk2,faults(1)%ibulk2) 
+  call CG_mask(CG_problem,faults(1)%ibulk2,faults(1)%ibulk2)
   call compute_AX(load , veloc , MASK_default, MASK_default)
   write(*,*) 'max v',maxval(veloc(1,:))
   write(*,*) 'max load',maxval(load(1,:))
@@ -94,11 +109,11 @@
 !  write(*,*) 'successfully get the ',it,'step'
 !  write(*,*) maxval(abs(CG_problem%Residue))
   enddo   ! end of main time loop
-   
+
   call compute_AX(load , displ , MASK_default, MASK_default)
- 
+
   call bc_qstaticflt_set3d_all(load,veloc,displ)
- 
+
 
 
 

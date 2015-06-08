@@ -233,17 +233,6 @@ subroutine Updateresidue(CG, delta_r)
 
 end subroutine Updateresidue
 
-subroutine Reinitialize(CG)
-
-  type(CG_data),intent(inout) :: CG
-  
-  CG%Pdirection = CG%Residue
-
-  
- 
-
-end subroutine Reinitialize
-
 
 subroutine Destruction(CG)
 

@@ -618,15 +618,6 @@ subroutine BC_QSTATICFLT_set3d(bc,MxA,V,D,iflt)
     call store_dataXZ(bc%dataXZ, strength, theta_old, theta_new, dc, &
         Vf_old, Vf_new, it*bc%dt,bc%dt)
   ! write dataXZ every NSNAP time step
- if ( mod(it,NSNAP) == 0) then
-   if (.NOT. PARALLEL_FAULT) then
-     if (bc%nspec > 0) call write_dataXZ(bc%dataXZ,it,iflt)
-   else
-     call gather_dataXZ(bc)
-     if (myrank==0) call write_dataXZ(bc%dataXZ_all,it,iflt)
-   endif
- endif
-
 
 ! dirty implementation 
 
@@ -722,6 +713,15 @@ subroutine BC_QSTATICFLT_set3d(bc,MxA,V,D,iflt)
     if ( mod(it,NTOUT) == 0 .or. it==NSTEP) call SCEC_write_dataT(bc%dataT)
 
   endif
+ if ( mod(it,NSNAP) == 0) then
+   if (.NOT. PARALLEL_FAULT) then
+     if (bc%nspec > 0) call write_dataXZ(bc%dataXZ,it,iflt)
+   else
+     call gather_dataXZ(bc)
+     if (myrank==0) call write_dataXZ(bc%dataXZ_all,it,iflt)
+   endif
+ endif
+
 
   ! write dataXZ every NSNAP time step
  ! if ( mod(it,NSNAP) == 0) then

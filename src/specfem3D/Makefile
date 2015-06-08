@@ -197,6 +197,8 @@ SOLVER_ARRAY_OBJECTS = \
 	$O/compute_add_sources_viscoelastic.o \
 	$O/compute_add_sources_poroelastic.o \
 	$O/compute_boundary_kernel.o \
+        $O/compute_Diagonal.o \
+        $O/compute_diagonal_K.o \
 	$O/compute_coupling_acoustic_el.o \
 	$O/compute_coupling_acoustic_po.o \
 	$O/compute_coupling_viscoelastic_ac.o \
