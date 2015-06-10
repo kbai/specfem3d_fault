@@ -554,7 +554,8 @@
   if (np <= 1) stop 'minimum number of Gauss-Lobatto points is 2'
 
 ! with spectral elements, use at least 3 points
-  if (np <= 2) stop 'minimum number of Gauss-Lobatto points for the SEM is 3'
+!  if (np <= 2) stop 'minimum number of Gauss-Lobatto points for the SEM is 3'
+!commented by kbai to enable traditional finite element method
 
   if ((alpha <= -one) .or. (beta <= -one)) stop 'alpha and beta must be greater than -1'
 

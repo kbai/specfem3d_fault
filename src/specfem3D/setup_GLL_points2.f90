@@ -23,16 +23,27 @@
 ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 !
 !=====================================================================
+!
+! United States and French Government Sponsorship Acknowledged.
 
+  subroutine setup_GLL_points2()
 
-! src/shared/precision.h.  Generated from precision.h.in by configure.
+  use specfem_par
+  implicit none
+  integer :: i,j,k,ier
 
-!
-! solver in single or double precision depending on the machine
-!
-! set to MPI_REAL to run in single precision
-! set to MPI_DOUBLE_PRECISION to run in double precision
-!
-! ALSO CHANGE FILE constants.h ACCORDINGLY
-!
-  integer, parameter :: CUSTOM_MPI_TYPE = MPI_DOUBLE_PRECISION
+  if(myrank == 0) then
+    write(IMAIN,*) '******************************************'
+    write(IMAIN,*) 'There is a total of ',NPROC,' slices'
+    write(IMAIN,*) '******************************************'
+    write(IMAIN,*)
+  endif
+
+! set up GLL points, weights and derivation matrices for reference element (between -1,1)
+  call define_derivation_matrices2(xigll2,yigll2,zigll2,wxgll2,wygll2,wzgll2, &
+                                hprime_xx2,hprime_yy2,hprime_zz2, &
+                                hprimewgll_xx2,hprimewgll_yy2,hprimewgll_zz2, &
+                                wgllwgll_xy2,wgllwgll_xz2,wgllwgll_yz2)
+
+ end subroutine setup_GLL_points2
+

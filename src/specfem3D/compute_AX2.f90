@@ -1,4 +1,4 @@
-subroutine compute_AX(AX,X,MASKX,MASKAX)
+subroutine compute_AX2(AX,X,MASKX,MASKAX)
 
   use specfem_par
   use specfem_par_acoustic
@@ -18,7 +18,7 @@ subroutine compute_AX(AX,X,MASKX,MASKAX)
 !  logical,dimension(3,NGLOB_AB),optional :: MASKXin,MASKAXin
   logical,dimension(3,NGLOB_AB),intent(in) :: MASKX,MASKAX
    AX(:,:)=0.0_CUSTOM_REAL
-    
+
     do iphase=1,2
 
     !first for points on MPI interfaces
@@ -35,33 +35,15 @@ subroutine compute_AX(AX,X,MASKX,MASKAX)
 
     else
       ! no optimizations used
-      call compute_forces_viscoelastic_noDev(iphase,NSPEC_AB,NGLOB_AB, &
-                        X,veloc,AX,load, MASKX, MASKAX,  &
-                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        hprime_xx,hprime_yy,hprime_zz, &
-                        hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
-                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-                        kappastore,mustore,jacobian,ibool, &
-                        ATTENUATION,deltat,PML_CONDITIONS, &
-                        one_minus_sum_beta,factor_common, &
-                        one_minus_sum_beta_kappa,factor_common_kappa, &
-                        alphaval,betaval,gammaval,&
-                        NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_kappa, &
-                        R_trace,R_xx,R_yy,R_xy,R_xz,R_yz, &
-                        epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy, &
-                        epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
-                        ANISOTROPY,NSPEC_ANISO, &
-                        c11store,c12store,c13store,c14store,c15store,c16store, &
-                        c22store,c23store,c24store,c25store,c26store,c33store, &
-                        c34store,c35store,c36store,c44store,c45store,c46store, &
-                        c55store,c56store,c66store, &
-                        SIMULATION_TYPE,COMPUTE_AND_STORE_STRAIN,NSPEC_STRAIN_ONLY, &
-                        NSPEC_BOUN,NSPEC2D_MOHO,NSPEC_ADJOINT, &
-                        is_moho_top,is_moho_bot, &
-                        dsdx_top,dsdx_bot, &
-                        ispec2D_moho_top,ispec2D_moho_bot, &
+      call compute_forces_viscoelastic_noDev2(iphase,NSPEC_AB,NGLOB_AB, &
+                        X,AX, MASKX, MASKAX,  &
+                        xix2,xiy2,xiz2,etax2,etay2,etaz2,gammax2,gammay2,gammaz2, &
+                        hprime_xx2,hprime_yy2,hprime_zz2, &
+                        hprimewgll_xx2,hprimewgll_yy2,hprimewgll_zz2, &
+                        wgllwgll_xy2,wgllwgll_xz2,wgllwgll_yz2, &
+                        kappastore,mustore,jacobian2,ibool, &
                         num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic, &
-                        phase_ispec_inner_elastic,.false.)
+                        phase_ispec_inner_elastic)
 
     endif
    if (phase_is_inner .eqv. .false.) then
@@ -82,13 +64,13 @@ subroutine compute_AX(AX,X,MASKX,MASKAX)
                             request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &
                             my_neighbours_ext_mesh,myrank)
 endif
- 
+
 
 
    enddo
 
 
-end subroutine compute_AX
+end subroutine compute_AX2
 
 
 

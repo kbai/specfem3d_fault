@@ -1,240 +1,109 @@
-! Base module for kinematic and dynamic fault solvers
-!
-! Authors:
-! Percy Galvez, Surendra Somala, Jean-Paul Ampuero
 
-module conjugate_gradient
- 
-  use constants
+subroutine smoother(iphase, &
+                    NSPEC_AB,NGLOB_AB,AX,  &
+                    xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                    hprime_xx,hprime_yy,hprime_zz, &
+                    hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,&
+                    wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                    kappastore,mustore,jacobian,ibool, &
+                    deltat, &
+                    SIMULATION_TYPE,&
+                    NSPEC_BOUN,&
+                    num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic, &
+                    phase_ispec_inner_elastic)
+
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,ONE_THIRD,FOUR_THIRDS,PI  !IMAIN WAS ADDED BY Kangchen
+
+  use fault_solver_dynamic, only : Kelvin_Voigt_eta!, KV_direction
+  use specfem_par, only : PI,FULL_ATTENUATION_SOLID, xigll, yigll, zigll, ystore
+  use specfem_par_elastic, only : rmassx ,rmassy ,rmassz
 
   implicit none
 
-  type CG_Vector
-    integer :: NDIM,NELE   
-  end type
-
-  type CG_data
-!    real(kind=CUSTOM_REAL) :: Norm_old
-    real(kind=CUSTOM_REAL), dimension(:,:), pointer :: X=>null(),L=>null()
-    real(kind=CUSTOM_REAL), dimension(:,:), pointer :: Residue=>null() , Pdirection=>null(), M=>null()
-    logical , dimension(:,:), pointer :: MASKX=>null() , MASKAX=>null()
-    type(CG_Vector) :: CG_size !the dimensions and element numbers in the vector
-  end type CG_data
-!!!!! DK DK  private
-
-contains
-
-!---------------------------------------------------------------------
-
-subroutine CG_initialize(CG,CG_dim,Displ,Load)
-
-!! DK DK use type(bc_dynandkinflt_type) instead of class(fault_type) for compatibility with some current compilers
-  use specfem_par
-  implicit none
-  integer :: ier
-  type(CG_data),intent(out) :: CG
-  real(kind=CUSTOM_REAL),target,dimension(:,:),intent(in) :: Displ,Load
-  type(CG_Vector),intent(in) :: CG_dim
-  
-  CG%X=>Displ
-  CG%L=>Load
-  CG%CG_size = CG_dim
-
-  write(*,*) CG%CG_size%NELE,'internal of the program'
-  allocate(CG%MASKX(CG%CG_size%NDIM,CG%CG_size%NELE))
-  allocate(CG%MASKAX(CG%CG_size%NDIM,CG%CG_size%NELE))
-  write(*,*) 'ier',ier
-  allocate(CG%Pdirection(CG%CG_size%NDIM,CG%CG_size%NELE))
-  write(*,*),'size',size(CG%Pdirection)
-  allocate(CG%Residue(CG%CG_size%NDIM,CG%CG_size%NELE))
-  allocate(CG%M(CG%CG_size%NDIM,CG%CG_size%NELE))
-!  allocate(CG%Z0(CG%CG_size%NDIM,CG%CG_size%NELE))
-
-
-!  allocate(Norm_old(CG%CG_size%NDIM,CG%CG_size%NELE))
-!  write(*,*) 'ier',ier,size(CG%Pdirection),size(CG%MASKX)
-  CG%Residue(:,:) = Load(:,:)
-  CG%Pdirection(:,:) = Load(:,:)
-!  CG%Z0 = Load(:,:)
-  CG%MASKX(:,:) =.true.
-  CG%MASKAX(:,:) = .true.
-  CG%M(:,:)=1.0_CUSTOM_REAL
-!  call Ax(CG)
-!  write(*,*) CG%MASKX
-!  call Vector_Multiplication_Weight(CG%Norm_old,CG%Residue,CG%Residue,CG%M)
- 
-end subroutine CG_initialize
-!=================================================================
-subroutine CG_initialize_preconditioner(CG,Mx,My,Mz)
-
-  type(CG_data),intent(inout) :: CG
-  real(kind=CUSTOM_REAL),target,dimension(:),intent(in) :: Mx,My,Mz
-  CG%M(1,:) = Mx
-  CG%M(2,:) = My
-  CG%M(3,:) = Mz
-!  CG%Z0 = CG%M * CG%Z0
-  
-!  call Vector_Multiplication_Weight(CG%Norm_old,CG%Residue,CG%Residue,CG%M)
- 
-end subroutine CG_initialize_preconditioner
-!========================================================
-
-
-
-
-
-!==================================================================
-subroutine CG_mask(CG,X_setfalse,AX_setfalse)
- 
-  implicit none
+  integer :: NSPEC_AB,NGLOB_AB
+
+! displacement, velocity and acceleration
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: AX,delta_accel
+
+! time step
+  real(kind=CUSTOM_REAL) :: deltat
+
+! arrays with mesh parameters per slice
+  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
+        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
+        kappastore,mustore,jacobian
+
+! array with derivatives of Lagrange polynomials and precalculated products
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprime_xx,hprimewgll_xx
+  real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLY) :: hprime_yy,hprimewgll_yy
+  real(kind=CUSTOM_REAL), dimension(NGLLZ,NGLLZ) :: hprime_zz,hprimewgll_zz
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY) :: wgllwgll_xy
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLZ) :: wgllwgll_xz
+  real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ) :: wgllwgll_yz
+
+! memory variables and standard linear solids for attenuation
+
+
+! anisotropy
+  integer :: iphase
+  integer :: num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic
+  integer, dimension(num_phase_ispec_elastic,2) :: phase_ispec_inner_elastic
+
+! adjoint simulations
+  integer :: SIMULATION_TYPE
+  integer :: NSPEC_BOUN
+
+  ! moho kernel
+
+
+! local parameters
+  integer :: ispec,iglob,ispec_p,num_elements
+  integer :: i,j,k,l,ia
+
+  real(kind=CUSTOM_REAL) :: xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl
+  real(kind=CUSTOM_REAL) :: duxdxl,duxdyl,duxdzl,duydxl,duydyl,duydzl,duzdxl,duzdyl,duzdzl
+
+  ! local anisotropy parameters
+
+
+  ! local attenuation parameters
+
+
+ ! local C-PML absorbing boundary conditions parameters
+
+!  write(*,*) 'entering compute forces viscoelastic noDev'
+  ! choses inner/outer elements
+  if( iphase == 1 ) then
+    num_elements = nspec_outer_elastic
+  else
+    num_elements = nspec_inner_elastic
+  endif
+!  WRITE(*,*) num_elements
+!  write(*,*) X(1,3)
+  do ispec_p = 1,num_elements
+       do l=1,3
+          do k=1,NGLLZ
+            do j=1,NGLLY
+              do i=1,NGLLX
+                      call eval_shape3D_single(myrank,shape3D,xil,etal,gammal,NGNOD)
+
+        ! interpolates source locations
+        xmesh = 0.0
+        ymesh = 0.0
+        zmesh = 0.0
+        do ia=1,NGNOD
+          xmesh = xmesh + shape3D(ia)*xelm(ia)
+          ymesh = ymesh + shape3D(ia)*yelm(ia)
+          zmesh = zmesh + shape3D(ia)*zelm(ia)
+        enddo
+
+                                      
+            enddo
+          enddo
+        enddo
+     enddo
+  enddo
+end subroutine smoother
 
-  type(CG_data),intent(inout) :: CG
-  
-  integer,dimension(:),intent(in):: X_setfalse,AX_setfalse
-
-  CG%MASKX(:,X_setfalse) = .false.
-  CG%MASKAX(:,AX_setfalse) = .false.
-
-end subroutine
-!====================================================================
-
-subroutine update_value_direction(CG)
-
-  use specfem_par
-  implicit none
-
-  real(kind=CUSTOM_REAL) :: PTW  , Norm_old , Norm_new , alpha , beta
-  real(kind=CUSTOM_REAL),dimension(:,:),allocatable :: W
-  type(CG_data),intent(inout) :: CG
-
-  !write(*,*) 'started to call the AXX'
-!    write(*,*) size(CG%Pdirection)
-!    write(*,*) NGLOB_AB
-    Norm_old = 1.0
-    allocate(W(CG%CG_size%NDIM,CG%CG_size%NELE))
-    write(*,*) size(W),size(CG%Pdirection)
-    call Axx(W,CG%Pdirection,CG%MASKX,CG%MASKAX)
-  ! w=Ap
-    write(*,*) maxval(W),minval(W)
-
-    call Vector_Multiplication(PTW,CG%Pdirection,W)
-    ! ptw = p'Ap
-!    write(*,*) 'calculate PTW=',PTW
-!    call Vector_Multiplication_Weight(CG%Norm_old,CG%Residue,CG%Residue,CG%M)
-    !write(*,*) 'calculate Vector Multiplication'
-    alpha = Norm_old/PTW
-
-    CG%X(:,:) = CG%X(:,:) + alpha * CG%Pdirection
-
-    CG%Residue(:,:) = CG%Residue(:,:) - alpha*W(:,:)
-
-    call Vector_Multiplication_Weight(Norm_new,CG%Residue,CG%Residue,CG%M)
-
-    beta = Norm_new/Norm_old
-
-    Norm_old = Norm_new
-
-    CG%Pdirection = CG%Residue + beta * CG%Pdirection
-
-    call Axx(W,CG%X,CG%MASKX,CG%MASKAX)
-
-    W=-W+CG%L
-
-!call Vector_Multiplication(Norm_old,W,W)
-
-    write(*,*) 'true residue=',maxval(abs(W))
-    write(*,*) 'pseudo residue=',maxval(abs(CG%Residue))
-  !  deallocate(W) 
-end subroutine update_value_direction
-
-!================================================================================================
-
-subroutine Axx(AX ,X, A ,B)
-
-use specfem_par
-
-implicit none
-
-    real(kind=CUSTOM_REAL),dimension(3,NGLOB_AB),intent(in) :: X
-    real(kind=CUSTOM_REAL),dimension(3,NGLOB_AB),intent(out) :: AX
-    logical,dimension(3,NGLOB_AB),intent(in) :: A
-    logical,dimension(3,NGLOB_AB),intent(in) :: B
-    
-    call compute_AX(AX , X ,A,B)    ! THIS IS AN INTERFACE AND CAN BE REPLACED BY ANY SUBROUTINE
-    Ax=-Ax
-end subroutine Axx
-
-
-subroutine Vector_Multiplication(SUM_ALL,A,B)
-
-use specfem_par
-implicit none
-
-    real(kind=CUSTOM_REAL),dimension(:,:),intent(in) :: A , B
-    real(kind=CUSTOM_REAL) :: SUM
-    real(kind=CUSTOM_REAL),intent(inout) :: SUM_ALL
-    integer :: i,j
-
-    SUM = 0.0_CUSTOM_REAL
-    SUM_ALL = 0.0_CUSTOM_REAL
-    do i=1,3
-      do j=1,NGLOB_AB
-        SUM = SUM + A(i,j)*B(i,j)
-      enddo
-    enddo
-
-    call sum_all_all_cr(SUM,SUM_ALL)
-
-end subroutine Vector_Multiplication
-
-
-
-subroutine Vector_Multiplication_Weight(SUM_ALL,A,B,Weight)
-
-use specfem_par
-implicit none
-
-    real(kind=CUSTOM_REAL),dimension(:,:),intent(in) :: A , B , Weight
-    real(kind=CUSTOM_REAL) :: SUM
-    real(kind=CUSTOM_REAL),intent(inout) :: SUM_ALL
-    integer :: i,j
-
-    SUM = 0.0_CUSTOM_REAL
-    SUM_ALL = 0.0_CUSTOM_REAL
-    do i=1,3
-      do j=1,NGLOB_AB
-        SUM = SUM + A(i,j)*B(i,j)*Weight(i,j)
-      enddo
-    enddo
-
-    call sum_all_all_cr(SUM,SUM_ALL)
-
-end subroutine Vector_Multiplication_Weight
-
-
-
-
-
-
-subroutine Updateresidue(CG, delta_r)
-
-  real(kind=CUSTOM_REAL),target,dimension(:,:),intent(in) :: delta_r
-  type(CG_data),intent(inout) :: CG
-  
-  CG%Residue = CG%Residue + delta_r
-  CG%Pdirection = CG%Residue 
-end subroutine Updateresidue
-
-
-subroutine Destruction(CG)
-
-  type(CG_data),intent(inout) :: CG
-  
-  deallocate(CG%MASKX)
-  deallocate(CG%MASKAX)
-  deallocate(CG%Pdirection)
-  deallocate(CG%Residue)
-
-end subroutine Destruction
-
-end module conjugate_gradient

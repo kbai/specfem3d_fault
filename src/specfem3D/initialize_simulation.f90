@@ -209,6 +209,19 @@
           gammay(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
           gammaz(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
           jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+
+allocate( xix2(2,2,2,NSPEC_AB), &
+          xiy2(2,2,2,NSPEC_AB), &
+          xiz2(2,2,2,NSPEC_AB), &
+          etax2(2,2,2,NSPEC_AB), &
+          etay2(2,2,2,NSPEC_AB), &
+          etaz2(2,2,2,NSPEC_AB), &
+          gammax2(2,2,2,NSPEC_AB), &
+          gammay2(2,2,2,NSPEC_AB), &
+          gammaz2(2,2,2,NSPEC_AB), &
+          jacobian2(2,2,2,NSPEC_AB),stat=ier)
+  
+
   if( ier /= 0 ) stop 'error allocating arrays for databases'
 
   ! mesh node locations

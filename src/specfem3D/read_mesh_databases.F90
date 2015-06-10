@@ -51,26 +51,47 @@
     print*,'path: ',prname(1:len_trim(prname))//'external_mesh.bin'
     call exit_mpi(myrank,'error opening database')
   endif
+  open(unit=28,file=prname(1:len_trim(prname))//'external_mesh2.bin',status='old',&
+      action='read',form='unformatted',iostat=ier)
+  if( ier /= 0 ) then
+    print*,'error: could not open database '
+    print*,'path: ',prname(1:len_trim(prname))//'external_mesh2.bin'
+    call exit_mpi(myrank,'error opening database')
+  endif
+
 
   read(27) NSPEC_AB
+  read(28)
   read(27) NGLOB_AB
-
+  read(28)
   read(27) ibool
-
+  read(28)
   read(27) xstore
+  read(28)
   read(27) ystore
+  read(28)
   read(27) zstore
-
+  read(28)
   read(27) xix
+  read(28) xix2
   read(27) xiy
+  read(28) xiy2
   read(27) xiz
+  read(28) xiz2
   read(27) etax
+  read(28) etax2
   read(27) etay
+  read(28) etay2
   read(27) etaz
+  read(28) etaz2
   read(27) gammax
+  read(28) gammax2
   read(27) gammay
+  read(28) gammay2
   read(27) gammaz
+  read(28) gammaz2
   read(27) jacobian
+  read(28) jacobian2
 
   read(27) kappastore
   read(27) mustore
@@ -773,24 +794,24 @@ subroutine add_layered_structure
    Bot=(/-4.0e3,-16.0e3,-30.0e3,-42.0e3/)
    Den=(/2.5e3,2.6e3,2.7e3,2.9e3/)
    Muu=Vs*Vs*Den
-   Kap=Vp*Vp*Den-4.0/3.0*Muu 
+   Kap=Vp*Vp*Den-4.0/3.0*Muu
   write(IMAIN,*) 'the layered model:'
-  
+
   do ilay=1,num_lay
      do II=1,NGLLX
        do JJ=1,NGLLY
          do KK=1,NGLLZ
         write(IMAIN,*) 'the ',ilay,' ', Vp(ilay),' ', Vs(ilay),' ',Top(ilay),' ',Bot(ilay),' ',Den(ilay),' ',Muu(ilay),' ',Kap(ilay)
-        
+
         kappastore(II,JJ,KK,:)=kappastore(II,JJ,KK,:)+(-kappastore(II,JJ,KK,:)+Kap(ilay))*((zstore>=Bot(ilay))*(zstore<Top(ilay)))
         mustore(II,JJ,KK,:)=mustore(II,JJ,KK,:)+(-mustore(II,JJ,KK,:)+Muu(ilay))*((zstore>=Bot(ilay))*(zstore<Top(ilay)))
         rhostore(II,JJ,KK,:)=rhostore(II,JJ,KK,:)+(-rhostore(II,JJ,KK,:)+Den(ilay))*((zstore>=Bot(ilay))*(zstore<Top(ilay)))
  enddo
  enddo
- enddo  
+ enddo
  enddo
   end subroutine add_layered_structure
-  
+
   end subroutine read_mesh_databases
 
 
@@ -1192,4 +1213,4 @@ subroutine add_layered_structure
   end subroutine read_mesh_databases_adjoint
 
 
-  
+

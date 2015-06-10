@@ -4,13 +4,13 @@
 ! Percy Galvez, Surendra Somala, Jean-Paul Ampuero
 
 module conjugate_gradient
- 
+
   use constants
 
   implicit none
 
   type CG_Vector
-    integer :: NDIM,NELE   
+    integer :: NDIM,NELE
   end type
 
   type CG_data
@@ -36,7 +36,7 @@ subroutine CG_initialize(CG,CG_dim,Displ,Load)
   type(CG_data),intent(out) :: CG
   real(kind=CUSTOM_REAL),target,dimension(:,:),intent(in) :: Displ,Load
   type(CG_Vector),intent(in) :: CG_dim
-  
+
   CG%X=>Displ
   CG%L=>Load
   CG%CG_size = CG_dim
@@ -49,37 +49,25 @@ subroutine CG_initialize(CG,CG_dim,Displ,Load)
   write(*,*),'size',size(CG%Pdirection)
   allocate(CG%Residue(CG%CG_size%NDIM,CG%CG_size%NELE))
   allocate(CG%M(CG%CG_size%NDIM,CG%CG_size%NELE))
-!  allocate(CG%Z0(CG%CG_size%NDIM,CG%CG_size%NELE))
-
-
-!  allocate(Norm_old(CG%CG_size%NDIM,CG%CG_size%NELE))
-!  write(*,*) 'ier',ier,size(CG%Pdirection),size(CG%MASKX)
   CG%Residue(:,:) = Load(:,:)
   CG%Pdirection(:,:) = Load(:,:)
-!  CG%Z0 = Load(:,:)
   CG%MASKX(:,:) =.true.
   CG%MASKAX(:,:) = .true.
   CG%M(:,:)=1.0_CUSTOM_REAL
-!  call Ax(CG)
-!  write(*,*) CG%MASKX
   call Vector_Multiplication_Weight(CG%Norm_old,CG%Residue,CG%Residue,CG%M)
- 
+  write(*,*) "normold:",CG%Norm_old
 end subroutine CG_initialize
 !=================================================================
 subroutine CG_initialize_preconditioner(CG,Mx,My,Mz)
 
   type(CG_data),intent(inout) :: CG
   real(kind=CUSTOM_REAL),target,dimension(:),intent(in) :: Mx,My,Mz
-!  CG%M(1,:) = Mx**(1.0/3.0)
-!  CG%M(2,:) = My**(1.0/3.0)
-!  CG%M(3,:) = Mz**(1.0/3.0)
-!  CG%Z0 = CG%M * CG%Z0
   CG%M(1,:) = Mx
   CG%M(2,:) = My
   CG%M(3,:) = Mz
-! 
   call Vector_Multiplication_Weight(CG%Norm_old,CG%Residue,CG%Residue,CG%M)
-  CG%Pdirection = CG%Pdirection * CG%M 
+  CG%Pdirection = CG%Pdirection * CG%M
+
 end subroutine CG_initialize_preconditioner
 !========================================================
 
@@ -89,11 +77,11 @@ end subroutine CG_initialize_preconditioner
 
 !==================================================================
 subroutine CG_mask(CG,X_setfalse,AX_setfalse)
- 
+
   implicit none
 
   type(CG_data),intent(inout) :: CG
-  
+
   integer,dimension(:),intent(in):: X_setfalse,AX_setfalse
 
   CG%MASKX(:,X_setfalse) = .false.
@@ -111,22 +99,15 @@ subroutine update_value_direction(CG)
   real(kind=CUSTOM_REAL),dimension(:,:),allocatable :: W
   type(CG_data),intent(inout) :: CG
 
-  !write(*,*) 'started to call the AXX'
-!    write(*,*) size(CG%Pdirection)
-!    write(*,*) NGLOB_AB
     allocate(W(CG%CG_size%NDIM,CG%CG_size%NELE))
     write(*,*) size(W),size(CG%Pdirection)
     call Axx(W,CG%Pdirection,CG%MASKX,CG%MASKAX)
-  ! w=Ap
     write(*,*) maxval(W),minval(W)
 
     call Vector_Multiplication(PTW,CG%Pdirection,W)
-    ! ptw = p'Ap
-!    write(*,*) 'calculate PTW=',PTW
-!    call Vector_Multiplication_Weight(CG%Norm_old,CG%Residue,CG%Residue,CG%M)
-    !write(*,*) 'calculate Vector Multiplication'
+    write(*,*) PTW,CG%Norm_old
     alpha = CG%Norm_old/PTW
-
+    write(*,*) "alpha=",alpha
     CG%X(:,:) = CG%X(:,:) + alpha * CG%Pdirection
 
     CG%Residue(:,:) = CG%Residue(:,:) - alpha*W(:,:)
@@ -147,7 +128,7 @@ subroutine update_value_direction(CG)
 
     write(*,*) 'true residue=',maxval(abs(W))
     write(*,*) 'pseudo residue=',maxval(abs(CG%Residue))
-  !  deallocate(W) 
+  !  deallocate(W)
 end subroutine update_value_direction
 
 !================================================================================================
@@ -162,8 +143,8 @@ implicit none
     real(kind=CUSTOM_REAL),dimension(3,NGLOB_AB),intent(out) :: AX
     logical,dimension(3,NGLOB_AB),intent(in) :: A
     logical,dimension(3,NGLOB_AB),intent(in) :: B
-    
-    call compute_AX(AX , X ,A,B)    ! THIS IS AN INTERFACE AND CAN BE REPLACED BY ANY SUBROUTINE
+
+    call compute_AX2(AX , X ,A,B)    ! THIS IS AN INTERFACE AND CAN BE REPLACED BY ANY SUBROUTINE
     Ax=-Ax
 end subroutine Axx
 
@@ -223,24 +204,24 @@ subroutine Updateresidue(CG, delta_r)
 
   real(kind=CUSTOM_REAL),target,dimension(:,:),intent(in) :: delta_r
   type(CG_data),intent(inout) :: CG
-  
+
   CG%Residue = CG%Residue + delta_r
   CG%Pdirection = CG%Residue
 
-  
+
   call Vector_Multiplication_Weight(CG%Norm_old,CG%Residue,CG%Residue,CG%M)
- 
+
 
 end subroutine Updateresidue
 
 subroutine Reinitialize(CG)
 
   type(CG_data),intent(inout) :: CG
-  
-  CG%Pdirection = CG%Residue
 
-  
- 
+  CG%Pdirection = CG%Residue*CG%M
+
+
+
 
 end subroutine Reinitialize
 
@@ -248,7 +229,7 @@ end subroutine Reinitialize
 subroutine Destruction(CG)
 
   type(CG_data),intent(inout) :: CG
-  
+
   deallocate(CG%MASKX)
   deallocate(CG%MASKAX)
   deallocate(CG%Pdirection)

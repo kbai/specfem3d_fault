@@ -51,6 +51,8 @@
   load(1,faults(1)%ibulk2) = load(1,faults(1)%ibulk2)-10.0e6_CUSTOM_REAL*faults(1)%B(:)
   endif
 
+  call restriction(NSPEC_AB,NGLOB_AB,veloc,load,ibool)
+
   call CG_initialize(CG_problem,CG_size,displ,load)
 !  write(*,*) faults(1)%ibulk1
 !  call CG_mask(CG_problem,faults(1)%ibulk1,faults(1)%ibulk1)
@@ -60,7 +62,7 @@
   write(*,*) CG_problem%CG_size%NELE
 !  write(*,*) size(CG_problem%Pdirection)
   call CG_initialize_preconditioner(CG_problem,rmassx,rmassy,rmassz)
-  do it = 1,1000
+  do it = 1,30000
 
 !  write(*,*) 'successfully get into the loop!'
   call update_value_direction(CG_problem)
@@ -76,7 +78,7 @@
   if(myrank ==0) &
   write(IMAIN,*)  'max_error=',Max_error_all
 
-!  if(mod(it,100) == 0) call Reinitialize(CG_problem)
+  if(mod(it,1000) == 0) call Reinitialize(CG_problem)
 
 
   enddo   ! end of main time loop

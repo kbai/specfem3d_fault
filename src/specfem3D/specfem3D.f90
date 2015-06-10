@@ -4,10 +4,10 @@
 ! ************** PROGRAM STARTS HERE **************
 
   ! force Flush-To-Zero if available to avoid very slow Gradual Underflow trapping
-!  do while(Debugwait) 
+!  do while(Debugwait)
 !  enddo
   call force_ftz()
-  
+
   ! reads in parameters
   call initialize_simulation()
 
@@ -24,13 +24,15 @@
 ! sets up reference element GLL points/weights/derivatives
   call setup_GLL_points()
 
-  
+  call setup_GLL_points2()
+
+
 ! detects surfaces
   call detect_mesh_surfaces()
 
 
 ! prepares sources and receivers
-  call setup_sources_receivers()
+!  call setup_sources_receivers()
 
 
 ! sets up and precomputes simulation arrays

@@ -41,7 +41,7 @@
 
 ! set to SIZE_REAL to run in single precision
 ! set to SIZE_DOUBLE to run in double precision (increases memory size by 2)
-  integer, parameter :: CUSTOM_REAL = SIZE_REAL
+  integer, parameter :: CUSTOM_REAL = SIZE_DOUBLE
 
 !----------- parameters that can be changed by the user -----------
 
@@ -57,7 +57,7 @@
   logical, parameter :: USE_DEVILLE_PRODUCTS = .false.
 
 ! number of GLL points in each direction of an element (degree plus one)
-  integer, parameter :: NGLLX = 5
+  integer, parameter :: NGLLX = 2
   integer, parameter :: NGLLY = NGLLX
   integer, parameter :: NGLLZ = NGLLX
 

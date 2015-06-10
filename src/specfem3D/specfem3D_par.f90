@@ -48,10 +48,14 @@ module specfem_par
 
 ! mesh parameters
   integer, dimension(:,:,:,:), allocatable :: ibool
+
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: xstore,ystore,zstore
 
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
+        xix2,xiy2,xiz2,etax2,etay2,etaz2,gammax2,gammay2,gammaz2,jacobian2
+
 
 ! material properties
   ! isotropic
@@ -144,6 +148,10 @@ module specfem_par
   double precision, dimension(NGLLX) :: xigll,wxgll
   double precision, dimension(NGLLY) :: yigll,wygll
   double precision, dimension(NGLLZ) :: zigll,wzgll
+  double precision, dimension(2) :: xigll2,wxgll2
+  double precision, dimension(2) :: yigll2,wygll2
+  double precision, dimension(2) :: zigll2,wzgll2
+
 
 ! array with derivatives of Lagrange polynomials and precalculated products
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT
@@ -152,6 +160,11 @@ module specfem_par
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY) :: wgllwgll_xy
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLZ) :: wgllwgll_xz
   real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ) :: wgllwgll_yz
+  real(kind=CUSTOM_REAL), dimension(2,2) :: hprime_xx2,hprimewgll_xx2,hprime_yy2,hprimewgll_yy2,hprime_zz2,hprimewgll_zz2
+  real(kind=CUSTOM_REAL), dimension(2,2) :: wgllwgll_xy2
+  real(kind=CUSTOM_REAL), dimension(2,2) :: wgllwgll_xz2
+  real(kind=CUSTOM_REAL), dimension(2,2) :: wgllwgll_yz2
+
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: wgllwgll_xy_3D,wgllwgll_xz_3D,wgllwgll_yz_3D
 

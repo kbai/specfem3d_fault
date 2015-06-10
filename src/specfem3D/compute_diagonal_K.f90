@@ -295,13 +295,6 @@ subroutine compute_diagonal_K(iphase, &
 
         if(l==1)  then
             AX(1,iglob) = AX(1,iglob) + delta_accel(1,iglob)
-            if(Ax(1,iglob)==0.0_CUSTOM_REAL) then
-                write(*,*) iglob
-                write(*,*) "ss:",fac1,fac2,fac3,newtempx1(i,j,k),newtempx2(i,j,k),newtempx3(i,j,k)
-                write(*,*)  "hps",hp1,hp2,hp3
-                write(*,*)  "ijk:",i,j,k
-                endif
-
         endif
 
         if(l==2)   AX(2,iglob) = AX(2,iglob) + delta_accel(2,iglob)

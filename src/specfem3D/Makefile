@@ -123,6 +123,7 @@ libspecfem_a_OBJECTS = \
 	$O/create_name_database.shared.o \
 	$O/create_serial_name_database.shared.o \
 	$O/define_derivation_matrices.shared.o \
+	$O/define_derivation_matrices2.shared.o \
 	$O/detect_surface.shared.o \
 	$O/exit_mpi.shared.o \
 	$O/force_ftz.cc.o \
@@ -211,7 +212,10 @@ SOLVER_ARRAY_OBJECTS = \
 	$O/compute_forces_viscoelastic_calling_routine.o \
 	$O/compute_forces_viscoelastic_Dev.o \
 	$O/compute_forces_viscoelastic_noDev.o \
+        $O/compute_forces_viscoelastic_noDev2.o \
         $O/compute_AX.o \
+        $O/compute_AX2.o \
+        $O/restriction.o \
 	$O/compute_forces_poro_fluid_part.o \
 	$O/compute_forces_poroelastic_calling_routine.o \
 	$O/compute_forces_poro_solid_part.o \
@@ -240,6 +244,7 @@ SOLVER_ARRAY_OBJECTS = \
 	$O/read_mesh_databases.o \
 	$O/save_adjoint_kernels.o \
 	$O/setup_GLL_points.o \
+        $O/setup_GLL_points2.o \
 	$O/setup_movie_meshes.o \
 	$O/setup_sources_receivers.o \
 	$O/specfem3D.o \

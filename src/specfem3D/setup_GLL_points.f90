@@ -44,6 +44,11 @@
                                 hprime_xx,hprime_yy,hprime_zz, &
                                 hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
                                 wgllwgll_xy,wgllwgll_xz,wgllwgll_yz)
+  call define_derivation_matrices2(xigll2,yigll2,zigll2,wxgll2,wygll2,wzgll2, &
+                                hprime_xx2,hprime_yy2,hprime_zz2, &
+                                hprimewgll_xx2,hprimewgll_yy2,hprimewgll_zz2, &
+                                wgllwgll_xy2,wgllwgll_xz2,wgllwgll_yz2)
+
 
 ! define transpose of derivation matrix
   do j = 1,NGLLY
