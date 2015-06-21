@@ -1100,3 +1100,15 @@
   call mpi_wait(req,req_mpi_status,ier)
 
   end subroutine wait_req
+
+
+  subroutine print_computer_name()
+    use :: mpi
+    implicit none
+    integer :: le,ierr
+    character*(80) name
+    call MPI_GET_PROCESSOR_NAME(name,le,ierr)
+    write(*,*) name
+end subroutine print_computer_name
+
+

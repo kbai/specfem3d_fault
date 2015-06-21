@@ -422,11 +422,25 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
            shape2D_top(NGNOD2D,NGLLX,NGLLY),stat=ier)
   if( ier /= 0 ) stop 'error allocating array shape2D_x etc.'
 
+  allocate(shape2D4_x(4,NGLLY,NGLLZ), &
+           shape2D4_y(4,NGLLX,NGLLZ), &
+           shape2D4_bottom(4,NGLLX,NGLLY), &
+           shape2D4_top(4,NGLLX,NGLLY),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array shape2D_x etc.'
+
+
   allocate(dershape2D_x(NDIM2D,NGNOD2D,NGLLY,NGLLZ), &
            dershape2D_y(NDIM2D,NGNOD2D,NGLLX,NGLLZ), &
            dershape2D_bottom(NDIM2D,NGNOD2D,NGLLX,NGLLY), &
            dershape2D_top(NDIM2D,NGNOD2D,NGLLX,NGLLY),stat=ier)
   if( ier /= 0 ) stop 'error allocating array dershape2D_x etc.'
+
+  allocate(dershape2D4_x(NDIM2D,4,NGLLY,NGLLZ), &
+           dershape2D4_y(NDIM2D,4,NGLLX,NGLLZ), &
+           dershape2D4_bottom(NDIM2D,4,NGLLX,NGLLY), &
+           dershape2D4_top(NDIM2D,4,NGLLX,NGLLY),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array dershape2D_x etc.'
+
 
   allocate(wgllwgll_xy(NGLLX,NGLLY), &
            wgllwgll_xz(NGLLX,NGLLZ), &
@@ -583,6 +597,12 @@ subroutine crm_ext_setup_jacobian(myrank, &
   call get_shape2D(myrank,shape2D_y,dershape2D_y,xigll,zigll,NGLLX,NGLLZ,NGNOD,NGNOD2D)
   call get_shape2D(myrank,shape2D_bottom,dershape2D_bottom,xigll,yigll,NGLLX,NGLLY,NGNOD,NGNOD2D)
   call get_shape2D(myrank,shape2D_top,dershape2D_top,xigll,yigll,NGLLX,NGLLY,NGNOD,NGNOD2D)
+
+  call get_shape2D(myrank,shape2D4_x,dershape2D4_x,yigll,zigll,NGLLY,NGLLZ,8,4)
+  call get_shape2D(myrank,shape2D4_y,dershape2D4_y,xigll,zigll,NGLLX,NGLLZ,8,4)
+  call get_shape2D(myrank,shape2D4_bottom,dershape2D4_bottom,xigll,yigll,NGLLX,NGLLY,8,4)
+  call get_shape2D(myrank,shape2D4_top,dershape2D4_top,xigll,yigll,NGLLX,NGLLY,8,4)
+
 
 ! 2D weights
   do j=1,NGLLY

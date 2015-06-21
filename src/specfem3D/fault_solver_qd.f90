@@ -117,7 +117,7 @@ subroutine BC_QSTATICFLT_init(prname,DTglobal,myrank)
   character(len=256) :: filename
   integer, parameter :: IIN_PAR =151
   integer, parameter :: IIN_BIN =170
-   
+
   NAMELIST / BEGIN_FAULT / dummy_idfault
 
   dummy_idfault = 0
@@ -204,7 +204,7 @@ subroutine find_fault_node(bc,myrank)
   real(kind=CUSTOM_REAL) :: minvalue
   integer :: pos,myrank
   real(kind=CUSTOM_REAL),dimension(bc%nglob) :: error
-  if(bc%nglob>0) then 
+  if(bc%nglob>0) then
 
   minvalue = minval(error)
   pos = minloc(error,1)
@@ -213,9 +213,9 @@ subroutine find_fault_node(bc,myrank)
 !  if (minvalue .lt. 1._CUSTOM_REAL)     write(*,*) 'the processor is',myrank,'and the nglob is :',pos
   endif
 end subroutine find_fault_node
-   
-  
-  
+
+
+
 subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
 
 
@@ -237,7 +237,7 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
  ! call find_fault_node(bc,myrank)  !Kangchen Added it just for dbg
 
 
-  
+
   if (bc%nspec>0) then
 !NOTE that all operation about fault quantities have to be placed in this if statement otherwise you will be operating on the processor that do not posses fault node which will give you a SEGMENTATION FAULT!
     allocate(bc%T(3,bc%nglob))
@@ -273,7 +273,7 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
 !       call load_stress_drop
 !     endif
      bc%T = bc%T0
-     
+
 
     !WARNING : Quick and dirty free surface condition at z=0
     !  do k=1,bc%nglob
@@ -306,7 +306,7 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
 !    bc%swf%mud = 0.373_CUSTOM_REAL;
 !    endif !iflt
 !    endif !CUSTOMIZED_PRESTRESS
-  endif  
+  endif
 
   if (RATE_AND_STATE) then
     call init_dataT(bc%dataT,bc%coord,bc%nglob,NT,dt,8,iflt)
@@ -321,7 +321,7 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
   else
     call init_dataT(bc%dataT,bc%coord,bc%nglob,NT,dt,7,iflt)
   endif ! RATE_AND_STATE
- 
+
   call init_dataXZ(bc%dataXZ,bc)
  ! output a fault snapshot at t=0
   if (.NOT. PARALLEL_FAULT) then
@@ -347,8 +347,8 @@ subroutine add_depth_dependence  !ADD BY Kangchen
 !        bc%T0(1,:) = bc%T0(1,:)+80000000_CUSTOM_REAL;
 !    endif
 
-    
-    
+
+
 !    bc%T0(2,:) = bc%T0(2,i)+tau0_dip(ipar)
 end subroutine add_depth_dependence
 
@@ -407,12 +407,12 @@ subroutine init_2d_distribution(a,coord,iin,n)
      elsewhere
         b=0._CUSTOM_REAL
      endwhere
-    
+
     case ('TPV29_T')
      r1=sqrt(((coord(1,:)-xc)**2 + (coord(3,:)-zc)**2 ));
      where(r1<rc)
        b=(r1+0.081*rc*(1./(1.-(r1/rc)**2)-1.))*val;
-       elsewhere 
+       elsewhere
            b=1.0e9;
      endwhere
     case ('TPV29_C')
@@ -420,21 +420,21 @@ subroutine init_2d_distribution(a,coord,iin,n)
       b=400000._CUSTOM_REAL
       elsewhere
           b=400000._CUSTOM_REAL+200._CUSTOM_REAL*(4000.0+coord(3,:))
-    endwhere     
+    endwhere
 
     case ('TPV31_C')
     where(coord(3,:)<-2400.0)
       b=0.0_CUSTOM_REAL
       elsewhere
           b=425.0_CUSTOM_REAL*(2400.0+coord(3,:))
-    endwhere     
-    
+    endwhere
+
      case ('TPV31_Nucleation')
     Mu0=32.03812032e9_CUSTOM_REAL
     do ij=1,size(a)
     call model_1D_layer(coord(1,ij),coord(2,ij),coord(3,ij),Rho,Vp,Vs,Att)
 !    call model_1D_tpv31(1.0,1.0,1.0,Rho,Vp,Vs,Att)
- 
+
 !    write(*,*) coord(3,ij),' ',Vs,' ',Rho
      Mu(ij)=Vs*Vs*Rho
 !     if (coord(3,ij)>-10000.0 .and. coord(3,ij)<-5000.0) then
@@ -454,7 +454,7 @@ subroutine init_2d_distribution(a,coord,iin,n)
      elsewhere
         b=0._CUSTOM_REAL
      endwhere
-            
+
     case ('circle')
       b = heaviside( r - sqrt((coord(1,:)-xc)**2 + (coord(2,:)-yc)**2 + (coord(3,:)-zc)**2 ) ) *val
     case ('circle-exp')
@@ -473,7 +473,7 @@ subroutine init_2d_distribution(a,coord,iin,n)
            val
      case ('z-cylinder')
       b = heaviside(r - sqrt((coord(1,:)-xc)**2 + (coord(2,:)-yc)**2)) * &
-           heaviside((lz/2._CUSTOM_REAL)-abs(coord(3,:)-zc)+SMALLVAL)  * & 
+           heaviside((lz/2._CUSTOM_REAL)-abs(coord(3,:)-zc)+SMALLVAL)  * &
            val
     case ('y-cylinder')
       b = heaviside(r - sqrt((coord(1,:)-xc)**2 + (coord(3,:)-zc)**2)) * &
@@ -554,10 +554,10 @@ subroutine BC_QSTATICFLT_set3d(bc,MxA,V,D,iflt)
                                                  Vf_old,Vf_new,TxExt
   real(kind=CUSTOM_REAL) :: half_dt,TLoad,DTau0,GLoad,time
   integer :: i
- 
 
-     
-    
+
+
+
   if (bc%nspec > 0) then !Surendra : for parallel faults
 
     half_dt = 0.5e0_CUSTOM_REAL*bc%dt
@@ -568,13 +568,13 @@ subroutine BC_QSTATICFLT_set3d(bc,MxA,V,D,iflt)
     dD = get_jump(bc,D) ! dD_predictor
     dV = get_jump(bc,V) ! dV_predictor
 !    dA = get_jump(bc,MxA)
-!    bc%dbg2=dA(3,:); 
+!    bc%dbg2=dA(3,:);
 
     dA = get_weighted_jump(bc,MxA) ! dA_free
 !    dMV=get_mass_jump(bc,V)
 !    dMA=get_jump(bc,MxA)
- 
-     
+
+
     ! rotate to fault frame (tangent,normal)
     ! component 3 is normal to the fault
 !    bc%dbg2=half_dt*dA(3,:);
@@ -619,25 +619,25 @@ subroutine BC_QSTATICFLT_set3d(bc,MxA,V,D,iflt)
         Vf_old, Vf_new, it*bc%dt,bc%dt)
   ! write dataXZ every NSNAP time step
 
-! dirty implementation 
+! dirty implementation
 
          !JPA the solver below can be refactored into a loop with two passes
 
       ! first pass
       theta_old = bc%rsf%theta
-      call rsf_update_state(Vf_old,bc%dt,bc%rsf)
-      do i=1,bc%nglob
-        Vf_new(i)=rtsafe(funcd,0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tStick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
-                         bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
-      enddo
+ !     call rsf_update_state(Vf_old,bc%dt,bc%rsf)
+ !     do i=1,bc%nglob
+ !       Vf_new(i)=rtsafe(funcd,0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tStick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
+ !                        bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
+ !     enddo
 
       ! second pass
-      bc%rsf%theta = theta_old
-      call rsf_update_state(0.5e0_CUSTOM_REAL*(Vf_old + Vf_new),bc%dt,bc%rsf)
-      do i=1,bc%nglob
-        Vf_new(i)=rtsafe(funcd,0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tStick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
-                         bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
-      enddo
+ !     bc%rsf%theta = theta_old
+ !     call rsf_update_state(0.5e0_CUSTOM_REAL*(Vf_old + Vf_new),bc%dt,bc%rsf)
+ !     do i=1,bc%nglob
+ !       Vf_new(i)=rtsafe(funcd,0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tStick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
+ !                        bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
+ !     enddo
 
  !     tnew = tStick - bc%Z*Vf_new
 
@@ -650,7 +650,7 @@ subroutine BC_QSTATICFLT_set3d(bc,MxA,V,D,iflt)
 !    bc%T = T
 
     ! Subtract initial stress
-    
+
 
       !JPA: this eliminates the effect of TxExt on the equations of motion. Why is it needed?
 
@@ -678,16 +678,16 @@ subroutine BC_QSTATICFLT_set3d(bc,MxA,V,D,iflt)
 
     bc%V(1,:) = vf_new * T(1,:)/tstick
     bc%V(2,:) = vf_new * T(2,:)/tstick
-    
-   V(1,bc%ibulk2) =  0.5e0_CUSTOM_REAL*bc%V(1,:) 
-   V(1,bc%ibulk1) =  -0.5e0_CUSTOM_REAL*bc%V(1,:) 
-   V(2,bc%ibulk2) =  0.5e0_CUSTOM_REAL*bc%V(2,:) 
-   V(2,bc%ibulk1) =  -0.5e0_CUSTOM_REAL*bc%V(2,:) 
-    
- 
+
+   V(1,bc%ibulk2) =  0.5e0_CUSTOM_REAL*bc%V(1,:)
+   V(1,bc%ibulk1) =  -0.5e0_CUSTOM_REAL*bc%V(1,:)
+   V(2,bc%ibulk2) =  0.5e0_CUSTOM_REAL*bc%V(2,:)
+   V(2,bc%ibulk1) =  -0.5e0_CUSTOM_REAL*bc%V(2,:)
+
+
     call store_dataXZ(bc%dataXZ, strength, theta_old, theta_new, dc, &
         Vf_old, Vf_new, it*bc%dt,bc%dt)
-   
+
 
  if ( mod(it,NSNAP) == 0) then
    if (.NOT. PARALLEL_FAULT) then
@@ -739,7 +739,7 @@ subroutine BC_QSTATICFLT_set3d(bc,MxA,V,D,iflt)
  !   else
  !       call gather_dataXZ(bc)
  !     if (myrank==0) then
-           
+
  !            call SCEC_Write_RuptureTime(bc%dataXZ_all,iflt)
  !     endif     ! Kangchen added it
  !
@@ -748,7 +748,7 @@ subroutine BC_QSTATICFLT_set3d(bc,MxA,V,D,iflt)
 !     if(myrank==44)         write(*,*) 'from 44', bc%V(:,1075),bc%T(:,1075)
 
  !    if(myrank==45)          write(*,*) 'from 45', bc%V(:,9748),bc%T(:,1075) for dbg Kangchen
-         
+
 end subroutine BC_QSTATICFLT_set3d
 
 !===============================================================
@@ -802,7 +802,7 @@ subroutine swf_init(f,mu,coord,IIN_PAR)
   call init_2d_distribution(f%Dc ,coord,IIN_PAR,ndc)
   call init_2d_distribution(f%C  ,coord,IIN_PAR,nC)
   call init_2d_distribution(f%T  ,coord,IIN_PAR,nForcedRup)
- 
+
   f%theta = 0e0_CUSTOM_REAL
 
   mu = swf_mu(f)
@@ -1547,7 +1547,7 @@ subroutine init_fault_traction(bc,Sigma_NORTH,Sigma_SOUTH,GradientZ)
     Sigma(4,:)*bc%R(3,1,:)+Sigma(2,:)*bc%R(3,2,:)+Sigma(5,:)*bc%R(3,3,:)
   Traction(3,:) = &
     Sigma(6,:)*bc%R(3,1,:)+Sigma(5,:)*bc%R(3,2,:)+(Sigma(3,:)+(bc%coord(3,:)*GradientZ))*bc%R(3,3,:)
-!  Traction = rotate(bc,Traction,1)    
+!  Traction = rotate(bc,Traction,1)
 !  bc%T0 =bc%T0+ Traction
   if(TPV29) then
     b11=1.025837
@@ -1558,7 +1558,7 @@ subroutine init_fault_traction(bc,Sigma_NORTH,Sigma_SOUTH,GradientZ)
       Pf=1000.0*9.8*(Depth)
       Sigma_TPV29(3)=-2670.0*9.8*(Depth)
 
-      if(Depth<=17000.0) then 
+      if(Depth<=17000.0) then
         Omega=1.0
       else
         if(Depth <= 22000.0) then
@@ -1576,23 +1576,23 @@ subroutine init_fault_traction(bc,Sigma_NORTH,Sigma_SOUTH,GradientZ)
       Sigma_TPV29(1)=Sigma_TPV29(1)+Pf
       Sigma_TPV29(2)=Sigma_TPV29(2)+Pf
       Sigma_TPV29(3)=Sigma_TPV29(3)+Pf
- 
+
       Traction(1,ij) = &
       Sigma_TPV29(1)*bc%R(3,1,ij)+Sigma_TPV29(4)*bc%R(3,2,ij)+Sigma_TPV29(6)*bc%R(3,3,ij)
       Traction(2,ij) = &
 Sigma_TPV29(4)*bc%R(3,1,ij)+Sigma_TPV29(2)*bc%R(3,2,ij)+Sigma_TPV29(5)*bc%R(3,3,ij)
       Traction(3,ij) = &
 Sigma_TPV29(6)*bc%R(3,1,ij)+Sigma_TPV29(5)*bc%R(3,2,ij)+Sigma_TPV29(3)*bc%R(3,3,ij)
- 
+
     enddo
   endif
 
- 
+
   if(TPV31) then
     Mu0=32.03812032e9
     do ij=1,bc%nglob
       call model_1D_layer(bc%coord(1,ij),bc%coord(2,ij),bc%coord(3,ij),Rho,Vp,Vs,Att)
- 
+
       Mu=Rho*Vs*Vs
       Sigma_TPV29(1)=-60.0e6*Mu/Mu0
       Sigma_TPV29(2)=-60.0e6*Mu/Mu0
@@ -1606,9 +1606,9 @@ Sigma_TPV29(1)*bc%R(3,1,ij)+Sigma_TPV29(4)*bc%R(3,2,ij)+Sigma_TPV29(6)*bc%R(3,3,
 Sigma_TPV29(4)*bc%R(3,1,ij)+Sigma_TPV29(2)*bc%R(3,2,ij)+Sigma_TPV29(5)*bc%R(3,3,ij)
       Traction(3,ij) = &
 Sigma_TPV29(6)*bc%R(3,1,ij)+Sigma_TPV29(5)*bc%R(3,2,ij)+Sigma_TPV29(3)*bc%R(3,3,ij)
- 
+
     enddo
-  endif 
+  endif
 
 
   if(BALOCHI_LAYER) then

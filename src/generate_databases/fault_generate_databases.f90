@@ -436,7 +436,8 @@ end subroutine close_fault
 
   use create_regions_mesh_ext_par, only: xstore_dummy,ystore_dummy,zstore_dummy, &
                                          dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
-                                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz
+                                         dershape2D4_x,dershape2D4_y,dershape2D4_bottom,dershape2D4_top, &
+                                          wgllwgll_xy,wgllwgll_xz,wgllwgll_yz
   use generate_databases_par, only : NGNOD2D
 
 
@@ -477,11 +478,20 @@ end subroutine close_fault
     enddo
 
     ! gets face GLL 2Djacobian, weighted from element face
+    if(MOD(NGLLX,2)==1) then
     call get_jacobian_boundary_face(myrank,nspec, &
            xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob, &
            dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
            wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
            ispec,iface_ref,jacobian2Dw_face,normal_face,NGLLX,NGLLY,NGNOD2D)
+    else
+    call get_jacobian_boundary_face(myrank,nspec, &
+           xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob, &
+           dershape2D4_x,dershape2D4_y,dershape2D4_bottom,dershape2D4_top, &
+           wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+           ispec,iface_ref,jacobian2Dw_face,normal_face,NGLLX,NGLLY,4)
+    endif
+
 
     ! normal convention: points away from domain1, reference element.
     do j=1,NGLLY

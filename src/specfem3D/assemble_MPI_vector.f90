@@ -53,12 +53,12 @@
   ! send/receive temporary buffers
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: buffer_send_vector
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: buffer_recv_vector
-  
-   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: compareerror 
+
+   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: compareerror
   ! requests
   integer, dimension(:), allocatable :: request_send_vector
   integer, dimension(:), allocatable :: request_recv_vector
-  
+
   integer ipoin,iinterface,ier
 
 
@@ -77,7 +77,7 @@
     if( ier /= 0 ) stop 'error allocating array request_recv_vector'
     allocate(compareerror(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
     if( ier /= 0 ) stop 'error allocating array buffer_recv_vector'
-  
+
     ! partition border copy into the buffer
     do iinterface = 1, num_interfaces_ext_mesh
       do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
@@ -107,7 +107,7 @@
     ! adding contributions of neighbours
     do iinterface = 1, num_interfaces_ext_mesh
       do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
-          compareerror(:,ipoin,iinterface) =   array_val(:,ibool_interfaces_ext_mesh(ipoin,iinterface))-buffer_recv_vector(:,ipoin,iinterface) 
+          compareerror(:,ipoin,iinterface) =   array_val(:,ibool_interfaces_ext_mesh(ipoin,iinterface))-buffer_recv_vector(:,ipoin,iinterface)
       enddo
     enddo
 !    write(*,*) myrank
@@ -123,7 +123,7 @@
     deallocate(buffer_recv_vector)
     deallocate(request_send_vector)
     deallocate(request_recv_vector)
-    deallocate(compareerror) 
+    deallocate(compareerror)
   endif
 
   end subroutine check_MPI_vector
@@ -178,12 +178,7 @@
     allocate(request_recv_vector(num_interfaces_ext_mesh),stat=ier)
     if( ier /= 0 ) stop 'error allocating array request_recv_vector'
 
-    ! partition border copy into the buffer
-    do iinterface = 1, num_interfaces_ext_mesh
-      do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
-        buffer_send_vector(:,ipoin,iinterface) = array_val(:,ibool_interfaces_ext_mesh(ipoin,iinterface))
-      enddo
-    enddo
+
 
     ! send messages
     do iinterface = 1, num_interfaces_ext_mesh
@@ -236,7 +231,7 @@
 ! Kangchen added this subroutine
 ! assembles vector field in blocking way, only returns after values have been received and assembled
 ! synchronize the overlapping value according to the largest one
-! It doesn't really matter which value it takes, it matters that they keep in agreement. 
+! It doesn't really matter which value it takes, it matters that they keep in agreement.
   implicit none
 
   include "constants.h"
@@ -313,7 +308,7 @@
     endif
   enddo
 
- 
+
 
   ! wait for communications completion (send)
     do iinterface = 1, num_interfaces_ext_mesh
@@ -429,7 +424,7 @@
   enddo
   if (need_add_my_contrib) call add_my_contrib()
 
- 
+
 
   ! wait for communications completion (send)
     do iinterface = 1, num_interfaces_ext_mesh

@@ -200,6 +200,8 @@ SOLVER_ARRAY_OBJECTS = \
 	$O/compute_boundary_kernel.o \
         $O/compute_Diagonal.o \
         $O/compute_diagonal_K.o \
+        $O/compute_diagonal_K2.o \
+        $O/compute_Diagonal2.o \
 	$O/compute_coupling_acoustic_el.o \
 	$O/compute_coupling_acoustic_po.o \
 	$O/compute_coupling_viscoelastic_ac.o \
@@ -216,6 +218,9 @@ SOLVER_ARRAY_OBJECTS = \
         $O/compute_AX.o \
         $O/compute_AX2.o \
         $O/restriction.o \
+        $O/restriction_call.o \
+        $O/restriction2.o \
+        $O/smoother.o \
 	$O/compute_forces_poro_fluid_part.o \
 	$O/compute_forces_poroelastic_calling_routine.o \
 	$O/compute_forces_poro_solid_part.o \
@@ -231,7 +236,6 @@ SOLVER_ARRAY_OBJECTS = \
 	$O/finalize_simulation.o \
 	$O/initialize_simulation.o \
 	$O/iterate_time.o \
-        $O/iterate_time_static_solver.o \
         $O/iterate_time_static_solver2.o \
 	$O/make_gravity.o \
 	$O/noise_tomography.o \

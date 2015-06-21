@@ -57,7 +57,7 @@
   logical, parameter :: USE_DEVILLE_PRODUCTS = .false.
 
 ! number of GLL points in each direction of an element (degree plus one)
-  integer, parameter :: NGLLX = 2
+  integer, parameter :: NGLLX = 5
   integer, parameter :: NGLLY = NGLLX
   integer, parameter :: NGLLZ = NGLLX
 

@@ -15,7 +15,7 @@ module fault_solver_common
     integer :: nspec=0, nglob=0
     real(kind=CUSTOM_REAL), dimension(:,:),   pointer :: T=>null(),V=>null(),D=>null(),coord=>null()
     real(kind=CUSTOM_REAL), dimension(:,:,:), pointer :: R=>null()
-    real(kind=CUSTOM_REAL), dimension(:),     pointer :: B=>null(),invM1=>null(),invM2=>null(),Z=>null(),dbg1=>null(),dbg2=>null(),dbg3=>null(),dbg4=>null() 
+    real(kind=CUSTOM_REAL), dimension(:),     pointer :: B=>null(),invM1=>null(),invM2=>null(),Z=>null(),dbg1=>null(),dbg2=>null(),dbg3=>null(),dbg4=>null()
     real(kind=CUSTOM_REAL) :: dt
     integer, dimension(:), pointer :: ibulk1=>null(), ibulk2=>null()
   end type fault_type
@@ -80,6 +80,8 @@ module fault_solver_common
   logical, parameter :: PARALLEL_FAULT = .TRUE.
  ! NOTE: PARALLEL_FAULT has to be the same
  !       in fault_solver_common.f90, fault_generate_databases.f90 and fault_scotch.f90
+  integer, dimension(:,:), allocatable :: ibool1
+  real(kind=CUSTOM_REAL), dimension(:,:), pointer   :: jacobian2Dw
 
   public :: fault_type, PARALLEL_FAULT, &
             initialize_fault, get_jump, get_weighted_jump, rotate, add_BT, &
@@ -99,10 +101,10 @@ subroutine initialize_fault (bc,IIN_BIN)
   integer, intent(in)                 :: IIN_BIN
 
   real(kind=CUSTOM_REAL) :: tmp_vec(3,NGLOB_AB)
-  real(kind=CUSTOM_REAL), dimension(:,:), allocatable   :: jacobian2Dw
+!  real(kind=CUSTOM_REAL), dimension(:,:), allocatable   :: jacobian2Dw
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: normal
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: nxyz
-  integer, dimension(:,:), allocatable :: ibool1
+!  integer, dimension(:,:), allocatable :: ibool1
   integer :: ij,k,e
 
   read(IIN_BIN) bc%nspec,bc%nglob
@@ -399,7 +401,7 @@ subroutine add_BT(bc,MxA,T)
   type(bc_dynandkinflt_type), intent(in) :: bc
   real(kind=CUSTOM_REAL), intent(inout) :: MxA(:,:)
   real(kind=CUSTOM_REAL), dimension(3,bc%nglob) :: T
-  
+
   T(1,:)=1.0e6;
   T(2,:)=0.0e6;
   T(3,:)=0.0e6;

@@ -227,6 +227,8 @@
 ! 2D shape functions and their derivatives, weights
   double precision, dimension(:,:,:), allocatable :: shape2D_x,shape2D_y,shape2D_bottom,shape2D_top
   double precision, dimension(:,:,:,:), allocatable :: dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top
+  double precision, dimension(:,:,:), allocatable :: shape2D4_x,shape2D4_y,shape2D4_bottom,shape2D4_top
+  double precision, dimension(:,:,:,:), allocatable :: dershape2D4_x,dershape2D4_y,dershape2D4_bottom,dershape2D4_top
   double precision, dimension(:,:), allocatable :: wgllwgll_xy,wgllwgll_xz,wgllwgll_yz
 
 ! absorbing boundary arrays (for all boundaries) - keeps all infos, allowing for irregular surfaces
