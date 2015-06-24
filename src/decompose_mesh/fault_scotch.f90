@@ -204,6 +204,8 @@ CONTAINS
       ! jpa: If the two fault sides have been meshed independently they might not match. Test it here:
       if (.not.found_it) then
          write(*,*)i, j , xyz_2
+         write(*,*) iglob2,nodes_coords(:,iglob2)
+         write(*,*) iglob1,nodes_coords(:,iglob1)
          stop 'Inconsistent fault mesh: corresponding node in the other fault face was not found'
       endif
     enddo

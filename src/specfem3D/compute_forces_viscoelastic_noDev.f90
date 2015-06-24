@@ -219,8 +219,8 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
        ! Kelvin Voigt damping: artificial viscosity around dynamic faults
 
         ! stores displacment values in local array
-        if (allocated(Kelvin_Voigt_eta)) then ! modified by Kangchen
-!         if (.TRUE.) then
+!        if (allocated(Kelvin_Voigt_eta)) then ! modified by Kangchen
+         if (.TRUE.) then
           eta = Kelvin_Voigt_eta(ispec)
 !          select case (KV_direction)
 !                 case (1)

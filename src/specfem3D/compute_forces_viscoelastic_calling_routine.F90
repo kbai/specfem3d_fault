@@ -823,6 +823,12 @@ subroutine compute_forces_viscoelastic_GPU()
     ! adds dynamic source
     if (SIMULATION_TYPE_DYN) call bc_dynflt_set3d_all(accel,veloc,displ)
     if (SIMULATION_TYPE_KIN) call bc_kinflt_set_all(accel,veloc,displ)
+    
+  call synchronize_MPI_vector_blocking_ord(NPROC,NGLOB_AB,accel, &
+                                     num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                     nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                     my_neighbours_ext_mesh,myrank)
+   
 
     ! transfers acceleration back to GPU
     call transfer_accel_to_device(NDIM*NGLOB_AB,accel, Mesh_pointer)

@@ -814,9 +814,9 @@ __global__ void Kernel_2_impl(int nb_blocks_to_compute,
     s_dummyz_loc[tx] = tex1Dfetch(d_displ_tex, iglob*3 + 2);
 #else
     // changing iglob indexing to match fortran row changes fast style
-    s_dummyx_loc[tx] = d_displ[iglob*3];
-    s_dummyy_loc[tx] = d_displ[iglob*3 + 1];
-    s_dummyz_loc[tx] = d_displ[iglob*3 + 2];
+    s_dummyx_loc[tx] = d_displ[iglob*3] + 0.3 * d_deltat * d_veloc[iglob*3];
+    s_dummyy_loc[tx] = d_displ[iglob*3 + 1] + 0.3 * d_deltat * d_veloc[iglob*3i + 1] 
+    s_dummyz_loc[tx] = d_displ[iglob*3 + 2] + 0.3 * d_deltat * d_veloc[iglob*3i + 2];
 #endif
   }
 
