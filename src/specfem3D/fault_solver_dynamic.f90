@@ -622,7 +622,7 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
   type(bc_dynandkinflt_type), intent(inout) :: bc
   real(kind=CUSTOM_REAL), intent(in) :: V(:,:),D(:,:)
   integer, intent(in) :: iflt
-
+  real(kind=CUSTOM_REAL), dimension(bc%nglob) :: tx,ty,Vxold,txnew,tynew,Vx_new   !Kangchen added this
   real(kind=CUSTOM_REAL), dimension(3,bc%nglob) :: T,dD,dV,dA
   real(kind=CUSTOM_REAL), dimension(bc%nglob) :: strength,tStick,tnew, &
                                                  theta_old, theta_new, dc, &
@@ -637,6 +637,7 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
 
     half_dt = 0.5e0_CUSTOM_REAL*bc%dt
     Vf_old = sqrt(bc%V(1,:)*bc%V(1,:)+bc%V(2,:)*bc%V(2,:))
+    Vxold = bc%V(1,:)
 
     ! get predicted values
     dD = get_dis1(bc,D)
@@ -712,6 +713,8 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
     endif
 
     tStick = sqrt( T(1,:)*T(1,:) + T(2,:)*T(2,:))
+    tx = T(1,:)
+    ty = T(2,:)
 
     if (.not. RATE_AND_STATE) then   ! Update slip weakening friction:
       ! Update slip state variable
@@ -745,7 +748,7 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
       theta_old = bc%rsf%theta
       call rsf_update_state(Vf_old,bc%dt,bc%rsf)
       do i=1,bc%nglob
-        Vf_new(i)=rtsafe(funcd,0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tStick(i),-bc%sigma(3,i),bc%Z(i),bc%rsf%f0(i), &
+        Vx_new(i)=rtsafe(funcd,0.0_CUSTOM_REAL,Vxold(i)+sign(Vxold(i))*5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tx(i),ty(i),-bc%sigma(3,i),bc%Z(i),bc%rsf%f0(i), &
                          bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
       enddo
 
@@ -753,18 +756,22 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
       bc%rsf%theta = theta_old
       call rsf_update_state(0.5e0_CUSTOM_REAL*(Vf_old + Vf_new),bc%dt,bc%rsf)
       do i=1,bc%nglob
-        Vf_new(i)=rtsafe(funcd,0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tStick(i),-bc%sigma(3,i),bc%Z(i),bc%rsf%f0(i), &
+        Vx_new(i)=rtsafe(funcd,0.0_CUSTOM_REAL,Vxold(i)+sign(Vxold(i))*5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tx(i),ty(i),-bc%sigma(3,i),bc%Z(i),bc%rsf%f0(i), &
                          bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
       enddo
-
+      Vf_new = sqrt(Vx_new*Vx_new+Vy_new*Vy_new)
       tnew = tStick - bc%Z*Vf_new
+      Vy_new = (1.1e0_CUSTOM_REAL*ty*Vx_new)/(bc%Z*Vx_new*0.1_CUSTOM_REAL+tx)
+      txnew = tx - bc%Z*Vx_new
+      tynew = ty - bc%Z*Vy_new
 
     endif
 
-    tStick = max(tStick,1e0_CUSTOM_REAL) ! to avoid division by zero
-    T(1,:) = tnew * T(1,:)/tStick
-    T(2,:) = tnew * T(2,:)/tStick
-
+!    tStick = max(tStick,1e0_CUSTOM_REAL) ! to avoid division by zero
+!    T(1,:) = tnew * T(1,:)/tStick
+!    T(2,:) = tnew * T(2,:)/tStick
+T(1,:) = txnew
+T(2,:) = tynew
     ! Save total tractions
     bc%T = T
 
@@ -1530,24 +1537,28 @@ end function asinh_slatec
 
 
 !---------------------------------------------------------------------
-subroutine funcd(x,fn,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
+subroutine funcd(x,fn,df,tx,ty,Seff,Z,f0,V0,a,b,L,theta,statelaw)
 
-  real(kind=CUSTOM_REAL) :: tStick,Seff,Z,f0,V0,a,b,L,theta
-  double precision :: arg,fn,df,x
+
+  real(kind=CUSTOM_REAL) :: tx,ty,Seff,Z,f0,V0,a,b,L,theta
+  double precision :: arg,fn,df,x,r,y
   integer :: statelaw
+  double precision :: ANISO = 1.1d0
 
+  y = (ANISO * dble(ty)-dble(tx)+dble(Z)*dble(x))/dble(Z)/ANISO
+  r = sqrt(x*x+y*y)
   if(statelaw == 1) then
      arg = exp((f0+dble(b)*log(V0*theta/L))/a)/TWO/V0
   else
      arg = exp(theta/a)/TWO/V0
   endif
-  fn = tStick - Z*x - a*Seff*asinh_slatec(x*arg)
-  df = -Z - a*Seff/sqrt(ONE + (x*arg)**2)*arg
+  fn = tx*r/x - Z*r - a*Seff*asinh_slatec(r*arg)
+  df = tx*(-y*y)/(x*x*r)-Z*x/r - a*Seff*x/sqrt(ONE + (x*arg)**2)*arg/r
 
 end subroutine funcd
 
 !---------------------------------------------------------------------
-function rtsafe(funcd,x1,x2,xacc,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
+function rtsafe(funcd,x1,x2,xacc,tx,ty,Seff,Z,f0,V0,a,b,L,theta,statelaw)
 
   integer, parameter :: MAXIT=200
   real(kind=CUSTOM_REAL) :: x1,x2,xacc
@@ -1555,11 +1566,11 @@ function rtsafe(funcd,x1,x2,xacc,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
   integer :: j
   !real(kind=CUSTOM_REAL) :: df,dx,dxold,f,fh,fl,temp,xh,xl
   double precision :: df,dx,dxold,f,fh,fl,temp,xh,xl,rtsafe
-  real(kind=CUSTOM_REAL) :: tStick,Seff,Z,f0,V0,a,b,L,theta
+  real(kind=CUSTOM_REAL) :: tx,ty,Seff,Z,f0,V0,a,b,L,theta
   integer :: statelaw
 
-  call funcd(dble(x1),fl,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
-  call funcd(dble(x2),fh,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
+  call funcd(dble(x1),fl,df,tx,ty,Seff,Z,f0,V0,a,b,L,theta,statelaw)
+  call funcd(dble(x2),fh,df,tx,ty,Seff,Z,f0,V0,a,b,L,theta,statelaw)
   if( (fl>0 .and. fh>0) .or. (fl<0 .and. fh<0) ) stop 'root must be bracketed in rtsafe'
   if(fl==0.) then
     rtsafe=x2
