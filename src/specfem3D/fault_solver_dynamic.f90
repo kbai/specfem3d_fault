@@ -241,9 +241,11 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
   if (bc%nspec>0) then
 !NOTE that all operation about fault quantities have to be placed in this if statement otherwise you will be operating on the processor that do not posses fault node which will give you a SEGMENTATION FAULT!
     allocate(bc%T(3,bc%nglob))
+    allocate(bc%sigma(3,bc%nglob))
     allocate(bc%D(3,bc%nglob))
     allocate(bc%V(3,bc%nglob))
     bc%T = 0e0_CUSTOM_REAL
+    bc%sigma = 0e0_CUSTOM_REAL
     bc%D = 0e0_CUSTOM_REAL
     bc%V = 0e0_CUSTOM_REAL
 
@@ -273,6 +275,7 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
        call load_stress_drop
      endif
      bc%T = bc%T0
+     bc%sigma(3,:) = bc%T0(3,:)
      
 
     !WARNING : Quick and dirty free surface condition at z=0
@@ -688,6 +691,9 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
     ! Opening implies free stress
     if (bc%allow_opening) T(3,:) = min(T(3,:),0.e0_CUSTOM_REAL)
 
+    bc%sigma = bc%sigma*(1.0_CUSTOM_REAL-exp(-100.0_CUSTOM_REAL*bc%dt))+T*exp(-100.0_CUSTOM_REAL*bc%dt)
+    T = bc%sigma
+    ! add relaxation time for normal stress Kangchen
     ! smooth loading within nucleation patch
     !WARNING : ad hoc for SCEC benchmark TPV10x
     if (RATE_AND_STATE) then
@@ -739,7 +745,7 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
       theta_old = bc%rsf%theta
       call rsf_update_state(Vf_old,bc%dt,bc%rsf)
       do i=1,bc%nglob
-        Vf_new(i)=rtsafe(funcd,0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tStick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
+        Vf_new(i)=rtsafe(funcd,0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tStick(i),-bc%sigma(3,i),bc%Z(i),bc%rsf%f0(i), &
                          bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
       enddo
 
@@ -747,7 +753,7 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
       bc%rsf%theta = theta_old
       call rsf_update_state(0.5e0_CUSTOM_REAL*(Vf_old + Vf_new),bc%dt,bc%rsf)
       do i=1,bc%nglob
-        Vf_new(i)=rtsafe(funcd,0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tStick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
+        Vf_new(i)=rtsafe(funcd,0.0_CUSTOM_REAL,Vf_old(i)+5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tStick(i),-bc%sigma(3,i),bc%Z(i),bc%rsf%f0(i), &
                          bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
       enddo
 
