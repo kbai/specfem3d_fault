@@ -72,7 +72,7 @@ subroutine compute_forces_viscoelastic()
 !write(*,*) '1 ',myrank,'my location is', maxloc(abs(displ),2)
 
   do iphase=1,2
-
+    write(*,*) 'iphase',iphase
     !first for points on MPI interfaces
     if( iphase == 1 ) then
       phase_is_inner = .false.
@@ -224,7 +224,7 @@ subroutine compute_forces_viscoelastic()
     endif
 
  enddo
-
+  write(*,*) "entering fault session"
 !Percy , Fault boundary term B*tau is added to the assembled forces
 !        which at this point are stored in the array 'accel'
   if (SIMULATION_TYPE_DYN) call bc_dynflt_set3d_all(accel,veloc,displ)

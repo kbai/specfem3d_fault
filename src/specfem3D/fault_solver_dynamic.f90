@@ -241,11 +241,11 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
   if (bc%nspec>0) then
 !NOTE that all operation about fault quantities have to be placed in this if statement otherwise you will be operating on the processor that do not posses fault node which will give you a SEGMENTATION FAULT!
     allocate(bc%T(3,bc%nglob))
-    allocate(bc%sigma(3,bc%nglob))
+!    allocate(bc%sigma(3,bc%nglob))
     allocate(bc%D(3,bc%nglob))
     allocate(bc%V(3,bc%nglob))
     bc%T = 0e0_CUSTOM_REAL
-    bc%sigma = 0e0_CUSTOM_REAL
+!    bc%sigma = 0e0_CUSTOM_REAL
     bc%D = 0e0_CUSTOM_REAL
     bc%V = 0e0_CUSTOM_REAL
 
@@ -275,7 +275,7 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
        call load_stress_drop
      endif
      bc%T = bc%T0
-     bc%sigma(3,:) = bc%T0(3,:)
+!     bc%sigma(3,:) = bc%T0(3,:)
      
 
     !WARNING : Quick and dirty free surface condition at z=0
@@ -622,22 +622,24 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
   type(bc_dynandkinflt_type), intent(inout) :: bc
   real(kind=CUSTOM_REAL), intent(in) :: V(:,:),D(:,:)
   integer, intent(in) :: iflt
-  real(kind=CUSTOM_REAL), dimension(bc%nglob) :: tx,ty,Vxold,txnew,tynew,Vx_new   !Kangchen added this
+  real(kind=CUSTOM_REAL), dimension(bc%nglob) :: tx,ty,Vxold,Vyold,txnew,tynew,Vx_new,Vy_new   !Kangchen added this
   real(kind=CUSTOM_REAL), dimension(3,bc%nglob) :: T,dD,dV,dA
   real(kind=CUSTOM_REAL), dimension(bc%nglob) :: strength,tStick,tnew, &
                                                  theta_old, theta_new, dc, &
                                                  Vf_old,Vf_new,TxExt
-  real(kind=CUSTOM_REAL) :: half_dt,TLoad,DTau0,GLoad,time
+  real(kind=CUSTOM_REAL) :: half_dt,TLoad,DTau0,GLoad,time,ANISO
   integer :: i
  
 
      
-    
+  ANISO = 2.0_CUSTOM_REAL
+  
   if (bc%nspec > 0) then !Surendra : for parallel faults
 
     half_dt = 0.5e0_CUSTOM_REAL*bc%dt
     Vf_old = sqrt(bc%V(1,:)*bc%V(1,:)+bc%V(2,:)*bc%V(2,:))
     Vxold = bc%V(1,:)
+    Vyold = bc%V(2,:)
 
     ! get predicted values
     dD = get_dis1(bc,D)
@@ -692,8 +694,9 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
     ! Opening implies free stress
     if (bc%allow_opening) T(3,:) = min(T(3,:),0.e0_CUSTOM_REAL)
 
-    bc%sigma = bc%sigma*(1.0_CUSTOM_REAL-exp(-100.0_CUSTOM_REAL*bc%dt))+T*exp(-100.0_CUSTOM_REAL*bc%dt)
-    T = bc%sigma
+!    bc%sigma = bc%sigma*(1.0_CUSTOM_REAL-exp(-100.0_CUSTOM_REAL*bc%dt))+T*exp(-100.0_CUSTOM_REAL*bc%dt)
+!    T = bc%sigma
+!    bc%sigma = T
     ! add relaxation time for normal stress Kangchen
     ! smooth loading within nucleation patch
     !WARNING : ad hoc for SCEC benchmark TPV10x
@@ -748,20 +751,26 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
       theta_old = bc%rsf%theta
       call rsf_update_state(Vf_old,bc%dt,bc%rsf)
       do i=1,bc%nglob
-        Vx_new(i)=rtsafe(funcd,0.0_CUSTOM_REAL,Vxold(i)+sign(Vxold(i))*5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tx(i),ty(i),-bc%sigma(3,i),bc%Z(i),bc%rsf%f0(i), &
+        Vy_new(i)=rtsafe(funcd,0.0_CUSTOM_REAL,sign(abs(Vyold(i))+5.0_CUSTOM_REAL,ty(i)),1e-5_CUSTOM_REAL,tx(i),ty(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
                          bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
       enddo
 
+       Vx_new = (tx*Vy_new*ANISO)/( bc%Z*Vy_new*(ANISO-1.0_CUSTOM_REAL)+ty)
+!       Vy_new = (ty*Vx_new)/(-bc%Z*Vx_new*0.1_CUSTOM_REAL+1.1_CUSTOM_REAL*tx)
+       Vf_new = sqrt(Vx_new*Vx_new+Vy_new*Vy_new)     
       ! second pass
       bc%rsf%theta = theta_old
       call rsf_update_state(0.5e0_CUSTOM_REAL*(Vf_old + Vf_new),bc%dt,bc%rsf)
       do i=1,bc%nglob
-        Vx_new(i)=rtsafe(funcd,0.0_CUSTOM_REAL,Vxold(i)+sign(Vxold(i))*5.0_CUSTOM_REAL,1e-5_CUSTOM_REAL,tx(i),ty(i),-bc%sigma(3,i),bc%Z(i),bc%rsf%f0(i), &
+        Vy_new(i)=rtsafe(funcd,0.0_CUSTOM_REAL,sign(abs(Vyold(i))+5.0_CUSTOM_REAL,ty(i)),1e-5_CUSTOM_REAL,tx(i),ty(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
                          bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
       enddo
+
+      Vx_new = (tx*Vy_new*ANISO)/( bc%Z*Vy_new*(ANISO-1.0_CUSTOM_REAL)+ty)
+
+!     Vy_new = (ty*Vx_new)/(-bc%Z*Vx_new*0.1_CUSTOM_REAL+1.1_CUSTOM_REAL*tx)
       Vf_new = sqrt(Vx_new*Vx_new+Vy_new*Vy_new)
       tnew = tStick - bc%Z*Vf_new
-      Vy_new = (1.1e0_CUSTOM_REAL*ty*Vx_new)/(bc%Z*Vx_new*0.1_CUSTOM_REAL+tx)
       txnew = tx - bc%Z*Vx_new
       tynew = ty - bc%Z*Vy_new
 
@@ -1543,17 +1552,21 @@ subroutine funcd(x,fn,df,tx,ty,Seff,Z,f0,V0,a,b,L,theta,statelaw)
   real(kind=CUSTOM_REAL) :: tx,ty,Seff,Z,f0,V0,a,b,L,theta
   double precision :: arg,fn,df,x,r,y
   integer :: statelaw
-  double precision :: ANISO = 1.1d0
+  double precision :: ANISO = 2.0d0
 
-  y = (ANISO * dble(ty)-dble(tx)+dble(Z)*dble(x))/dble(Z)/ANISO
+!  y = (dble(ty)*dble(x))/(dble(Z)*dble(x)*(1.0d0-ANISO)+ANISO*dble(tx))
+  y = (dble(tx)*dble(x)*ANISO)/(dble(Z)*dble(x)*(ANISO-1.0d0)+dble(ty))
   r = sqrt(x*x+y*y)
   if(statelaw == 1) then
      arg = exp((f0+dble(b)*log(V0*theta/L))/a)/TWO/V0
   else
      arg = exp(theta/a)/TWO/V0
   endif
-  fn = tx*r/x - Z*r - a*Seff*asinh_slatec(r*arg)
-  df = tx*(-y*y)/(x*x*r)-Z*x/r - a*Seff*x/sqrt(ONE + (x*arg)**2)*arg/r
+!  fn = tx*r/x - Z*r - a*Seff*asinh_slatec(r*arg)
+!  df = tx*(-y*y)/(x*x*r)-Z*x/r - a*Seff*x/sqrt(ONE + (r*arg)**2)*arg/r
+  fn = ty*r/x - Z*r - 1.0_CUSTOM_REAL*a*Seff*asinh_slatec(r*arg)
+  df = ty*(-y*y)/(x*x*r)-Z*x/r - 1.0_CUSTOM_REAL*a*Seff*x/sqrt(ONE + (r*arg)**2)*arg/r
+
 
 end subroutine funcd
 
@@ -1589,7 +1602,7 @@ function rtsafe(funcd,x1,x2,xacc,tx,ty,Seff,Z,f0,V0,a,b,L,theta,statelaw)
   rtsafe=0.5d0*(x1+x2)
   dxold=abs(x2-x1)
   dx=dxold
-  call funcd(rtsafe,f,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
+  call funcd(rtsafe,f,df,tx,ty,Seff,Z,f0,V0,a,b,L,theta,statelaw)
   do j=1,MAXIT
     if( ((rtsafe-xh)*df-f)*((rtsafe-xl)*df-f)>0 .or. abs(2.*f)>abs(dxold*df)  ) then
       dxold=dx
@@ -1604,7 +1617,7 @@ function rtsafe(funcd,x1,x2,xacc,tx,ty,Seff,Z,f0,V0,a,b,L,theta,statelaw)
       if(temp==rtsafe) return
     endif
     if(abs(dx)<xacc) return
-    call funcd(rtsafe,f,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
+    call funcd(rtsafe,f,df,tx,ty,Seff,Z,f0,V0,a,b,L,theta,statelaw)
     if(f<0.) then
       xl=rtsafe
     else

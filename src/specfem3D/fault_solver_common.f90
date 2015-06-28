@@ -13,7 +13,7 @@ module fault_solver_common
 
   type fault_type
     integer :: nspec=0, nglob=0
-    real(kind=CUSTOM_REAL), dimension(:,:),   pointer :: T=>null(),V=>null(),D=>null(),coord=>null(),sigma=>null()
+    real(kind=CUSTOM_REAL), dimension(:,:),   pointer :: T=>null(),V=>null(),D=>null(),coord=>null()!,sigma=>null()
     real(kind=CUSTOM_REAL), dimension(:,:,:), pointer :: R=>null()
     real(kind=CUSTOM_REAL), dimension(:),     pointer :: B=>null(),invM1=>null(),invM2=>null(),Z=>null(),dbg1=>null(),dbg2=>null(),dbg3=>null(),dbg4=>null() 
     real(kind=CUSTOM_REAL) :: dt

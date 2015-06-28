@@ -93,6 +93,7 @@
 ! *********************************************************
 
   do it = 1,NSTEP
+    write(*,*) it
     ! simulation status output and stability check
     if( mod(it,NTSTEP_BETWEEN_OUTPUT_INFO) == 0 .or. it == 5 .or. it == NSTEP ) &
       call check_stability()
