@@ -67,7 +67,9 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                      rmemory_duz_dxl_z, rmemory_duz_dyl_z, rmemory_duy_dzl_z, rmemory_dux_dzl_z, &
                      rmemory_displ_elastic,displ_old
   use fault_solver_dynamic, only : Kelvin_Voigt_eta!, KV_direction
-  use specfem_par, only : PI,FULL_ATTENUATION_SOLID, xigll, yigll, zigll, ystore
+  use specfem_par, only : PI,FULL_ATTENUATION_SOLID, xigll, yigll, zigll, ystore, zstore, &
+                        vp_xx,vp_yy,vp_zz,vp_xy,vp_xz,vp_yz
+
 
   implicit none
 
@@ -78,6 +80,10 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
 
 ! time step
   real(kind=CUSTOM_REAL) :: deltat
+! plastic parameter
+  real(kind=CUSTOM_REAL) :: cohesion,phi,Pf,sigma_mean,J2,Y,r,dtvp_mean,Tv
+  real(kind=CUSTOM_REAL) ::  b11,b33,b13,Depth,Omega
+  logical,parameter :: PLASTICITY = .TRUE.
 
 ! arrays with mesh parameters per slice
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
@@ -154,6 +160,8 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
   real(kind=CUSTOM_REAL) :: duxdyl_plus_duydxl,duzdxl_plus_duxdzl,duzdyl_plus_duydzl
 
   real(kind=CUSTOM_REAL) :: sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz,sigma_yx,sigma_zx,sigma_zy
+  real(kind=CUSTOM_REAL) :: sigmap_xx,sigmap_yy,sigmap_zz,sigmap_xy,sigmap_xz,sigmap_yz
+  real(kind=CUSTOM_REAL) :: sigma_xx0,sigma_yy0,sigma_zz0,sigma_xy0,sigma_xz0,sigma_yz0
 
   real(kind=CUSTOM_REAL) :: hp1,hp2,hp3
   real(kind=CUSTOM_REAL) :: fac1,fac2,fac3
@@ -195,6 +203,16 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
 
   imodulo_N_SLS = mod(N_SLS,3)
 
+  cohesion = 1360000.0_CUSTOM_REAL
+
+  Tv = 0.03_CUSTOM_REAL
+
+  phi = atan(0.1934_CUSTOM_REAL)
+
+    b11=0.926793
+    b33=1.073206
+    b13=-0.169029
+
   ! choses inner/outer elements
   if( iphase == 1 ) then
     num_elements = nspec_outer_elastic
@@ -220,7 +238,6 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
 
         ! stores displacment values in local array
         if (allocated(Kelvin_Voigt_eta)) then ! modified by Kangchen
-!         if (.TRUE.) then
           eta = Kelvin_Voigt_eta(ispec)
 !          select case (KV_direction)
 !                 case (1)
@@ -488,6 +505,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
               duzdxl_plus_duxdzl = duzdxl + duxdzl
               duzdyl_plus_duydzl = duzdyl + duydzl
 
+
               if(ATTENUATION .and. COMPUTE_AND_STORE_STRAIN) then
                  ! temporary variables used for fixing attenuation in a consistent way
                  duxdxl_att = xixl*tempx1_att(i,j,k) + etaxl*tempx2_att(i,j,k) + gammaxl*tempx3_att(i,j,k)
@@ -619,8 +637,91 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                 sigma_xz = mul*duzdxl_plus_duxdzl
                 sigma_yz = mul*duzdyl_plus_duydzl
      !           write(IMAIN,*) 'sigma_xy',sigma_xy,'mul',mul   !added by Kangchen
-              endif ! ANISOTROPY
+            endif ! ANISOTROPY
+            if(PLASTICITY) then
 
+                sigma_xx = sigma_xx - vp_xx(i,j,k,ispec)*2.0d0*mul
+                sigma_yy = sigma_yy - vp_yy(i,j,k,ispec)*2.0d0*mul
+                sigma_zz = sigma_zz - vp_zz(i,j,k,ispec)*2.0d0*mul
+                sigma_xy = sigma_xy - vp_xy(i,j,k,ispec)*2.0d0*mul
+                sigma_xz = sigma_xz - vp_xz(i,j,k,ispec)*2.0d0*mul
+                sigma_yz = sigma_yz - vp_yz(i,j,k,ispec)*2.0d0*mul
+
+                Depth=-zstore(ibool(i,j,k,ispec))
+                Pf=1000.0d0*9.8d0*(Depth)
+                sigma_zz0=-2670.0d0*9.8d0*(Depth)
+
+                if(Depth<=15000.0d0) then
+                  Omega=1.0d0
+                else
+                if(Depth <= 20000.0) then
+                     Omega=(20000.0d0-Depth)/5000.0d0
+                else
+                     Omega=0.0d0
+                endif
+                endif
+                sigma_xx0 = Omega*(b11*(sigma_zz0+Pf)-Pf)+(1.0_CUSTOM_REAL-Omega)*sigma_zz0
+                sigma_yy0 = Omega*(b33*(sigma_zz0+Pf)-Pf)+(1.0_CUSTOM_REAL-Omega)*sigma_zz0
+                sigma_xy0 = Omega*(b13*(sigma_zz0+Pf))
+                sigma_yz0 = 0.0_CUSTOM_REAL
+                sigma_xz0 = 0.0_CUSTOM_REAL
+
+                sigma_xx = sigma_xx + sigma_xx0
+                sigma_yy = sigma_yy + sigma_yy0
+                sigma_zz = sigma_zz + sigma_zz0
+                sigma_xy = sigma_xy + sigma_xy0
+                sigma_xz = sigma_xz + sigma_xz0
+                sigma_yz = sigma_yz + sigma_yz0
+
+
+
+    !            Pf = -zstore(ibool(i,j,k,ispec)) * 1000.0_CUSTOM_REAL * 9.8_CUSTOM_REAL
+
+
+                sigma_mean = ONE_THIRD*(sigma_xx+sigma_yy+sigma_zz)
+
+                J2 = (sigma_xy*sigma_xy+sigma_yz*sigma_yz+sigma_xz*sigma_xz)+&
+                    0.50d0*((sigma_xx - sigma_mean)**2+(sigma_yy-sigma_mean)**2+(sigma_zz-sigma_mean)**2)
+
+                Y = max(0.0_CUSTOM_REAL,cohesion*cos(phi)-(sigma_mean+Pf)*sin(phi))
+
+                if(sqrt(J2) > Y) then
+                    r =exp(-deltat/Tv) + (1.0_CUSTOM_REAL-exp(-deltat/Tv)) * Y/sqrt(J2)
+                    sigmap_xx = sigma_mean + (sigma_xx - sigma_mean)*r
+                    sigmap_yy = sigma_mean + (sigma_yy - sigma_mean)*r
+                    sigmap_zz = sigma_mean + (sigma_zz - sigma_mean)*r
+                    sigmap_xy = sigma_xy * r
+                    sigmap_yz = sigma_yz * r
+                    sigmap_xz = sigma_xz * r
+                    vp_xy(i,j,k,ispec) = vp_xy(i,j,k,ispec) + 1.0_CUSTOM_REAL/(2.0*mul)*(sigma_xy-sigmap_xy)
+                    vp_xz(i,j,k,ispec) = vp_xz(i,j,k,ispec) + 1.0_CUSTOM_REAL/(2.0*mul)*(sigma_xz-sigmap_xz)
+                    vp_yz(i,j,k,ispec) = vp_yz(i,j,k,ispec) + 1.0_CUSTOM_REAL/(2.0*mul)*(sigma_yz-sigmap_yz)
+!                    dtvp_mean = lambdal/(3.0*lambdal+2.0*mul)*&
+!                    ((sigma_xx - sigmap_xx)+(sigma_yy-sigmap_yy)+(sigma_zz-sigmap_zz))
+                    vp_xx(i,j,k,ispec) = vp_xx(i,j,k,ispec) + 1.0_CUSTOM_REAL/(2.0*mul)*(sigma_xx-sigmap_xx)
+                    vp_yy(i,j,k,ispec) = vp_yy(i,j,k,ispec) + 1.0_CUSTOM_REAL/(2.0*mul)*(sigma_yy-sigmap_yy)
+                    vp_zz(i,j,k,ispec) = vp_zz(i,j,k,ispec) + 1.0_CUSTOM_REAL/(2.0*mul)*(sigma_zz-sigmap_zz)
+                
+                sigma_xx = sigmap_xx 
+                sigma_yy = sigmap_yy 
+                sigma_zz = sigmap_zz 
+                sigma_xy = sigmap_xy 
+                sigma_xz = sigmap_xz 
+                sigma_yz = sigmap_yz 
+
+
+
+                
+                endif
+                sigma_xx = sigma_xx - sigma_xx0
+                sigma_yy = sigma_yy - sigma_yy0
+                sigma_zz = sigma_zz - sigma_zz0
+                sigma_xy = sigma_xy - sigma_xy0
+                sigma_xz = sigma_xz - sigma_xz0
+                sigma_yz = sigma_yz - sigma_yz0
+
+
+            endif
               ! subtract memory variables if attenuation
               if(ATTENUATION) then
 ! way 1

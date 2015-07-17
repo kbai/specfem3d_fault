@@ -76,12 +76,14 @@ module fault_solver_dynamic
   ! this parameter is read from Par_file
   logical, save :: TPV16 = .FALSE.
 
+  logical, save :: TPV26 = .TRUE.
+
   logical, save :: TPV29 = .FALSE.
 
   logical, save :: TPV10x= .FALSE.
   ! this is for some of the rate and state friction SCEC benchmarks.
 
-  logical, save :: RATE_AND_STATE = .TRUE.
+  logical, save :: RATE_AND_STATE = .FALSE.
 
   logical, save :: BALOCHI = .FALSE.
 
@@ -115,7 +117,7 @@ subroutine BC_DYNFLT_init(prname,DTglobal,myrank)
   character(len=256) :: filename
   integer, parameter :: IIN_PAR =151
   integer, parameter :: IIN_BIN =170
-   
+
   NAMELIST / BEGIN_FAULT / dummy_idfault
 
   dummy_idfault = 0
@@ -202,7 +204,7 @@ subroutine find_fault_node(bc,myrank)
   real(kind=CUSTOM_REAL) :: minvalue
   integer :: pos,myrank
   real(kind=CUSTOM_REAL),dimension(bc%nglob) :: error
-  if(bc%nglob>0) then 
+  if(bc%nglob>0) then
   error = abs(bc%coord(1,:)-488.9_CUSTOM_REAL)+abs(bc%coord(2,:)-0._CUSTOM_REAL)+abs(bc%coord(3,:)+7807.0_CUSTOM_REAL)
   minvalue = minval(error)
   pos = minloc(error,1)
@@ -211,9 +213,9 @@ subroutine find_fault_node(bc,myrank)
 !  if (minvalue .lt. 1._CUSTOM_REAL)     write(*,*) 'the processor is',myrank,'and the nglob is :',pos
   endif
 end subroutine find_fault_node
-   
-  
-  
+
+
+
 subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
 
 
@@ -235,7 +237,7 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
  ! call find_fault_node(bc,myrank)  !Kangchen Added it just for dbg
 
 
-  
+
   if (bc%nspec>0) then
 !NOTE that all operation about fault quantities have to be placed in this if statement otherwise you will be operating on the processor that do not posses fault node which will give you a SEGMENTATION FAULT!
     allocate(bc%T(3,bc%nglob))
@@ -263,14 +265,14 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
     call init_2d_distribution(bc%T0(1,:),bc%coord,IIN_PAR,n1)
     call init_2d_distribution(bc%T0(2,:),bc%coord,IIN_PAR,n2)
     call init_2d_distribution(bc%T0(3,:),bc%coord,IIN_PAR,n3)
-    call init_fault_traction(bc,Sigma,GradientZ) !added the fault traction caused by a regional stress field 
+    call init_fault_traction(bc,Sigma,GradientZ) !added the fault traction caused by a regional stress field
 !    call add_depth_dependence
      if (BALOCHI) then
        call make_frictional_stress
        call load_stress_drop
      endif
      bc%T = bc%T0
-     
+
 
     !WARNING : Quick and dirty free surface condition at z=0
     !  do k=1,bc%nglob
@@ -303,7 +305,7 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
 !    bc%swf%mud = 0.373_CUSTOM_REAL;
 !    endif !iflt
 !    endif !CUSTOMIZED_PRESTRESS
-  endif  
+  endif
 
   if (RATE_AND_STATE) then
     call init_dataT(bc%dataT,bc%coord,bc%nglob,NT,dt,8,iflt)
@@ -318,7 +320,7 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
   else
     call init_dataT(bc%dataT,bc%coord,bc%nglob,NT,dt,7,iflt)
   endif ! RATE_AND_STATE
- 
+
   call init_dataXZ(bc%dataXZ,bc)
  ! output a fault snapshot at t=0
   if (.NOT. PARALLEL_FAULT) then
@@ -344,7 +346,7 @@ subroutine load_stress_drop   !added by kangchen this is specially made for Balo
 
    real(kind=CUSTOM_REAL),dimension(bc%nglob) :: T1tmp, T2tmp
    character(len=70) :: filename
-   integer :: IIN_STR,ier 
+   integer :: IIN_STR,ier
    filename = prname(1:len_trim(prname))//'fault_prestr.bin'
    open(unit=IIN_STR,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
    read(IIN_STR) T1tmp
@@ -370,8 +372,8 @@ subroutine add_depth_dependence  !ADD BY Kangchen
 !        bc%T0(1,:) = bc%T0(1,:)+80000000_CUSTOM_REAL;
 !    endif
 
-    
-    
+
+
 !    bc%T0(2,:) = bc%T0(2,i)+tau0_dip(ipar)
 end subroutine add_depth_dependence
 
@@ -385,7 +387,7 @@ subroutine TPV16_init(iflt)
   real(kind=CUSTOM_REAL) :: minX, siz_str,siz_dip, hypo_loc_str,hypo_loc_dip,rad_T_str,rad_T_dip
   integer :: relz_num,sub_relz_num, num_cell_str,num_cell_dip, hypo_cell_str,hypo_cell_dip
   integer :: i
-  character(len=70) :: fn  
+  character(len=70) :: fn
 
   write(fn,"('../DATA/input_file_fault',I0,'.txt')") iflt
 !  write(*,*) fn
@@ -411,7 +413,7 @@ subroutine TPV16_init(iflt)
     bc%T0(3,i) = bc%T0(3,i)-sigma0(ipar);
     bc%T0(1,i) = bc%T0(1,i)+tau0_str(ipar)
     bc%T0(2,i) = bc%T0(2,i)+tau0_dip(ipar)
-    write(IMAIN,*) bc%coord(1,i) , sigma0(ipar)
+ !   write(IMAIN,*) bc%coord(1,i) , sigma0(ipar)
     bc%swf%mus(i) = static_fc(ipar)
     bc%swf%mud(i) = dyn_fc(ipar)
     bc%swf%Dc(i) = swcd(ipar)
@@ -476,12 +478,12 @@ subroutine init_2d_distribution(a,coord,iin,n)
      elsewhere
         b=0._CUSTOM_REAL
      endwhere
-    
+
     case ('TPV29_T')
      r1=sqrt(((coord(1,:)-xc)**2 + (coord(3,:)-zc)**2 ));
      where(r1<rc)
        b=(r1+0.081*rc*(1./(1.-(r1/rc)**2)-1.))*val;
-       elsewhere 
+       elsewhere
            b=1.0e9;
      endwhere
     case ('TPV29_C')
@@ -489,21 +491,29 @@ subroutine init_2d_distribution(a,coord,iin,n)
       b=400000._CUSTOM_REAL
       elsewhere
           b=400000._CUSTOM_REAL+200._CUSTOM_REAL*(4000.0+coord(3,:))
-    endwhere     
+    endwhere
+
+    case ('TPV26_C')
+    where(coord(3,:)<-5000.0)
+      b=400000._CUSTOM_REAL
+      elsewhere
+          b=400000._CUSTOM_REAL+720._CUSTOM_REAL*(5000.0+coord(3,:))
+    endwhere
+
 
     case ('TPV31_C')
     where(coord(3,:)<-2400.0)
       b=0.0_CUSTOM_REAL
       elsewhere
           b=425.0_CUSTOM_REAL*(2400.0+coord(3,:))
-    endwhere     
-    
+    endwhere
+
      case ('TPV31_Nucleation')
     Mu0=32.03812032e9_CUSTOM_REAL
     do ij=1,size(a)
     call model_1D_layer(coord(1,ij),coord(2,ij),coord(3,ij),Rho,Vp,Vs,Att)
 !    call model_1D_tpv31(1.0,1.0,1.0,Rho,Vp,Vs,Att)
- 
+
 !    write(*,*) coord(3,ij),' ',Vs,' ',Rho
      Mu(ij)=Vs*Vs*Rho
 !     if (coord(3,ij)>-10000.0 .and. coord(3,ij)<-5000.0) then
@@ -523,7 +533,7 @@ subroutine init_2d_distribution(a,coord,iin,n)
      elsewhere
         b=0._CUSTOM_REAL
      endwhere
-            
+
     case ('circle')
       b = heaviside( r - sqrt((coord(1,:)-xc)**2 + (coord(2,:)-yc)**2 + (coord(3,:)-zc)**2 ) ) *val
     case ('circle-exp')
@@ -542,7 +552,7 @@ subroutine init_2d_distribution(a,coord,iin,n)
            val
      case ('z-cylinder')
       b = heaviside(r - sqrt((coord(1,:)-xc)**2 + (coord(2,:)-yc)**2)) * &
-           heaviside((lz/2._CUSTOM_REAL)-abs(coord(3,:)-zc)+SMALLVAL)  * & 
+           heaviside((lz/2._CUSTOM_REAL)-abs(coord(3,:)-zc)+SMALLVAL)  * &
            val
     case ('y-cylinder')
       b = heaviside(r - sqrt((coord(1,:)-xc)**2 + (coord(3,:)-zc)**2)) * &
@@ -623,10 +633,10 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
                                                  Vf_old,Vf_new,TxExt
   real(kind=CUSTOM_REAL) :: half_dt,TLoad,DTau0,GLoad,time
   integer :: i
- 
 
-     
-    
+
+
+
   if (bc%nspec > 0) then !Surendra : for parallel faults
 
     half_dt = 0.5e0_CUSTOM_REAL*bc%dt
@@ -635,25 +645,25 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
     ! get predicted values
     dD = get_dis1(bc,D)
     bc%dbg3=dD(3,:)
-    
+
     dD = get_dis2(bc,D)
     bc%dbg4=dD(3,:)
     dD = get_jump(bc,D) ! dD_predictor
     dV = get_jump(bc,V) ! dV_predictor
 !    dA = get_jump(bc,MxA)
-!    bc%dbg2=dA(3,:); 
-    
+!    bc%dbg2=dA(3,:);
+
     dA=get_acceleration1(bc,MxA)
     bc%dbg1=dA(3,:)
     dA=get_acceleration2(bc,MxA)
-    
-    bc%dbg2=dA(3,:) 
+
+    bc%dbg2=dA(3,:)
 
     dA = get_weighted_jump(bc,MxA) ! dA_free
 !    dMV=get_mass_jump(bc,V)
 !    dMA=get_jump(bc,MxA)
- 
-     
+
+
     ! rotate to fault frame (tangent,normal)
     ! component 3 is normal to the fault
 !    bc%dbg2=half_dt*dA(3,:);
@@ -715,7 +725,7 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
 
       ! combined with time-weakening for nucleation
       !  if (associated(bc%twf)) bc%MU = min( bc%MU, twf_mu(bc%twf,bc%coord,time) )
-      if (TPV29) then
+      if (TPV29 .or. TPV26) then
       bc%MU = min( bc%MU, twf_mu(bc%swf,it*bc%dt) )
       endif
 
@@ -824,16 +834,16 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
     else
         call gather_dataXZ(bc)
       if (myrank==0) then
-           
+
              call SCEC_Write_RuptureTime(bc%dataXZ_all,iflt)
-      endif     ! Kangchen added it 
-         
+      endif     ! Kangchen added it
+
     endif
   endif
 !     if(myrank==44)         write(*,*) 'from 44', bc%V(:,1075),bc%T(:,1075)
 
  !    if(myrank==45)          write(*,*) 'from 45', bc%V(:,9748),bc%T(:,1075) for dbg Kangchen
-         
+
 end subroutine BC_DYNFLT_set3d
 
 !===============================================================
@@ -887,7 +897,7 @@ subroutine swf_init(f,mu,coord,IIN_PAR)
   call init_2d_distribution(f%Dc ,coord,IIN_PAR,ndc)
   call init_2d_distribution(f%C  ,coord,IIN_PAR,nC)
   call init_2d_distribution(f%T  ,coord,IIN_PAR,nForcedRup)
- 
+
   f%theta = 0e0_CUSTOM_REAL
 
   mu = swf_mu(f)
@@ -1608,6 +1618,7 @@ subroutine init_fault_traction(bc,Sigma,GradientZ)
   integer :: ij
   real(kind=CUSTOM_REAL) :: GradientZ
   logical :: TPV29=.FALSE.
+  logical :: TPV26=.TRUE.
   logical :: TPV31=.FALSE.
   real(kind=CUSTOM_REAL) :: Pf,Omega,Depth,b11,b33,b13
   real(kind=CUSTOM_REAL) :: Vs,Vp,Rho,Att,Mu,Mu0
@@ -1623,7 +1634,7 @@ subroutine init_fault_traction(bc,Sigma,GradientZ)
     Sigma(4)*bc%R(3,1,:)+Sigma(2)*bc%R(3,2,:)+Sigma(5)*bc%R(3,3,:)
   Traction(3,:) = &
     Sigma(6)*bc%R(3,1,:)+Sigma(5)*bc%R(3,2,:)+(Sigma(3)+(bc%coord(3,:)*GradientZ))*bc%R(3,3,:)
-!  Traction = rotate(bc,Traction,1)    
+!  Traction = rotate(bc,Traction,1)
 !  bc%T0 =bc%T0+ Traction
   if(TPV29) then
     b11=1.025837
@@ -1634,7 +1645,7 @@ subroutine init_fault_traction(bc,Sigma,GradientZ)
       Pf=1000.0*9.8*(Depth)
       Sigma_TPV29(3)=-2670.0*9.8*(Depth)
 
-      if(Depth<=17000.0) then 
+      if(Depth<=17000.0) then
         Omega=1.0
       else
         if(Depth <= 22000.0) then
@@ -1652,23 +1663,61 @@ subroutine init_fault_traction(bc,Sigma,GradientZ)
       Sigma_TPV29(1)=Sigma_TPV29(1)+Pf
       Sigma_TPV29(2)=Sigma_TPV29(2)+Pf
       Sigma_TPV29(3)=Sigma_TPV29(3)+Pf
- 
+
       Traction(1,ij) = &
       Sigma_TPV29(1)*bc%R(3,1,ij)+Sigma_TPV29(4)*bc%R(3,2,ij)+Sigma_TPV29(6)*bc%R(3,3,ij)
       Traction(2,ij) = &
 Sigma_TPV29(4)*bc%R(3,1,ij)+Sigma_TPV29(2)*bc%R(3,2,ij)+Sigma_TPV29(5)*bc%R(3,3,ij)
       Traction(3,ij) = &
 Sigma_TPV29(6)*bc%R(3,1,ij)+Sigma_TPV29(5)*bc%R(3,2,ij)+Sigma_TPV29(3)*bc%R(3,3,ij)
- 
+
     enddo
   endif
 
- 
+  if(TPV26) then
+    b11=0.926793
+    b33=1.073206
+    b13=-0.169029
+    do ij=1,bc%nglob
+      Depth=-bc%coord(3,ij)
+      Pf=1000.0*9.8*(Depth)
+      Sigma_TPV29(3)=-2670.0*9.8*(Depth)    ! this is sigma_22
+
+      if(Depth<=15000.0) then
+        Omega=1.0
+      else
+        if(Depth <= 20000.0) then
+           Omega=(20000.0-Depth)/5000.0
+        else
+           Omega=0.0
+        endif
+      endif
+      Sigma_TPV29(1)=Omega*(b11*(Sigma_TPV29(3)+Pf)-Pf)+(1.0-Omega)*Sigma_TPV29(3)
+      Sigma_TPV29(2)=Omega*(b33*(Sigma_TPV29(3)+Pf)-Pf)+(1.0-Omega)*Sigma_TPV29(3)
+      Sigma_TPV29(4)=Omega*(b13*(Sigma_TPV29(3)+Pf))
+      Sigma_TPV29(5)=0.0
+      Sigma_TPV29(6)=0.0
+  ! add pore fluid pressure
+      Sigma_TPV29(1)=Sigma_TPV29(1)+Pf
+      Sigma_TPV29(2)=Sigma_TPV29(2)+Pf
+      Sigma_TPV29(3)=Sigma_TPV29(3)+Pf
+
+      Traction(1,ij) = &
+      Sigma_TPV29(1)*bc%R(3,1,ij)+Sigma_TPV29(4)*bc%R(3,2,ij)+Sigma_TPV29(6)*bc%R(3,3,ij)
+      Traction(2,ij) = &
+Sigma_TPV29(4)*bc%R(3,1,ij)+Sigma_TPV29(2)*bc%R(3,2,ij)+Sigma_TPV29(5)*bc%R(3,3,ij)
+      Traction(3,ij) = &
+Sigma_TPV29(6)*bc%R(3,1,ij)+Sigma_TPV29(5)*bc%R(3,2,ij)+Sigma_TPV29(3)*bc%R(3,3,ij)
+
+    enddo
+  endif
+
+
   if(TPV31) then
     Mu0=32.03812032e9
     do ij=1,bc%nglob
       call model_1D_layer(bc%coord(1,ij),bc%coord(2,ij),bc%coord(3,ij),Rho,Vp,Vs,Att)
- 
+
       Mu=Rho*Vs*Vs
       Sigma_TPV29(1)=-60.0e6*Mu/Mu0
       Sigma_TPV29(2)=-60.0e6*Mu/Mu0
@@ -1682,13 +1731,13 @@ Sigma_TPV29(1)*bc%R(3,1,ij)+Sigma_TPV29(4)*bc%R(3,2,ij)+Sigma_TPV29(6)*bc%R(3,3,
 Sigma_TPV29(4)*bc%R(3,1,ij)+Sigma_TPV29(2)*bc%R(3,2,ij)+Sigma_TPV29(5)*bc%R(3,3,ij)
       Traction(3,ij) = &
 Sigma_TPV29(6)*bc%R(3,1,ij)+Sigma_TPV29(5)*bc%R(3,2,ij)+Sigma_TPV29(3)*bc%R(3,3,ij)
- 
+
     enddo
-  endif 
-  
-  Traction = rotate(bc,Traction,1)    
+  endif
+
+  Traction = rotate(bc,Traction,1)
   bc%T0 =bc%T0+ Traction
- 
+
 end subroutine init_fault_traction
 
 

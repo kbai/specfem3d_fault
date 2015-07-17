@@ -211,6 +211,20 @@
           jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
   if( ier /= 0 ) stop 'error allocating arrays for databases'
 
+
+  allocate(vp_xx(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+          vp_yy(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+          vp_zz(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+          vp_xy(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+          vp_xz(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+          vp_yz(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat = ier)
+
+          vp_xx = 0.0_CUSTOM_REAL
+          vp_yy = 0.0_CUSTOM_REAL
+          vp_zz = 0.0_CUSTOM_REAL
+          vp_xy = 0.0_CUSTOM_REAL
+          vp_xz = 0.0_CUSTOM_REAL
+          vp_yz = 0.0_CUSTOM_REAL
   ! mesh node locations
   allocate(xstore(NGLOB_AB), &
           ystore(NGLOB_AB), &

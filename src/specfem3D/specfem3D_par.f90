@@ -173,6 +173,8 @@ module specfem_par
   double precision, dimension(:), allocatable :: comp_dir_vect_source_N
   double precision, dimension(:), allocatable :: comp_dir_vect_source_Z_UP
 
+! viscoplasticity
+  real(kind=CUSTOM_REAL),dimension(:,:,:,:),allocatable :: vp_xx, vp_yy, vp_zz, vp_xy, vp_xz, vp_yz
 ! parameters
   integer :: SIMULATION_TYPE
   integer :: NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE
