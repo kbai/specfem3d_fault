@@ -122,9 +122,9 @@
 #undef USE_TEXTURES_FIELDS
 #undef USE_TEXTURES_CONSTANTS
 #endif
-
 #ifdef USE_TEXTURES_FIELDS
 #pragma message ("\nCompiling with: USE_TEXTURES_FIELDS enabled\n")
+#else
 #endif
 #ifdef USE_TEXTURES_CONSTANTS
 #pragma message ("\nCompiling with: USE_TEXTURES_CONSTANTS enabled\n")

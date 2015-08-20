@@ -54,6 +54,7 @@
         store_val_ux_external_mesh(NGLLX*NGLLY*1), &
         store_val_uy_external_mesh(NGLLX*NGLLY*1), &
         store_val_uz_external_mesh(NGLLX*NGLLY*1), &
+        store_val_coulomb_external_mesh(NGLLX*NGLLY*1), & 
         store_val_stressxx_external_mesh(NGLLX*NGLLY*1),&  
         store_val_stressxy_external_mesh(NGLLX*NGLLY*1),&              
         store_val_stressyy_external_mesh(NGLLX*NGLLY*1),&      
@@ -69,6 +70,7 @@
         store_val_ux_external_mesh(NGNOD2D_FOUR_CORNERS*1), &
         store_val_uy_external_mesh(NGNOD2D_FOUR_CORNERS*1), &
         store_val_uz_external_mesh(NGNOD2D_FOUR_CORNERS*1),&
+        store_val_coulomb_external_mesh(NGNOD2D_FOUR_CORNERS*1),&
         store_val_stressxx_external_mesh(NGNOD2D_FOUR_CORNERS*1),&  
         store_val_stressxy_external_mesh(NGNOD2D_FOUR_CORNERS*1),&              
         store_val_stressyy_external_mesh(NGNOD2D_FOUR_CORNERS*1),&      
@@ -86,6 +88,7 @@
         store_val_ux_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh), &
         store_val_uy_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh), &
         store_val_uz_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh),&
+        store_val_coulomb_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh),&  
         store_val_stressxx_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh),&  
         store_val_stressxy_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh),&              
         store_val_stressyy_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh),&      
@@ -101,6 +104,7 @@
         store_val_ux_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_ext_mesh), &
         store_val_uy_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_ext_mesh), &
         store_val_uz_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_ext_mesh),&
+        store_val_coulomb_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_ext_mesh),&
         store_val_stressxx_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_ext_mesh),&  
         store_val_stressxy_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_ext_mesh),&              
         store_val_stressyy_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_ext_mesh),&      
@@ -113,6 +117,7 @@
   store_val_ux_external_mesh(:) = 0._CUSTOM_REAL
   store_val_uy_external_mesh(:) = 0._CUSTOM_REAL
   store_val_uz_external_mesh(:) = 0._CUSTOM_REAL
+  store_val_coulomb_external_mesh(:) = 0._CUSTOM_REAL 
   store_val_stressxx_external_mesh(:) = 0._CUSTOM_REAL
   store_val_stressxy_external_mesh(:) = 0._CUSTOM_REAL
   store_val_stressyy_external_mesh(:) = 0._CUSTOM_REAL
@@ -132,7 +137,8 @@
         store_val_ux_all_external_mesh(NGLLX*NGLLY*nfaces_surface_glob_ext_mesh), &
         store_val_uy_all_external_mesh(NGLLX*NGLLY*nfaces_surface_glob_ext_mesh), &
         store_val_uz_all_external_mesh(NGLLX*NGLLY*nfaces_surface_glob_ext_mesh),stat=ier)
-      allocate(store_val_stressxx_all_external_mesh(NGLLX*NGLLY*nfaces_surface_glob_ext_mesh), &
+      allocate(store_val_coulomb_all_external_mesh(NGLLX*NGLLY*nfaces_surface_glob_ext_mesh), &
+        store_val_stressxx_all_external_mesh(NGLLX*NGLLY*nfaces_surface_glob_ext_mesh), &
         store_val_stressyy_all_external_mesh(NGLLX*NGLLY*nfaces_surface_glob_ext_mesh), &
         store_val_stresszz_all_external_mesh(NGLLX*NGLLY*nfaces_surface_glob_ext_mesh), &
         store_val_stressxy_all_external_mesh(NGLLX*NGLLY*nfaces_surface_glob_ext_mesh), &
@@ -147,6 +153,7 @@
         store_val_ux_all_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_glob_ext_mesh), &
         store_val_uy_all_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_glob_ext_mesh), &
         store_val_uz_all_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_glob_ext_mesh), &
+        store_val_coulomb_all_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_glob_ext_mesh),&  
         store_val_stressxx_all_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_glob_ext_mesh),&  
         store_val_stressxy_all_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_glob_ext_mesh),&              
         store_val_stressyy_all_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_glob_ext_mesh),&      

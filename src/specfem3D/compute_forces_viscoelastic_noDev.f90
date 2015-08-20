@@ -69,6 +69,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
   use fault_solver_dynamic, only : Kelvin_Voigt_eta!, KV_direction
   use specfem_par, only : PI,FULL_ATTENUATION_SOLID, xigll, yigll, zigll, ystore, zstore, &
                         vp_xx,vp_yy,vp_zz,vp_xy,vp_xz,vp_yz
+  use specfem_par_movie , only :  stress_xx,stress_yy,stress_zz,stress_xy,stress_xz,stress_yz,coulomb
 
 
   implicit none
@@ -83,7 +84,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
 ! plastic parameter
   real(kind=CUSTOM_REAL) :: cohesion,phi,Pf,sigma_mean,J2,Y,r,dtvp_mean,Tv
   real(kind=CUSTOM_REAL) ::  b11,b33,b13,Depth,Omega
-  logical,parameter :: PLASTICITY = .TRUE.
+  logical,parameter :: PLASTICITY = .FALSE.
 
 ! arrays with mesh parameters per slice
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
@@ -202,17 +203,17 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
   integer :: ispec_CPML
 
   imodulo_N_SLS = mod(N_SLS,3)
-
+   if(PLASTICITY) then
   cohesion = 1360000.0_CUSTOM_REAL
 
   Tv = 0.03_CUSTOM_REAL
 
   phi = atan(0.1934_CUSTOM_REAL)
 
-    b11=0.926793
-    b33=1.073206
-    b13=-0.169029
-
+    b11=0.926793_CUSTOM_REAL
+    b33=1.073206_CUSTOM_REAL
+    b13=-0.169029_CUSTOM_REAL
+  endif
   ! choses inner/outer elements
   if( iphase == 1 ) then
     num_elements = nspec_outer_elastic
@@ -722,6 +723,14 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
 
 
             endif
+             !  stress_xx(i,j,k,ispec) = sigma_xx
+             !  stress_yy(i,j,k,ispec) = sigma_yy
+             !  stress_zz(i,j,k,ispec) = sigma_zz
+             !  stress_xy(i,j,k,ispec) = sigma_xy
+             !  stress_xz(i,j,k,ispec) = sigma_xz
+             !  stress_yz(i,j,k,ispec) = sigma_yz
+             !  coulomb(i,j,k,ispec) = max(0.6_CUSTOM_REAL*sigma_yy+sigma_xy,coulomb(i,j,k,ispec))
+!               coulomb(i,j,k,ispec) = 0.6_CUSTOM_REAL*sigma_yy + sigma_xy 
               ! subtract memory variables if attenuation
               if(ATTENUATION) then
 ! way 1

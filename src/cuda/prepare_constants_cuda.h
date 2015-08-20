@@ -28,7 +28,6 @@
 
 #ifndef CUDA_HEADER_H
 #define CUDA_HEADER_H
-
 typedef float realw;  // type of "working" variables
 
 // CUDA version >= 5.0 needed for new symbol addressing and texture binding
@@ -41,7 +40,6 @@ typedef float realw;  // type of "working" variables
 #endif
 
 #ifdef USE_OLDER_CUDA4_GPU
-#pragma message ("\nCompiling with: USE_OLDER_CUDA4_GPU enabled\n")
 #endif
 
 /* ----------------------------------------------------------------------------------------------- */

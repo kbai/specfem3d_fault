@@ -47,7 +47,7 @@ FCFLAGS_f90 =
 # ADIOS
 # with configure: ./configure --with-adios ADIOS_CONFIG=..
 
-MPI_INCLUDES = 
+MPI_INCLUDES =  -I/opt/intel/impi/5.0.0.028/include64
 ADIOS_INC =  -I../../
 ADIOS_LINK = 
 

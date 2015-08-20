@@ -72,7 +72,7 @@ subroutine compute_forces_viscoelastic()
 !write(*,*) '1 ',myrank,'my location is', maxloc(abs(displ),2)
 
   do iphase=1,2
-
+    write(*,*) 'iphase',iphase
     !first for points on MPI interfaces
     if( iphase == 1 ) then
       phase_is_inner = .false.
@@ -224,7 +224,7 @@ subroutine compute_forces_viscoelastic()
     endif
 
  enddo
-
+  write(*,*) "entering fault session"
 !Percy , Fault boundary term B*tau is added to the assembled forces
 !        which at this point are stored in the array 'accel'
   if (SIMULATION_TYPE_DYN) call bc_dynflt_set3d_all(accel,veloc,displ)
@@ -823,6 +823,12 @@ subroutine compute_forces_viscoelastic_GPU()
     ! adds dynamic source
     if (SIMULATION_TYPE_DYN) call bc_dynflt_set3d_all(accel,veloc,displ)
     if (SIMULATION_TYPE_KIN) call bc_kinflt_set_all(accel,veloc,displ)
+    
+  call synchronize_MPI_vector_blocking_ord(NPROC,NGLOB_AB,accel, &
+                                     num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                                     nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                     my_neighbours_ext_mesh,myrank)
+   
 
     ! transfers acceleration back to GPU
     call transfer_accel_to_device(NDIM*NGLOB_AB,accel, Mesh_pointer)

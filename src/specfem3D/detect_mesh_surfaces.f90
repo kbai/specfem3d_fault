@@ -111,7 +111,8 @@
                stress_zz(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
                stress_xy(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
                stress_xz(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-               stress_yz(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ier)
+               stress_yz(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+               coulomb(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
       if( ier /= 0 ) stop 'error allocating array movie div and curl'
       div(:,:,:,:) = 0._CUSTOM_REAL
       curl_x(:,:,:,:) = 0._CUSTOM_REAL

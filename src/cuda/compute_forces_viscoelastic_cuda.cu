@@ -36,7 +36,6 @@
 #include "config.h"
 #include "mesh_constants_cuda.h"
 
-
 #ifdef USE_TEXTURES_FIELDS
 realw_texture d_displ_tex;
 realw_texture d_veloc_tex;
@@ -814,9 +813,10 @@ __global__ void Kernel_2_impl(int nb_blocks_to_compute,
     s_dummyz_loc[tx] = tex1Dfetch(d_displ_tex, iglob*3 + 2);
 #else
     // changing iglob indexing to match fortran row changes fast style
-    s_dummyx_loc[tx] = d_displ[iglob*3];
-    s_dummyy_loc[tx] = d_displ[iglob*3 + 1];
-    s_dummyz_loc[tx] = d_displ[iglob*3 + 2];
+    // here is a dirty implementation of viscousity made by Kangchen
+    s_dummyx_loc[tx] = d_displ[iglob*3] ;
+    s_dummyy_loc[tx] = d_displ[iglob*3 + 1] ; 
+    s_dummyz_loc[tx] = d_displ[iglob*3 + 2] ;
 #endif
   }
 
@@ -1440,7 +1440,7 @@ __global__ void Kernel_2_impl(int nb_blocks_to_compute,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-// note: kernel_2 is split into two kernels:
+// note: kernel_2 is split into two kernel:
 //       - a kernel without attenuation Kernel_2_noatt_impl() and
 //       - a kernel including attenuation Kernel_2_att_impl()
 //       this separation should help with performance
@@ -1456,6 +1456,7 @@ template<int FORWARD_OR_ADJOINT> __global__ void Kernel_2_noatt_impl(int nb_bloc
                                                                       int* d_phase_ispec_inner_elastic, int num_phase_ispec_elastic,
                                                                       int d_iphase,
                                                                       int use_mesh_coloring_gpu,
+                                 				      realw d_deltat,
                                                                       realw* d_displ,realw* d_veloc,realw* d_accel,
                                                                       realw* d_xix, realw* d_xiy, realw* d_xiz,
                                                                       realw* d_etax, realw* d_etay, realw* d_etaz,
@@ -1509,7 +1510,7 @@ template<int FORWARD_OR_ADJOINT> __global__ void Kernel_2_noatt_impl(int nb_bloc
   realw duxdxl,duxdyl,duxdzl,duydxl,duydyl,duydzl,duzdxl,duzdyl,duzdzl;
   realw duxdxl_plus_duydyl,duxdxl_plus_duzdzl,duydyl_plus_duzdzl;
   realw duxdyl_plus_duydxl,duzdxl_plus_duxdzl,duzdyl_plus_duydzl;
-
+ 
   realw fac1,fac2,fac3,lambdal,mul,lambdalplus2mul,kappal;
   realw sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz;
   realw epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc,epsilondev_xz_loc,epsilondev_yz_loc;
@@ -1574,9 +1575,10 @@ template<int FORWARD_OR_ADJOINT> __global__ void Kernel_2_noatt_impl(int nb_bloc
     s_dummyz_loc[tx] = texfetch_displ<FORWARD_OR_ADJOINT>(iglob*3 + 2);
 #else
     // changing iglob indexing to match fortran row changes fast style
-    s_dummyx_loc[tx] = d_displ[iglob*3];
-    s_dummyy_loc[tx] = d_displ[iglob*3 + 1];
-    s_dummyz_loc[tx] = d_displ[iglob*3 + 2];
+    s_dummyx_loc[tx] = d_displ[iglob*3] + 0.3 * d_deltat * d_veloc[iglob*3];
+    s_dummyy_loc[tx] = d_displ[iglob*3 + 1] + 0.3 * d_deltat * d_veloc[iglob*3+ 1]; 
+    s_dummyz_loc[tx] = d_displ[iglob*3 + 2] + 0.3 * d_deltat * d_veloc[iglob*3+ 2];
+
 #endif
   }
 
@@ -2159,9 +2161,9 @@ template<int FORWARD_OR_ADJOINT> __global__ void Kernel_2_att_impl(int nb_blocks
     s_dummyz_loc[tx] = texfetch_displ<FORWARD_OR_ADJOINT>(iglob*3 + 2);
 #else
     // changing iglob indexing to match fortran row changes fast style
-    s_dummyx_loc[tx] = d_displ[iglob*3];
-    s_dummyy_loc[tx] = d_displ[iglob*3 + 1];
-    s_dummyz_loc[tx] = d_displ[iglob*3 + 2];
+    s_dummyx_loc[tx] = d_displ[iglob*3] + 0.3 * d_deltat * d_veloc[iglob*3];
+    s_dummyy_loc[tx] = d_displ[iglob*3 + 1] + 0.3 * d_deltat * d_veloc[iglob*3+ 1]; 
+    s_dummyz_loc[tx] = d_displ[iglob*3 + 2] + 0.3 * d_deltat * d_veloc[iglob*3+ 2];
 #endif
 
   // JC JC here we will need to add GPU support for the new C-PML routines
@@ -2903,6 +2905,7 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                                   mp->d_phase_ispec_inner_elastic,mp->num_phase_ispec_elastic,
                                                                   d_iphase,
                                                                   mp->use_mesh_coloring_gpu,
+								  d_deltat,
                                                                   mp->d_displ,mp->d_veloc,mp->d_accel,
                                                                   d_xix, d_xiy, d_xiz,
                                                                   d_etax, d_etay, d_etaz,
@@ -2943,6 +2946,7 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                                      mp->d_phase_ispec_inner_elastic,mp->num_phase_ispec_elastic,
                                                                      d_iphase,
                                                                      mp->use_mesh_coloring_gpu,
+                                                                     d_deltat,
                                                                      mp->d_b_displ,mp->d_b_veloc,mp->d_b_accel,
                                                                      d_xix, d_xiy, d_xiz,
                                                                      d_etax, d_etay, d_etaz,

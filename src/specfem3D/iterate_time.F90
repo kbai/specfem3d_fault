@@ -102,7 +102,7 @@
       if( mod(it,NTSTEP_BETWEEN_OUTPUT_ENERGY) == 0 .or. it == 5 .or. it == NSTEP ) &
         call compute_total_energy()
     endif
-
+    write(*,*) 'stop1'
     ! updates wavefields using Newmark time scheme
     call update_displacement_scheme()
 
@@ -142,7 +142,9 @@
         ! 1. acoustic domain
         if( ACOUSTIC_SIMULATION ) call compute_forces_acoustic()
         ! 2. elastic domain
+        write(*,*) 'stop3'
         if( ELASTIC_SIMULATION ) call compute_forces_viscoelastic()
+        write(*,*) 'stop2'
       endif
 
       ! poroelastic solver

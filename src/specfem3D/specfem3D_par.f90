@@ -552,7 +552,7 @@ module specfem_par_movie
 ! to save full 3D snapshot of velocity (movie volume
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable:: div, curl_x, curl_y, curl_z
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable:: velocity_x,velocity_y,velocity_z
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable:: stress_xx,stress_yy,stress_zz,stress_xy,stress_xz,stress_yz
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable:: stress_xx,stress_yy,stress_zz,stress_xy,stress_xz,stress_yz,coulomb
 ! shakemovies and movie surface
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_x_external_mesh
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_y_external_mesh
@@ -578,7 +578,9 @@ module specfem_par_movie
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_ux_all_external_mesh
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_uy_all_external_mesh
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_uz_all_external_mesh
-
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_coulomb_external_mesh
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_coulomb_all_external_mesh
+ 
 ! movie volume
   real(kind=CUSTOM_REAL) xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl
 

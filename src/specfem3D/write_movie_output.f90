@@ -405,6 +405,8 @@
       endif
     endif
 
+
+
     if (USE_HIGHRES_FOR_MOVIES) then
       ! all GLL points on a face
       do ipoin = 1, NGLLX*NGLLY
@@ -489,7 +491,7 @@
     write(IOUT) store_val_ux_all_external_mesh  ! velocity x-component
     write(IOUT) store_val_uy_all_external_mesh  ! velocity y-component
     write(IOUT) store_val_uz_all_external_mesh  ! velocity z-component
-  
+
     close(IOUT)
   endif
 
@@ -558,11 +560,11 @@
   subroutine wmo_get_vel_vector_stress(ispec,ispec2D, &
                                 ipoin,iglob, &
                                 val_element, &
-                                narraydim,stress_xx_glob,stress_yy_glob,stress_zz_glob,stress_xy_glob,stress_xz_glob,stress_yz_glob)
+                                narraydim,stress_xx_glob,stress_yy_glob,stress_zz_glob,stress_xy_glob,stress_xz_glob,stress_yz_glob,coulomb_glob)
 
   ! put into this separate routine to make compilation faster
 
-  use specfem_par,only: NDIM,ibool,NGLOB_AB
+  use specfem_par,only: NDIM,ibool,NGLOB_AB,xstore,ystore,zstore
   use specfem_par_elastic,only: displ,veloc,ispec_is_elastic
   use specfem_par_acoustic,only: ispec_is_acoustic
   use specfem_par_movie
@@ -571,7 +573,7 @@
   integer,intent(in) :: ispec,ispec2D,ipoin,iglob
   integer,intent(in) :: narraydim
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: val_element
-   real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: stress_xx_glob,stress_yy_glob,stress_zz_glob,stress_xy_glob,stress_xz_glob,stress_yz_glob
+   real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: stress_xx_glob,stress_yy_glob,stress_zz_glob,stress_xy_glob,stress_xz_glob,stress_yz_glob,coulomb_glob
 
 
   ! local parameters
@@ -585,12 +587,10 @@
       store_val_stressxy_external_mesh(narraydim*(ispec2D-1)+ipoin) = stress_xy_glob(iglob)
       store_val_stressxz_external_mesh(narraydim*(ispec2D-1)+ipoin) = stress_xz_glob(iglob)
       store_val_stressyz_external_mesh(narraydim*(ispec2D-1)+ipoin) = stress_yz_glob(iglob)
+      store_val_coulomb_external_mesh(narraydim*(ispec2D-1)+ipoin) = coulomb_glob(iglob)
     endif
 
-
-
-
-  end subroutine wmo_get_vel_vector_stress
+ end subroutine wmo_get_vel_vector_stress
 
 
 !=====================================================================
@@ -609,9 +609,9 @@
     real(kind=CUSTOM_REAL),dimension(1) :: dummy
     integer :: ispec,ipoin,iglob,i,j,k,ier
     integer :: imin,imax,jmin,jmax,kmin,kmax,iface,igll,iloc
-    real(kind=CUSTOM_REAL),dimension(:),allocatable:: stress_xx_glob,stress_yy_glob,stress_zz_glob,stress_xy_glob,stress_xz_glob,stress_yz_glob
+    real(kind=CUSTOM_REAL),dimension(:),allocatable:: stress_xx_glob,stress_yy_glob,stress_zz_glob,stress_xy_glob,stress_xz_glob,stress_yz_glob,coulomb_glob
     integer,dimension(:),allocatable :: valency
- 
+
     ! allocate array for single elements
     allocate( val_element(NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
     if( ier /= 0 ) stop 'error allocating arrays for movie elements'
@@ -659,6 +659,32 @@
           endif
        enddo
     endif
+       allocate(valency(NGLOB_AB), stat=ier)
+       allocate(stress_xx_glob(NGLOB_AB), &
+            stress_yy_glob(NGLOB_AB), &
+            stress_zz_glob(NGLOB_AB), &
+            stress_xy_glob(NGLOB_AB), &
+            stress_xz_glob(NGLOB_AB), &
+            stress_yz_glob(NGLOB_AB), &
+            coulomb_glob(NGLOB_AB),stat=ier)
+!       write(*,*) 'we are here!'
+!       write(*,*) NSPEC_AB
+!       write(*,*) NGLOB_AB
+!       write(*,*) size(stress_xx_glob)
+!       write(*,*) size(displ)
+!       write(*,*) size(valency)
+!       write(*,*) size(stress_xx)
+!       write(*,*) size(ispec_is_elastic)
+!       write(*,*) size(ibool)
+    call wmo_movie_stress(NSPEC_AB,NGLOB_AB,displ, &
+                                 stress_xx_glob,stress_yy_glob,stress_zz_glob,stress_xy_glob,stress_xz_glob,stress_yz_glob,coulomb_glob,&
+                                 valency, &
+                                 stress_xx,stress_yy,stress_zz,stress_xy,stress_xz,stress_yz,coulomb,&
+                                ibool,ispec_is_elastic, &
+                                hprime_xx,hprime_yy,hprime_zz, &
+                                xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz)
+
+
 
 
     ! outputs values on free surface
@@ -685,31 +711,6 @@
        endif
        !here we put STRESS compute subroutine
 
-       allocate(valency(NGLOB_AB), stat=ier)
-       allocate(stress_xx_glob(NGLOB_AB), &
-            stress_yy_glob(NGLOB_AB), &
-            stress_zz_glob(NGLOB_AB), &
-            stress_xy_glob(NGLOB_AB), &
-            stress_xz_glob(NGLOB_AB), &
-            stress_yz_glob(NGLOB_AB), stat=ier)
-!       write(*,*) 'we are here!' 
-!       write(*,*) NSPEC_AB
-!       write(*,*) NGLOB_AB
-!       write(*,*) size(stress_xx_glob)
-!       write(*,*) size(displ)
-!       write(*,*) size(valency)
-!       write(*,*) size(stress_xx)
-!       write(*,*) size(ispec_is_elastic)
-!       write(*,*) size(ibool)
-    call wmo_movie_stress(NSPEC_AB,NGLOB_AB,displ, &
-                                 stress_xx_glob,stress_yy_glob,stress_zz_glob,stress_xy_glob,stress_xz_glob,stress_yz_glob,&
-                                 valency, &
-                                 stress_xx,stress_yy,stress_zz,stress_xy,stress_xz,stress_yz,&
-                                ibool,ispec_is_elastic, &
-                                hprime_xx,hprime_yy,hprime_zz, &
-                                xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz)
-
- 
 
        ! high_resolution
        if (USE_HIGHRES_FOR_MOVIES) then
@@ -728,7 +729,7 @@
             call  wmo_get_vel_vector_stress(ispec,0, &
                                 ipoin,iglob, &
                                 val_element, &
-                                0,stress_xx_glob,stress_yy_glob,stress_zz_glob,stress_xy_glob,stress_xz_glob,stress_yz_glob)
+                                0,stress_xx_glob,stress_yy_glob,stress_zz_glob,stress_xy_glob,stress_xz_glob,stress_yz_glob,coulomb_glob)
 
 
 !             write(*,*) 'finished!'
@@ -751,16 +752,27 @@
                 iglob = ibool(iorderi(iloc),iorderj(iloc),kmin,ispec)
              endif
 
-    
+
          ! puts displ/velocity values into storage array
              call wmo_get_vel_vector(ispec,0, &
                   ipoin,iglob, &
                   val_element, &
                   0)
-    
+
           enddo ! iloc
        endif
     enddo ! iface
+     ! this is a block that export the volume coulomb data when it is increased to 1Mpa
+
+    write(outputname,"('/proc',i6.6,'time',i6.6,'coulomb')") myrank,it
+
+    open(unit=29,file=trim(OUTPUT_FILES)//outputname,status='unknown',form='formatted',iostat=ier)
+    do iglob =1,NGLOB_AB
+       if(coulomb_glob(iglob) > 10.0e6_CUSTOM_REAL)   write(29,*) xstore(iglob),ystore(iglob),zstore(iglob),coulomb_glob(iglob)
+    enddo
+    close(29)
+    ! this is a block that export the volume coulomb
+
 
     ! master process collects all info
     if (it == NTSTEP_BETWEEN_FRAMES ) then
@@ -817,7 +829,10 @@
        call gatherv_all_cr(store_val_stressyz_external_mesh,nfaces_surface_ext_mesh_points,&
             store_val_stressyz_all_external_mesh,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
             nfaces_surface_glob_em_points,NPROC)
- 
+       call gatherv_all_cr(store_val_coulomb_external_mesh,nfaces_surface_ext_mesh_points,&
+            store_val_coulomb_all_external_mesh,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
+            nfaces_surface_glob_em_points,NPROC)
+
     else
        call gatherv_all_cr(store_val_ux_external_mesh,nfaces_surface_ext_mesh_points,&
             dummy,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
@@ -846,6 +861,9 @@
        call gatherv_all_cr(store_val_stressxz_external_mesh,nfaces_surface_ext_mesh_points,&
             dummy,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
             1,NPROC)
+        call gatherv_all_cr(store_val_coulomb_external_mesh,nfaces_surface_ext_mesh_points,&
+            dummy,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
+            1,NPROC)
    endif
 
     ! file output: note that values are only stored on free surface
@@ -863,8 +881,9 @@
        write(IOUT) store_val_stressyy_all_external_mesh !
        write(IOUT) store_val_stresszz_all_external_mesh !
        write(IOUT) store_val_stressxy_all_external_mesh !
-    write(IOUT) store_val_stressxz_all_external_mesh !
-    write(IOUT) store_val_stressyz_all_external_mesh !   
+       write(IOUT) store_val_stressxz_all_external_mesh !
+       write(IOUT) store_val_stressyz_all_external_mesh !
+       write(IOUT) store_val_coulomb_all_external_mesh !
        close(IOUT)
     endif
 
@@ -1121,7 +1140,7 @@
   real(kind=CUSTOM_REAL),dimension(:,:,:,:),allocatable:: veloc_element
   ! divergence and curl only in the global nodes
   real(kind=CUSTOM_REAL),dimension(:),allocatable:: div_glob,curl_glob
-  real(kind=CUSTOM_REAL),dimension(:),allocatable:: stress_xx_glob,stress_yy_glob,stress_zz_glob,stress_xy_glob,stress_xz_glob,stress_yz_glob
+  real(kind=CUSTOM_REAL),dimension(:),allocatable:: stress_xx_glob,stress_yy_glob,stress_zz_glob,stress_xy_glob,stress_xz_glob,stress_yz_glob,coulomb_glob
   integer,dimension(:),allocatable :: valency
   integer :: ispec,ier
   character(len=3) :: channel
@@ -1177,10 +1196,11 @@
             stress_zz_glob(NGLOB_AB), &
             stress_xy_glob(NGLOB_AB), &
             stress_xz_glob(NGLOB_AB), &
-            stress_yz_glob(NGLOB_AB), stat=ier)
+            stress_yz_glob(NGLOB_AB), &
+            coulomb_glob(NGLOB_AB),stat=ier)
     if( ier /= 0 ) stop 'error allocating arrays for movie div and curl'
 
-    ! calculates divergence and curl of velocity field note that this subroutine also calculats the velocity field 
+    ! calculates divergence and curl of velocity field note that this subroutine also calculats the velocity field
    call wmo_movie_div_curl(NSPEC_AB,NGLOB_AB,veloc, &
                                div_glob,curl_glob,valency, &
                                div,curl_x,curl_y,curl_z, &
@@ -1189,9 +1209,9 @@
                                hprime_xx,hprime_yy,hprime_zz, &
                                xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz)
     call wmo_movie_stress(NSPEC_AB,NGLOB_AB,displ, &
-                                 stress_xx_glob,stress_yy_glob,stress_zz_glob,stress_xy_glob,stress_xz_glob,stress_yz_glob,&
+                                 stress_xx_glob,stress_yy_glob,stress_zz_glob,stress_xy_glob,stress_xz_glob,stress_yz_glob,coulomb_glob,&
                                  valency, &
-                                 stress_xx,stress_yy,stress_zz,stress_xy,stress_xz,stress_yz,&
+                                 stress_xx,stress_yy,stress_zz,stress_xy,stress_xz,stress_yz,coulomb,&
                                 ibool,ispec_is_elastic, &
                                 hprime_xx,hprime_yy,hprime_zz, &
                                 xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz)
@@ -1208,7 +1228,7 @@
   !  if( ier /= 0 ) stop 'error opening file curl_glob'
   !  write(27) curl_glob
   !  close(27)
-  !  
+  !
     write(outputname,"('/proc',i6.6,'_stress_xx_it',i6.6,'.bin')") myrank,it
     open(unit=27,file=trim(OUTPUT_FILES)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
     if( ier /= 0 ) stop 'error opening file stress_xx_glob'
@@ -1229,7 +1249,7 @@
 
 
     deallocate(div_glob,curl_glob,valency)
-    deallocate(stress_xx_glob,stress_yy_glob,stress_xy_glob,stress_zz_glob,stress_xz_glob,stress_yz_glob)
+    deallocate(stress_xx_glob,stress_yy_glob,stress_xy_glob,stress_zz_glob,stress_xz_glob,stress_yz_glob,coulomb_glob)
   endif ! elastic
 
   ! saves full snapshot data to local disk
@@ -1458,9 +1478,9 @@
 
 
   subroutine wmo_movie_stress(NSPEC_AB,NGLOB_AB,veloc, &
-                                 stress_xx_glob,stress_yy_glob,stress_zz_glob,stress_xy_glob,stress_xz_glob,stress_yz_glob,&
+                                 stress_xx_glob,stress_yy_glob,stress_zz_glob,stress_xy_glob,stress_xz_glob,stress_yz_glob,coulomb_glob,&
                                  valency, &
-                                 stress_xx,stress_yy,stress_zz,stress_xy,stress_xz,stress_yz,&
+                                 stress_xx,stress_yy,stress_zz,stress_xy,stress_xz,stress_yz,coulomb,&
                                 ibool,ispec_is, &
                                 hprime_xx,hprime_yy,hprime_zz, &
                                 xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz)
@@ -1477,13 +1497,13 @@
 
   ! divergence and curl only in the global nodes
 
-  real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: stress_xx_glob,stress_yy_glob,stress_zz_glob,stress_xy_glob,stress_xz_glob,stress_yz_glob
+  real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: stress_xx_glob,stress_yy_glob,stress_zz_glob,stress_xy_glob,stress_xz_glob,stress_yz_glob,coulomb_glob
 
   integer,dimension(NGLOB_AB) :: valency
 
 
 
-   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: stress_xx,stress_yy,stress_zz,stress_xy,stress_xz,stress_yz
+   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: stress_xx,stress_yy,stress_zz,stress_xy,stress_xz,stress_yz,coulomb
 
   integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB):: ibool
   logical,dimension(NSPEC_AB) :: ispec_is
@@ -1515,8 +1535,9 @@
    stress_xy_glob(:) = 0.0_CUSTOM_REAL
 
    stress_zz_glob(:) = 0.0_CUSTOM_REAL
-   stress_xz_glob(:) = 0.0_CUSTOM_REAL 
+   stress_xz_glob(:) = 0.0_CUSTOM_REAL
    stress_yz_glob(:) = 0.0_CUSTOM_REAL
+   coulomb_glob(:) = 0.0_CUSTOM_REAL
   valency(:) = 0
 
 !write(*,*) 'VALUE VALENCY GIVEN SUCCESSFULLY!'
@@ -1586,23 +1607,24 @@
     do k = 1,NGLLZ
       do j = 1,NGLLY
         do i = 1,NGLLX
-           stress_xx(i,j,k,ispec)=(kappastore(i,j,k,ispec)-2./3.*mustore(i,j,k,ispec))*(dvydyl(i,j,k)+dvzdzl(i,j,k))+(kappastore(i,j,k,ispec)+4./3.*mustore(i,j,k,ispec))*dvxdxl(i,j,k);
-           stress_yy(i,j,k,ispec)=(kappastore(i,j,k,ispec)-2./3.*mustore(i,j,k,ispec))*(dvxdxl(i,j,k)+dvzdzl(i,j,k))+(kappastore(i,j,k,ispec)+4./3.*mustore(i,j,k,ispec))*dvydyl(i,j,k);
-           stress_zz(i,j,k,ispec)=(kappastore(i,j,k,ispec)-2./3.*mustore(i,j,k,ispec))*(dvydyl(i,j,k)+dvxdxl(i,j,k))+(kappastore(i,j,k,ispec)+4./3.*mustore(i,j,k,ispec))*dvzdzl(i,j,k);
-           stress_xy(i,j,k,ispec)=mustore(i,j,k,ispec)*(dvxdyl(i,j,k)+dvydxl(i,j,k))
-           stress_xz(i,j,k,ispec)=mustore(i,j,k,ispec)*(dvxdzl(i,j,k)+dvzdxl(i,j,k))
-           stress_yz(i,j,k,ispec)=mustore(i,j,k,ispec)*(dvydzl(i,j,k)+dvzdyl(i,j,k))
-           
+!           stress_xx(i,j,k,ispec)=(kappastore(i,j,k,ispec)-2./3.*mustore(i,j,k,ispec))*(dvydyl(i,j,k)+dvzdzl(i,j,k))+(kappastore(i,j,k,ispec)+4./3.*mustore(i,j,k,ispec))*dvxdxl(i,j,k);
+!           stress_yy(i,j,k,ispec)=(kappastore(i,j,k,ispec)-2./3.*mustore(i,j,k,ispec))*(dvxdxl(i,j,k)+dvzdzl(i,j,k))+(kappastore(i,j,k,ispec)+4./3.*mustore(i,j,k,ispec))*dvydyl(i,j,k);
+!           stress_zz(i,j,k,ispec)=(kappastore(i,j,k,ispec)-2./3.*mustore(i,j,k,ispec))*(dvydyl(i,j,k)+dvxdxl(i,j,k))+(kappastore(i,j,k,ispec)+4./3.*mustore(i,j,k,ispec))*dvzdzl(i,j,k);
+!           stress_xy(i,j,k,ispec)=mustore(i,j,k,ispec)*(dvxdyl(i,j,k)+dvydxl(i,j,k))
+!           stress_xz(i,j,k,ispec)=mustore(i,j,k,ispec)*(dvxdzl(i,j,k)+dvzdxl(i,j,k))
+!           stress_yz(i,j,k,ispec)=mustore(i,j,k,ispec)*(dvydzl(i,j,k)+dvzdyl(i,j,k))
+
           ! velocity field
           iglob = ibool(i,j,k,ispec)
 
           valency(iglob)=valency(iglob)+1
           stress_xx_glob(iglob)=stress_xx_glob(iglob)+stress_xx(i,j,k,ispec)
           stress_yy_glob(iglob)=stress_yy_glob(iglob)+stress_yy(i,j,k,ispec)
-          stress_zz_glob(iglob)=stress_zz_glob(iglob)+stress_zz(i,j,k,ispec)  
+          stress_zz_glob(iglob)=stress_zz_glob(iglob)+stress_zz(i,j,k,ispec)
           stress_xy_glob(iglob)=stress_xy_glob(iglob)+stress_xy(i,j,k,ispec)
           stress_yz_glob(iglob)=stress_yz_glob(iglob)+stress_yz(i,j,k,ispec)
-          stress_xz_glob(iglob)=stress_xz_glob(iglob)+stress_xz(i,j,k,ispec)    
+          stress_xz_glob(iglob)=stress_xz_glob(iglob)+stress_xz(i,j,k,ispec)
+          coulomb_glob(iglob) = coulomb_glob(iglob)+coulomb(i,j,k,ispec)
         enddo
       enddo
     enddo
@@ -1615,13 +1637,14 @@
       ! averages by number of contributions
 !      div_glob(i) = div_glob(i)/valency(i)
 !      curl_glob(i) = curl_glob(i)/valency(i)
-  
+
      stress_xx_glob(i)=stress_xx_glob(i)/valency(i)
      stress_yy_glob(i)=stress_yy_glob(i)/valency(i)
      stress_zz_glob(i)=stress_zz_glob(i)/valency(i)
      stress_xy_glob(i)=stress_xy_glob(i)/valency(i)
      stress_yz_glob(i)=stress_yz_glob(i)/valency(i)
      stress_xz_glob(i)=stress_xz_glob(i)/valency(i)
+     coulomb_glob(i) = coulomb_glob(i)/valency(i)
     endif
 
   enddo
